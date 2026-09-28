@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "preppop-ai",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    // Only these sites can call the Worker from a browser.
+    "ALLOWED_ORIGINS": "https://mralexgrin.github.io,http://localhost:4190"
+  },
+  // 10 requests per visitor IP per minute. A 200-card deck is 7 requests.
+  "ratelimits": [
+    { "name": "LIMITER", "namespace_id": "4190", "simple": { "limit": 10, "period": 60 } }
+  ],
+  "observability": { "enabled": true }
+  // ANTHROPIC_API_KEY is a secret: npx wrangler secret put ANTHROPIC_API_KEY
+}

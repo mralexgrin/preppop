@@ -290,12 +290,8 @@ textarea.input { min-height: 52px; line-height: 1.45; }
 /* Settings */
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 14px; max-width: 680px; }
 .panel p { color: var(--ink-2); }
-.key-row { display: flex; gap: 8px; }
-.key-row .input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92rem; }
 .hint { font-size: .88rem; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.status-line { font-weight: 600; font-size: .92rem; }
-.status-line.on { color: var(--know); }
 
 /* Toast */
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); background: var(--ink); color: var(--bg); padding: 12px 18px; border-radius: 999px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; max-width: calc(100% - 32px); text-align: center; z-index: 20; }

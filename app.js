@@ -9,10 +9,14 @@ const toastEl = document.getElementById("toast");
 let state = loadState();
 
 function loadState() {
-  const fresh = { decks: [], apiKey: "", distractors: {} };
+  const fresh = { decks: [], distractors: {} };
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    return raw ? { ...fresh, ...JSON.parse(raw) } : fresh;
+    if (!raw) return fresh;
+    // Keys were stored here before the answer service existed; drop them.
+    const { apiKey, ...saved } = JSON.parse(raw);
+    if (apiKey !== undefined) localStorage.setItem(STORE_KEY, JSON.stringify(saved));
+    return { ...fresh, ...saved };
   } catch {
     return fresh;
   }
@@ -550,15 +554,9 @@ function renderTest(deck) {
 
   const drawSetup = () => {
     const n = deck.cards.length;
-    const hasKey = Boolean(state.apiKey);
-    const canStart = hasKey ? n >= 1 : n >= 4;
     app.innerHTML = `${header(`<a class="btn btn-soft" href="#/deck/${deck.id}/study">Switch to Flashcards</a>`)}
       ${t.notice ? `<div class="notice warn" role="alert">${esc(t.notice)}</div>` : ""}
-      ${
-        hasKey
-          ? `<div class="notice ai"><span class="spark" aria-hidden="true">✦</span><span>${MODEL_LABEL} writes 3 believable wrong answers for every question.</span></div>`
-          : `<div class="notice"><span>No API key yet, so wrong answers will come from your other cards. <a href="#/settings">Add a key in Settings</a> to have Claude write them.</span></div>`
-      }
+      <div class="notice ai"><span class="spark" aria-hidden="true">✦</span><span>${MODEL_LABEL} writes 3 believable wrong answers for every question.</span></div>
       <fieldset class="choice-fieldset" style="border:0;padding:0;margin:0">
         <legend class="setup-label">How should questions look?</legend>
         <div class="choice-grid">
@@ -574,12 +572,8 @@ function renderTest(deck) {
         </div>
       </fieldset>
       <div class="row">
-        <button class="btn btn-primary btn-lg" type="button" id="start" ${canStart ? "" : "disabled"}>Start test · ${plural(n, "question")}</button>
-        ${
-          canStart
-            ? ""
-            : `<span class="hint">${n ? "Add at least 4 cards, or an API key, to take a test." : "Add some cards to this deck first."}</span>`
-        }
+        <button class="btn btn-primary btn-lg" type="button" id="start" ${n ? "" : "disabled"}>Start test · ${plural(n, "question")}</button>
+        ${n ? "" : `<span class="hint">Add some cards to this deck first.</span>`}
       </div>`;
     app.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", () => (t.mode = r.value)));
     app.querySelector("#start").addEventListener("click", start);
@@ -598,12 +592,11 @@ function renderTest(deck) {
     });
 
     const missing = t.questions.filter((q) => !state.distractors[cacheKey(q)]);
-    if (state.apiKey && missing.length) {
+    if (missing.length) {
       t.phase = "loading";
       draw();
       try {
         const written = await writeWrongAnswers({
-          apiKey: state.apiKey,
           deckName: deck.name,
           items: missing.map((q) => ({ key: cacheKey(q), shows: q.shows, prompt: q.prompt, answer: q.answer })),
         });
@@ -771,51 +764,13 @@ function renderSettings() {
   const cached = Object.keys(state.distractors).length;
   app.innerHTML = `
     <header class="page-head"><div><h1>Settings</h1></div></header>
-    <section class="panel" aria-labelledby="ai-heading">
-      <h2 id="ai-heading">AI answer choices</h2>
-      <p>In Test mode, PrepPop asks ${MODEL_LABEL} to write 3 believable wrong answers for each question. Add your own Anthropic API key to turn it on. You can create one in the <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a>.</p>
-      <p class="status-line ${state.apiKey ? "on" : ""}">${state.apiKey ? "✓ AI answers are on" : "AI answers are off. Tests use your other cards as wrong answers."}</p>
-      <label class="field">
-        <span class="field-label">Anthropic API key</span>
-        <span class="key-row">
-          <input class="input" id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…" value="${esc(state.apiKey)}">
-          <button class="btn btn-ghost" type="button" id="reveal" aria-pressed="false">Show</button>
-        </span>
-      </label>
-      <p class="hint">Your key stays in this browser's storage and is only sent to Anthropic's API. Anyone using this browser profile can read it.</p>
-      <div class="row">
-        <button class="btn btn-primary" type="button" id="save-key">Save key</button>
-        ${state.apiKey ? `<button class="btn btn-danger" type="button" id="remove-key">Remove key</button>` : ""}
-      </div>
-    </section>
     <section class="panel" aria-labelledby="data-heading">
       <h2 id="data-heading">Your data</h2>
       <p>Decks and progress are saved in this browser only. Clearing your browser's site data erases them.</p>
-      <p>Wrong answers Claude writes are saved so repeat tests are instant. ${plural(cached, "question")} saved.</p>
+      <p>In Test mode, ${MODEL_LABEL} writes the wrong answers. They're saved so repeat tests are instant. ${plural(cached, "question")} saved.</p>
       <div class="row"><button class="btn btn-ghost" type="button" id="clear-cache" ${cached ? "" : "disabled"}>Clear saved AI answers</button></div>
     </section>`;
 
-  const input = app.querySelector("#api-key");
-  app.querySelector("#reveal").addEventListener("click", (e) => {
-    const show = input.type === "password";
-    input.type = show ? "text" : "password";
-    e.currentTarget.textContent = show ? "Hide" : "Show";
-    e.currentTarget.setAttribute("aria-pressed", show);
-  });
-  app.querySelector("#save-key").addEventListener("click", () => {
-    const key = input.value.trim();
-    if (!key) return toast("Paste a key first");
-    state.apiKey = key;
-    persist();
-    toast("API key saved");
-    renderSettings();
-  });
-  app.querySelector("#remove-key")?.addEventListener("click", () => {
-    state.apiKey = "";
-    persist();
-    toast("API key removed");
-    renderSettings();
-  });
   app.querySelector("#clear-cache").addEventListener("click", () => {
     state.distractors = {};
     persist();
