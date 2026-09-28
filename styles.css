@@ -298,3 +298,7 @@ textarea.input { min-height: 52px; line-height: 1.45; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.card-tools { text-align: center; margin-top: 18px; }
+.text-btn { border: 0; background: none; padding: 6px 8px; border-radius: 8px; font-weight: 600; font-size: .9rem; color: var(--ink-3); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.text-btn.danger:hover { color: var(--learn); }

@@ -141,6 +141,15 @@ function renderLibrary() {
       <a class="btn btn-primary" href="#/new">+ New deck</a>
     </header>
     <ul class="deck-grid">${state.decks.map(deckTile).join("")}</ul>`;
+
+  app.querySelector(".deck-grid").addEventListener("click", (e) => {
+    const deck = getDeck(e.target.closest("[data-delete-deck]")?.dataset.deleteDeck);
+    if (!deck || !confirm(`Delete "${deck.name}" and all of its cards? This can't be undone.`)) return;
+    state.decks = state.decks.filter((d) => d !== deck);
+    persist();
+    renderLibrary();
+    toast("Deck deleted");
+  });
 }
 
 function deckTile(deck) {
@@ -166,6 +175,7 @@ function deckTile(deck) {
         <a class="btn btn-soft" href="#/deck/${deck.id}/study">Flashcards</a>
         <a class="btn btn-soft" href="#/deck/${deck.id}/test">Test</a>
         <a class="btn btn-ghost" href="#/deck/${deck.id}/edit" aria-label="Edit ${esc(deck.name)}">Edit</a>
+        <button class="btn btn-danger" type="button" data-delete-deck="${deck.id}" aria-label="Delete ${esc(deck.name)}">Delete</button>
       </div>
     </li>`;
 }
@@ -450,12 +460,24 @@ function renderStudy(deck) {
         <button class="btn btn-learn" type="button" data-mark="learning"><kbd>←</kbd> Still learning</button>
         <button class="btn btn-know" type="button" data-mark="known">I know it <kbd>→</kbd></button>
       </div>
-      <p class="kbd-hint">Space to flip · ← still learning · → I know it</p>`;
+      <p class="kbd-hint">Space to flip · ← still learning · → I know it</p>
+      <p class="card-tools"><button class="text-btn danger" type="button" id="delete-card">Delete this card</button></p>`;
 
     bindToolbar();
     const flipBtn = app.querySelector("#flip");
     flipBtn.addEventListener("click", flip);
     app.querySelectorAll("[data-mark]").forEach((b) => b.addEventListener("click", () => mark(b.dataset.mark)));
+    app.querySelector("#delete-card").addEventListener("click", () => deleteCard(card));
+  };
+
+  const deleteCard = (card) => {
+    if (!confirm(`Delete this card?\n\n${card.term}\n\nThis can't be undone.`)) return;
+    deck.cards = deck.cards.filter((c) => c !== card);
+    s.order = s.order.filter((id) => id !== card.id);
+    s.flipped = false;
+    persist();
+    draw();
+    toast("Card deleted");
   };
 
   const bindToolbar = () => {
