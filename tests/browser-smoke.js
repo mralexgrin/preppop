@@ -30,6 +30,8 @@ function check(cond, message) {
 
 // Two-phase so the app starts from clean storage: call reset(), then run() again after reload.
 export async function reset() {
+  // Block writes first so an in-flight sync can't save old data back after the clear.
+  Storage.prototype.setItem = () => {};
   localStorage.clear();
   location.hash = "#/";
   location.reload();
@@ -246,6 +248,49 @@ export async function flows({ stubAnswers = true } = {}) {
     check(Number($(".stat strong").textContent) >= 1, "streak of at least one day after practicing");
     check($$(".cal .cal-cell").length === 84, "12-week calendar");
     check($$(".weak li").length >= 1, "missed cards listed to work on");
+  });
+
+  await step("sync: encrypted upload, merge from another device, erase", async () => {
+    const { deriveVault, open, seal } = await import("/js/sync.js");
+    const vaults = new Map(); // fake server: id -> { version, data }
+    const realFetch = window.fetch;
+    window.fetch = async (input, init = {}) => {
+      const url = typeof input === "string" ? input : input.url;
+      const match = url.match(/\/vault\/([a-f0-9]{64})$/);
+      if (!match) return realFetch(input, init);
+      const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+      const row = vaults.get(match[1]);
+      const method = init.method ?? "GET";
+      if (method === "GET") return row ? json(row) : json({ error: "not_found" }, 404);
+      if (method === "DELETE") return vaults.delete(match[1]), json({ deleted: true });
+      const { base, data } = JSON.parse(init.body);
+      if ((row?.version ?? 0) !== base) return json({ error: "conflict", ...row }, 409);
+      vaults.set(match[1], { version: base + 1, data });
+      return json({ version: base + 1 });
+    };
+    try {
+      await go("#/settings");
+      $("#sync-on").click();
+      await until(() => $("#sync-key"), "sync key shown");
+      const key = $("#sync-key").textContent;
+      const { id, aesKey } = await deriveVault(key);
+      const stored = vaults.get(id);
+      check(stored && !stored.data.includes("deck"), "server holds only ciphertext");
+      const remote = await open(aesKey, stored.data, `${id}:${stored.version}`);
+      check(remote.decks.length === JSON.parse(localStorage.getItem("preppop:v1")).decks.length, "all decks uploaded");
+      // Another device adds a deck and syncs first.
+      remote.decks.push({ id: "otherdevice1", name: "From my laptop", subject: "history", updatedAt: Date.now(), cards: [{ id: "x1", term: "1776", definition: "Declaration", status: "new" }] });
+      vaults.set(id, { version: stored.version + 1, data: await seal(aesKey, remote, `${id}:${stored.version + 1}`) });
+      $("#sync-now").click();
+      await until(() => JSON.parse(localStorage.getItem("preppop:v1")).decks.some((d) => d.name === "From my laptop"), "deck from the other device merged in");
+      await until(() => !$("#sync-now")?.disabled, "sync finished");
+      window.confirm = () => true; // turn off, and erase the cloud copy
+      $("#sync-off").click();
+      await until(() => $("#sync-on"), "sync turned off");
+      check(vaults.size === 0, "cloud copy erased");
+    } finally {
+      window.fetch = realFetch;
+    }
   });
 
   await step("backup downloads and restores", async () => {

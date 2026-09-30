@@ -138,6 +138,73 @@ const tests = {
     await call({ notes: "Some notes long enough to count as notes.", subject: "<script>" }, { path: "/cards-from-notes" });
     assert.match(lastCall.body.messages[0].content, /Subject: other/);
   },
+  async "vault: create, read, update with version checks, erase"() {
+    const DB = fakeD1();
+    const id = "a".repeat(64);
+    const auth = "1".repeat(64);
+    const vault = (method, body, key = auth) =>
+      worker.fetch(
+        new Request(`https://preppop-ai.example.workers.dev/vault/${id}`, {
+          method,
+          headers: { Origin: ORIGIN, "content-type": "application/json", "x-vault-auth": key },
+          body: body ? JSON.stringify(body) : undefined,
+        }),
+        { ...env, DB },
+      );
+    assert.equal((await vault("GET")).status, 404);
+    const created = await vault("PUT", { base: 0, data: "aXY=.Y2lwaGVy" });
+    assert.equal(created.status, 200);
+    assert.equal((await created.json()).version, 1);
+    assert.equal((await (await vault("GET")).json()).data, "aXY=.Y2lwaGVy");
+    assert.ok(!JSON.stringify([...DB.rows.values()]).includes(auth), "only a hash of the auth secret is stored");
+    // A second device that never saw version 1 gets a conflict with the current copy.
+    const stale = await vault("PUT", { base: 0, data: "bmV3.ZGF0YQ==" });
+    assert.equal(stale.status, 409);
+    assert.equal((await stale.json()).data, "aXY=.Y2lwaGVy");
+    const updated = await vault("PUT", { base: 1, data: "bmV3.ZGF0YQ==" });
+    assert.equal((await updated.json()).version, 2);
+    assert.equal((await vault("PUT", { base: 1, data: "b2xk.ZGF0YQ==" })).status, 409);
+    // Knowing the id isn't enough.
+    const wrong = "2".repeat(64);
+    assert.equal((await vault("GET", null, wrong)).status, 401);
+    assert.equal((await vault("PUT", { base: 2, data: "ZXZp.bA==" }, wrong)).status, 401);
+    assert.equal((await vault("DELETE", null, wrong)).status, 401);
+    assert.equal((await vault("GET", null, "nope")).status, 401);
+    // Erasing leaves a marker so other devices learn about it instead of re-creating it.
+    assert.equal((await vault("DELETE")).status, 200);
+    assert.equal((await vault("GET")).status, 410);
+    assert.equal((await vault("PUT", { base: 0, data: "YWdh.aW4=" })).status, 410);
+    assert.equal((await vault("PUT", { base: 2, data: "YWdh.aW4=" })).status, 410);
+  },
+  async "vault: rejects bad ids, bad bodies, and works only with a database"() {
+    const bad = await call(null, { method: "GET", path: "/vault/not-a-real-id" });
+    assert.equal(bad.status, 404);
+    const id = "b".repeat(64);
+    const headers = { Origin: ORIGIN, "x-vault-auth": "3".repeat(64) };
+    const noDb = await worker.fetch(new Request(`https://x/vault/${id}`, { method: "GET", headers }), env);
+    assert.equal(noDb.status, 503);
+    const DB = fakeD1();
+    const put = (body) => worker.fetch(new Request(`https://x/vault/${id}`, { method: "PUT", headers, body: JSON.stringify(body) }), { ...env, DB });
+    assert.equal((await put({ base: 0, data: "<script>" })).status, 400);
+    assert.equal((await put({ base: -1, data: "aXY=.eA==" })).status, 400);
+    assert.equal((await put({ base: 0, data: "a".repeat(300_001) + ".eA==" })).status, 400);
+  },
+  async "vault: creating is limited separately, and old vaults are cleaned up"() {
+    const DB = fakeD1();
+    const headers = { Origin: ORIGIN, "x-vault-auth": "4".repeat(64) };
+    const create = (id, limiter) =>
+      worker.fetch(new Request(`https://x/vault/${id}`, { method: "PUT", headers, body: JSON.stringify({ base: 0, data: "aXY=.eA==" }) }), {
+        ...env,
+        DB,
+        CREATE_LIMITER: { limit: async () => ({ success: limiter }) },
+      });
+    assert.equal((await create("c".repeat(64), false)).status, 429);
+    assert.equal((await create("c".repeat(64), true)).status, 200);
+    DB.rows.set("d".repeat(64), { version: 3, data: "x.y", updated_at: Date.now() - 400 * 864e5, auth_hash: "h" });
+    const { cleanupVaults } = await import("../src/index.js");
+    assert.equal(await cleanupVaults({ DB }), 1);
+    assert.equal(DB.rows.size, 1);
+  },
   async "per-visitor limit is a 429"() {
     const res = await call({ deckName: "x", items }, { extraEnv: { LIMITER: { limit: async () => ({ success: false }) } } });
     assert.equal(res.status, 429);
@@ -159,3 +226,41 @@ for (const [name, fn] of Object.entries(tests)) {
 }
 console.error = origError;
 process.exit(failed ? 1 : 0);
+
+// A tiny in-memory stand-in for the D1 queries the vault uses.
+function fakeD1() {
+  const rows = new Map();
+  const stmt = (sql, args) => ({
+    async first() {
+      if (sql.startsWith("SELECT COUNT")) return { n: rows.size };
+      const row = rows.get(args[0]);
+      return row ? { ...row } : null;
+    },
+    async run() {
+      let changes = 0;
+      if (sql.startsWith("INSERT") && sql.includes("-1")) {
+        const [id, now, authHash] = args; // erase marker (upsert)
+        const row = rows.get(id);
+        rows.set(id, { version: -1, data: "", updated_at: now, auth_hash: row?.auth_hash ?? authHash });
+        changes = 1;
+      } else if (sql.startsWith("INSERT")) {
+        const [id, data, now, authHash] = args;
+        if (!rows.has(id)) {
+          rows.set(id, { version: 1, data, updated_at: now, auth_hash: authHash });
+          changes = 1;
+        }
+      } else if (sql.startsWith("UPDATE")) {
+        const [data, now, id, base, authHash] = args;
+        const row = rows.get(id);
+        if (row && row.version === base && row.auth_hash === authHash) {
+          rows.set(id, { ...row, version: base + 1, data, updated_at: now });
+          changes = 1;
+        }
+      } else if (sql.startsWith("DELETE FROM vaults WHERE updated_at")) {
+        for (const [id, row] of rows) if (row.updated_at < args[0]) changes += rows.delete(id) ? 1 : 0;
+      }
+      return { meta: { changes } };
+    },
+  });
+  return { rows, prepare: (sql) => ({ bind: (...args) => stmt(sql, args), first: () => stmt(sql, []).first() }) };
+}

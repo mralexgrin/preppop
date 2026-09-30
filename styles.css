@@ -562,3 +562,13 @@ main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .suggestion > span { display: grid; gap: 2px; overflow-wrap: anywhere; }
 .suggestion > span span { color: var(--ink-2); font-size: .92rem; }
 .import-bar .btn .spark { margin-right: 2px; }
+
+/* Sync */
+.sync-status { font-weight: 600; }
+.sync-status.good { color: var(--know) !important; }
+.sync-status.bad { color: var(--learn) !important; }
+.sync-connect summary { cursor: pointer; font-weight: 600; color: var(--ink-2); padding: 4px 0; }
+.sync-connect form { margin-top: 10px; }
+.sync-key-input { flex: 1; min-width: 220px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; }
+.sync-key-box { border: 1.5px solid var(--pop); background: var(--pop-soft); border-radius: var(--radius-sm); padding: 14px 16px; display: grid; gap: 8px; }
+.sync-key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.15rem; font-weight: 700; letter-spacing: .04em; color: var(--ink) !important; overflow-wrap: anywhere; user-select: all; }

@@ -23,7 +23,7 @@ Test mode's wrong answers come from Claude Opus 5.5. Visitors don't need a key. 
 
 The Worker does two fixed jobs: wrong answers (`/wrong-answers`) and cards from notes (`/cards-from-notes`). The prompt, model, and limits are fixed on the server, so it can't be used as a general Claude proxy:
 
-- Only browser requests from `mralexgrin.github.io` and `localhost:4190` are allowed (`ALLOWED_ORIGINS` in `worker/wrangler.jsonc`).
+- Only browser requests from `mralexgrin.github.io` are allowed (`ALLOWED_ORIGINS` in `worker/wrangler.jsonc`). For local testing, override it in `worker/.dev.vars`, e.g. `ALLOWED_ORIGINS=http://localhost:4190`.
 - 10 requests per visitor IP per minute, with at most 30 cards per request and 600 characters per field.
 
 Also set a monthly spend limit on the key in the Anthropic Console.
@@ -36,11 +36,24 @@ If the service can't be reached, wrong answers are drawn from the deck's other c
 cd worker
 npm install
 npx wrangler login
+npx wrangler d1 create preppop-sync          # copy the database_id into wrangler.jsonc
+npx wrangler d1 migrations apply preppop-sync --remote
 npx wrangler deploy
 npx wrangler secret put ANTHROPIC_API_KEY
 ```
 
-Then set `SERVICE_URL` in `ai.js` to the deployed `workers.dev` URL. `npm test` runs offline tests against a stubbed Anthropic API.
+Then set `SERVICE_URL` in `js/ai.js` to the deployed `workers.dev` URL. `npm test` runs offline tests against a stubbed Anthropic API and an in-memory database. For local testing, `npx wrangler d1 migrations apply preppop-sync --local` and then `npx wrangler dev`.
+
+## Sync across devices
+
+Settings → **Sync across devices** keeps decks and progress the same on every device, with no account:
+
+- **Turn on sync** makes a random 25-character sync key. It's the only credential, so there's no email, name, or password. Show it and copy it from Settings.
+- On another device, **I already have a sync key** links it. Decks from both devices are kept, each card keeps its most recent progress, a deck's card list follows its most recently edited copy, and deletions carry over.
+- The key never leaves the device. `js/sync.js` derives three things from it (HKDF-SHA256): a storage id, an auth secret the server checks on every read and write (it stores only a hash), and an AES-GCM key. Data is compressed and encrypted before upload, bound to its id and version. The Worker stores only ciphertext in D1 (`/vault/:id`, with version checks so devices can't overwrite each other).
+- Downloaded data is cleaned like an imported backup before it's merged (`cleanSyncData` in `js/backup.js`).
+- Limits: 300 KB of ciphertext per vault, 60 sync requests and 3 new vaults per IP per minute, 20,000 vaults in total. Vaults unused for 12 months are deleted by a nightly cron. Erasing leaves a marker, so other linked devices turn sync off instead of re-uploading.
+- Sync runs on its own: on the deck list, Progress, and Settings screens, after changes, and when the app goes to the background. **Turn off** can also erase the cloud copy.
 
 ## Install and offline
 

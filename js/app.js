@@ -12,6 +12,7 @@ import { renderWrite } from "./views/write.js";
 import { renderStarters } from "./views/starters.js";
 import { renderProgress } from "./views/progress.js";
 import { renderSteps } from "./views/steps.js";
+import { syncNow, pushChanges, syncStatus } from "./cloud.js";
 
 hooks.onPersistError = () => toast("Couldn't save. Browser storage is full or blocked.");
 load();
@@ -58,6 +59,9 @@ function route() {
     badge.setAttribute("aria-label", `${due} due`);
   });
 
+  // Screens that don't hold on to a deck can take merged data from other devices.
+  if (["", "progress", "settings"].includes(page ?? "")) maybeSync();
+
   if (page === "new") return renderEditor(null);
   if (page === "settings") return renderSettings();
   if (page === "review") return renderReview();
@@ -90,3 +94,30 @@ window.addEventListener("beforeinstallprompt", (e) => {
 // Hide the phone tab bar while typing so it never covers the keyboard.
 document.addEventListener("focusin", (e) => document.body.classList.toggle("typing", Boolean(isTyping(e.target))));
 document.addEventListener("focusout", () => document.body.classList.remove("typing"));
+
+// ---------- Sync across devices (see js/cloud.js) ----------
+
+let pushTimer;
+hooks.onChange = () => {
+  if (!state.sync) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushChanges, 10_000);
+};
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && state.sync && pushTimer) {
+    clearTimeout(pushTimer);
+    pushTimer = null;
+    pushChanges();
+  }
+});
+
+async function maybeSync() {
+  if (!state.sync || syncStatus.busy) return;
+  const stale = !state.sync.lastSync || Date.now() - state.sync.lastSync > 60_000;
+  if (!stale && !syncStatus.needsMerge) return;
+  const hashAtStart = location.hash;
+  const changed = await syncNow();
+  // Redraw only if the data changed and she's still on the same screen.
+  if (changed && location.hash === hashAtStart && !view.leaveGuard) route();
+}

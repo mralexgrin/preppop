@@ -61,6 +61,7 @@ export function renderStarters() {
         ordered: starter.ordered,
         starter: starter.id,
         createdAt: Date.now(),
+        updatedAt: Date.now(),
         cards: starter.cards.map((c) => ({ ...blankCard(), ...c })),
       });
       persist();

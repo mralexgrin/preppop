@@ -3,10 +3,11 @@
 import { uid } from "./util.js";
 import { isSubject } from "./subjects.js";
 import { dayKey, grade, seedSchedule } from "./srs.js";
+import { normalizeSyncKey } from "./sync.js";
 
 export const STORE_KEY = "preppop:v1";
 
-export const state = { decks: [], distractors: {}, settings: {}, activity: {} };
+export const state = { decks: [], distractors: {}, settings: {}, activity: {}, deletedDecks: {}, sync: null };
 
 export const DEFAULT_DAILY_GOAL = 20;
 
@@ -22,6 +23,12 @@ function cleanStats(stats) {
   return { seen, missed: Math.min(seen, count(stats.missed)) };
 }
 
+// { id: timestamp } maps (deletion markers), keeping only safe ids and numbers.
+const cleanStamps = (stamps) =>
+  stamps && typeof stamps === "object" && !Array.isArray(stamps)
+    ? Object.fromEntries(Object.entries(stamps).filter(([id, at]) => SAFE_ID.test(id) && Number.isFinite(at)))
+    : {};
+
 const withoutEmpty = (card) => {
   if (card.stats === undefined) delete card.stats;
   return card;
@@ -33,14 +40,23 @@ function safeId(id, seen) {
   seen.add(out);
   return out;
 }
-export const hooks = { onPersistError: null };
+export const hooks = { onPersistError: null, onChange: null };
 
 // Turns whatever was saved (any older shape) into the current shape.
 export function migrate(saved, today = dayKey()) {
   const { apiKey, ...rest } = saved && typeof saved === "object" ? saved : {};
-  const out = { decks: [], distractors: {}, settings: {}, activity: {}, ...rest };
+  const out = { decks: [], distractors: {}, settings: {}, activity: {}, deletedDecks: {}, sync: null, ...rest };
   const isObject = (v) => v && typeof v === "object" && !Array.isArray(v);
-  for (const key of ["distractors", "settings", "activity"]) if (!isObject(out[key])) out[key] = {};
+  for (const key of ["distractors", "settings", "activity", "deletedDecks"]) if (!isObject(out[key])) out[key] = {};
+  out.deletedDecks = cleanStamps(out.deletedDecks);
+  const syncKey = normalizeSyncKey(out.sync?.key);
+  out.sync = syncKey
+    ? {
+        key: syncKey,
+        version: Number.isInteger(out.sync.version) && out.sync.version >= 0 ? out.sync.version : 0,
+        lastSync: Number.isFinite(out.sync.lastSync) ? out.sync.lastSync : null,
+      }
+    : null;
   const deckIds = new Set();
   out.decks = (Array.isArray(out.decks) ? out.decks : [])
     .filter(isObject)
@@ -52,6 +68,8 @@ export function migrate(saved, today = dayKey()) {
         name: typeof deck.name === "string" ? deck.name : "Untitled deck",
         subject: isSubject(deck.subject) ? deck.subject : "other",
         ordered: deck.ordered === true,
+        deletedCards: cleanStamps(deck.deletedCards),
+        updatedAt: Number.isFinite(deck.updatedAt) ? deck.updatedAt : Number.isFinite(deck.createdAt) ? deck.createdAt : 0,
         cards: (Array.isArray(deck.cards) ? deck.cards : []).filter(isObject).map((card) =>
           withoutEmpty(seedSchedule(
             {
@@ -86,9 +104,10 @@ export function load(storage = globalThis.localStorage) {
   }
 }
 
-export function persist(storage = globalThis.localStorage) {
+export function persist(storage = globalThis.localStorage, { quiet = false } = {}) {
   try {
     storage.setItem(STORE_KEY, JSON.stringify(state));
+    if (!quiet) hooks.onChange?.();
     return true;
   } catch {
     hooks.onPersistError?.();
@@ -110,3 +129,19 @@ export function recordAnswer(card, correct, today = dayKey()) {
 }
 
 export const dailyGoal = () => state.settings.dailyGoal ?? DEFAULT_DAILY_GOAL;
+
+// Removes a deck and remembers the deletion so synced devices drop it too.
+export function deleteDeck(deck) {
+  state.decks = state.decks.filter((d) => d !== deck);
+  state.deletedDecks[deck.id] = Date.now();
+}
+
+// Call when a deck's name, subject, or cards change (not when it's studied).
+export const touch = (deck) => (deck.updatedAt = Date.now());
+
+// Remembers cards removed from a deck so synced devices drop them too.
+export function forgetCards(deck, removedIds) {
+  const now = Date.now();
+  deck.deletedCards = { ...(deck.deletedCards ?? {}) };
+  for (const id of removedIds) deck.deletedCards[id] = now;
+}

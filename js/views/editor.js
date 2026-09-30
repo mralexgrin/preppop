@@ -1,4 +1,4 @@
-import { state, persist, blankCard } from "../store.js";
+import { state, persist, blankCard, deleteDeck, touch, forgetCards } from "../store.js";
 import { esc, plural, uid } from "../util.js";
 import { app, toast, setTitle, view, saveFile } from "../ui.js";
 import { makeDeckFile } from "../backup.js";
@@ -325,7 +325,7 @@ export function renderEditor(deck) {
 
   app.querySelector("#delete")?.addEventListener("click", () => {
     if (!confirm(`Delete "${deck.name}" and all of its cards? This can't be undone.`)) return;
-    state.decks = state.decks.filter((d) => d.id !== deck.id);
+    deleteDeck(deck);
     persist();
     dirty = false;
     toast("Deck deleted");
@@ -357,9 +357,12 @@ export function renderEditor(deck) {
     }
 
     if (isNew) {
-      state.decks.push({ id: uid(), name, subject: draft.subject, ordered: draft.ordered, createdAt: Date.now(), cards });
+      state.decks.push({ id: uid(), name, subject: draft.subject, ordered: draft.ordered, createdAt: Date.now(), updatedAt: Date.now(), cards });
     } else {
+      const kept = new Set(cards.map((c) => c.id));
+      forgetCards(deck, deck.cards.filter((c) => !kept.has(c.id)).map((c) => c.id));
       Object.assign(deck, { name, subject: draft.subject, ordered: draft.ordered, cards });
+      touch(deck);
     }
     state.settings.lastSubject = draft.subject;
     persist();

@@ -4,6 +4,7 @@ import { app, toast, setTitle, saveFile, install, isInstalled, isIOS } from "../
 import { MODEL_LABEL } from "../ai.js";
 import { makeBackup, readFile, mergeDecks, mergeActivity } from "../backup.js";
 import { dayKey } from "../srs.js";
+import { syncStatus, syncNow, enableSync, connectSync, disableSync } from "../cloud.js";
 
 const GOALS = [10, 20, 30, 50];
 
@@ -36,6 +37,10 @@ export function renderSettings() {
       </div>
     </section>
 
+    <section class="panel" aria-labelledby="sync-heading" id="sync-panel">
+      ${syncHTML()}
+    </section>
+
     <section class="panel" aria-labelledby="backup-heading">
       <h2 id="backup-heading">Backup</h2>
       <p>Your ${plural(state.decks.length, "deck")} and ${plural(cards, "card")} are saved in this browser only. Clearing Safari or Chrome data, or losing your phone, erases them. Download a backup now and then, and keep it somewhere safe like iCloud Drive or Google Drive.</p>
@@ -52,6 +57,8 @@ export function renderSettings() {
       <p>In Test mode, ${MODEL_LABEL} writes the wrong answers. They're saved so repeat tests are instant. ${plural(cached, "question")} saved.</p>
       <div class="row"><button class="btn btn-ghost" type="button" id="clear-cache" ${cached ? "" : "disabled"}>Clear saved AI answers</button></div>
     </section>`;
+
+  bindSync();
 
   app.querySelector("#install")?.addEventListener("click", async () => {
     const prompt = install.prompt;
@@ -139,9 +146,20 @@ function showRestore(data) {
     toast(message);
     location.hash = "#/";
   };
+  // Restored decks count as just edited, so sync keeps them instead of an
+  // older cloud copy (or an earlier deletion).
+  const freshen = (decks) => {
+    const now = Date.now();
+    state.deletedDecks = { ...state.deletedDecks };
+    for (const deck of decks) {
+      deck.updatedAt = now;
+      delete state.deletedDecks[deck.id];
+    }
+  };
   panel.querySelector("#add-decks").addEventListener("click", () => {
     const { decks, added, skipped } = mergeDecks(state.decks, data.decks);
     commit(() => {
+      freshen(decks.filter((d) => !state.decks.includes(d)));
       state.decks = decks;
       if (isBackup) state.activity = mergeActivity(state.activity, data.activity);
     }, `Added ${plural(added, "deck")}${skipped ? `, ${skipped} already here` : ""}`);
@@ -149,6 +167,12 @@ function showRestore(data) {
   panel.querySelector("#replace-all")?.addEventListener("click", () => {
     if (!confirm("Replace all your decks and progress with this backup? What's here now will be gone.")) return;
     commit(() => {
+      // Decks not in the backup are deleted everywhere, not brought back by sync.
+      const keep = new Set(data.decks.map((d) => d.id));
+      const now = Date.now();
+      state.deletedDecks = { ...state.deletedDecks };
+      for (const deck of state.decks) if (!keep.has(deck.id)) state.deletedDecks[deck.id] = now;
+      freshen(data.decks);
       state.decks = data.decks;
       state.activity = data.activity;
       state.settings = { ...state.settings, ...data.settings };
@@ -163,4 +187,121 @@ function installHTML() {
   if (isIOS())
     return `${why}<ol class="steps"><li>Open PrepPop in <strong>Safari</strong>.</li><li>Tap the <strong>Share</strong> button (the square with an arrow).</li><li>Choose <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</li></ol>`;
   return `${why}<p class="hint">In your browser's menu, choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p>`;
+}
+
+// ---------- Sync across devices ----------
+
+const sentence = (text) => (text ? `${text[0].toUpperCase()}${text.slice(1)}${/[.!?]$/.test(text) ? "" : "."}` : "");
+
+const ago = (ms) => {
+  const min = Math.round((Date.now() - ms) / 60000);
+  if (min < 1) return "just now";
+  if (min < 60) return `${min} min ago`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
+  return new Date(ms).toLocaleDateString();
+};
+
+const PRIVACY = `<p class="hint">Your decks are encrypted on this device before they're uploaded, so PrepPop's server can't read them. There's no account, email, or password: the sync key is the only way in. Keep it somewhere safe, and only share it with your own devices. A cloud copy that isn't used for 12 months is deleted.</p>`;
+
+function syncHTML(revealKey = false) {
+  if (!state.sync) {
+    return `
+      <h2 id="sync-heading">Sync across devices</h2>
+      <p>Keep your decks and progress the same on your phone, laptop, or a school computer, and safe if you lose one.</p>
+      <div class="row">
+        <button class="btn btn-primary" type="button" id="sync-on">Turn on sync</button>
+      </div>
+      <details class="sync-connect">
+        <summary>I already have a sync key</summary>
+        <form class="row" id="sync-connect-form">
+          <label class="visually-hidden" for="sync-key-input">Sync key</label>
+          <input class="input sync-key-input" id="sync-key-input" placeholder="ABCDE-12345-FGHJK-67890-MNPQR" autocomplete="off" autocapitalize="characters" spellcheck="false">
+          <button class="btn btn-soft" type="submit">Connect</button>
+        </form>
+      </details>
+      <p class="form-error" id="sync-error" role="alert" ${syncStatus.error ? "" : "hidden"}>${esc(sentence(syncStatus.error))}</p>
+      ${PRIVACY}`;
+  }
+  const line = syncStatus.busy
+    ? "Syncing…"
+    : syncStatus.error
+      ? `Couldn't sync: ${esc(syncStatus.error)}.`
+      : state.sync.lastSync
+        ? `Synced ${ago(state.sync.lastSync)}.`
+        : "Not synced yet.";
+  return `
+    <h2 id="sync-heading">Sync is on</h2>
+    <p class="sync-status ${syncStatus.error ? "bad" : "good"}" aria-live="polite">${line}</p>
+    ${
+      revealKey
+        ? `<div class="sync-key-box"><p class="field-label">Your sync key</p><p class="sync-key" id="sync-key">${esc(state.sync.key)}</p>
+            <div class="row"><button class="btn btn-soft" type="button" id="sync-copy">Copy key</button></div>
+            <p class="hint">On your other device, open PrepPop → Settings → Sync across devices → <strong>I already have a sync key</strong>.</p></div>`
+        : ""
+    }
+    <div class="row">
+      <button class="btn btn-primary" type="button" id="sync-now" ${syncStatus.busy ? "disabled" : ""}>Sync now</button>
+      ${revealKey ? "" : `<button class="btn btn-soft" type="button" id="sync-show">Show sync key</button>`}
+      <button class="btn btn-ghost" type="button" id="sync-off">Turn off</button>
+    </div>
+    ${PRIVACY}`;
+}
+
+function bindSync(revealKey = false) {
+  const panel = app.querySelector("#sync-panel");
+  if (!panel) return;
+  const redraw = (reveal = revealKey) => {
+    if (!panel.isConnected) return;
+    panel.innerHTML = syncHTML(reveal);
+    bindSync(reveal);
+  };
+  panel.querySelector("#sync-on")?.addEventListener("click", async (e) => {
+    e.currentTarget.disabled = true;
+    e.currentTarget.textContent = "Turning on…";
+    await enableSync();
+    toast(syncStatus.error ? "Sync is on, but the first upload didn't work yet" : "Sync is on");
+    redraw(true);
+    panel.querySelector("#sync-key")?.scrollIntoView({ block: "center", behavior: "smooth" });
+  });
+  panel.querySelector("#sync-connect-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const button = e.currentTarget.querySelector("button");
+    button.disabled = true;
+    button.textContent = "Connecting…";
+    const problem = await connectSync(panel.querySelector("#sync-key-input").value);
+    if (problem) {
+      button.disabled = false;
+      button.textContent = "Connect";
+      const err = panel.querySelector("#sync-error");
+      err.textContent = problem;
+      err.hidden = false;
+      return;
+    }
+    toast("Connected. Your decks are synced.");
+    redraw(false);
+  });
+  panel.querySelector("#sync-now")?.addEventListener("click", async () => {
+    const pending = syncNow();
+    redraw();
+    await pending;
+    toast(syncStatus.error ? "Couldn't sync" : "Synced");
+    redraw();
+  });
+  panel.querySelector("#sync-show")?.addEventListener("click", () => redraw(true));
+  panel.querySelector("#sync-copy")?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(state.sync.key);
+      toast("Sync key copied");
+    } catch {
+      toast("Couldn't copy. Select the key and copy it yourself.");
+    }
+  });
+  panel.querySelector("#sync-off")?.addEventListener("click", async () => {
+    if (!confirm("Turn off sync on this device? Your decks stay here. You can turn it back on with your sync key.")) return;
+    const erase = confirm("Also erase the cloud copy? Only do this if you don't use PrepPop sync on any other device.\n\nOK = erase it, Cancel = keep it");
+    const problem = await disableSync({ eraseCloud: erase });
+    toast(problem ?? (erase ? "Sync off and cloud copy erased" : "Sync is off on this device"));
+    redraw(false);
+  });
 }

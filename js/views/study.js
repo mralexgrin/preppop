@@ -1,4 +1,4 @@
-import { persist, recordAnswer } from "../store.js";
+import { persist, recordAnswer, touch, forgetCards } from "../store.js";
 import { esc, plural, shuffle, isTyping } from "../util.js";
 import { app, toast, setTitle, statusChip, view, deckHeader } from "../ui.js";
 import { flipCardHTML, setFlipped, attachSwipe, bindSpeak } from "../flipcard.js";
@@ -89,6 +89,8 @@ export function renderStudy(deck) {
   const deleteCard = (card) => {
     if (!confirm(`Delete this card?\n\n${card.term}\n\nThis can't be undone.`)) return;
     deck.cards = deck.cards.filter((c) => c !== card);
+    forgetCards(deck, [card.id]);
+    touch(deck);
     s.order = s.order.filter((id) => id !== card.id);
     s.flipped = false;
     persist();

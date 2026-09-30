@@ -2,7 +2,8 @@
 // does two fixed jobs: writing wrong answer choices for Test mode
 // (/wrong-answers) and turning class notes into flashcards
 // (/cards-from-notes). Prompts, model, and limits live here so the public
-// endpoint can't be used as a general-purpose Claude proxy.
+// endpoint can't be used as a general-purpose Claude proxy. It also stores
+// encrypted sync data (/vault/:id) in D1; see js/sync.js in the app.
 
 import Anthropic from "@anthropic-ai/sdk";
 
@@ -46,6 +47,10 @@ const SCHEMA = {
 class BadRequest extends Error {}
 
 export default {
+  async scheduled(event, env) {
+    await cleanupVaults(env);
+  },
+
   async fetch(request, env) {
     const origin = request.headers.get("Origin") ?? "";
     const allowed = (env.ALLOWED_ORIGINS ?? "").split(",").map((o) => o.trim());
@@ -53,15 +58,19 @@ export default {
 
     const cors = {
       "Access-Control-Allow-Origin": origin,
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "content-type",
+      "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "content-type, x-vault-auth",
       "Access-Control-Max-Age": "86400",
       Vary: "Origin",
     };
     const reply = (body, status = 200) => Response.json(body, { status, headers: cors });
 
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
-    const route = ROUTES[new URL(request.url).pathname];
+    const path = new URL(request.url).pathname;
+    const vault = path.match(/^\/vault\/([a-f0-9]{64})$/);
+    if (vault) return handleVault(request, env, vault[1], reply);
+
+    const route = ROUTES[path];
     if (request.method !== "POST" || !route) return reply({ error: "not_found" }, 404);
 
     if (env.LIMITER) {
@@ -97,10 +106,10 @@ export default {
   },
 };
 
-async function readJson(request) {
-  if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) throw new BadRequest("body too large");
+async function readJson(request, maxBytes = MAX_BODY_BYTES) {
+  if (Number(request.headers.get("content-length") ?? 0) > maxBytes) throw new BadRequest("body too large");
   const text = await request.text();
-  if (text.length > MAX_BODY_BYTES) throw new BadRequest("body too large");
+  if (text.length > maxBytes) throw new BadRequest("body too large");
   try {
     return JSON.parse(text);
   } catch {
@@ -264,3 +273,108 @@ const ROUTES = {
   "/wrong-answers": { parse: parseWrongAnswers, build: buildWrongAnswers, read: readWrongAnswers },
   "/cards-from-notes": { parse: parseNotes, build: buildNotes, read: readNotes },
 };
+
+// ---------- /vault/:id (encrypted sync) ----------
+//
+// Each vault holds one student's encrypted data. The id and an auth secret
+// are both derived from her sync key on her device; only a hash of the auth
+// secret is stored, and every read and write must present it. An erased vault
+// stays as a marker (version -1) so other devices learn it was erased (410)
+// instead of quietly re-creating it.
+
+const MAX_VAULT = 300_000; // characters of ciphertext (compressed; thousands of cards)
+const MAX_VAULTS = 20_000; // stay well inside D1's storage limit
+const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+const HEX64 = /^[a-f0-9]{64}$/;
+
+async function sha256(text) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function handleVault(request, env, id, reply) {
+  if (!env.DB) return reply({ error: "sync_unavailable" }, 503);
+  if (!["GET", "PUT", "DELETE"].includes(request.method)) return reply({ error: "not_found" }, 404);
+  const ip = request.headers.get("CF-Connecting-IP") ?? "unknown";
+  // Sync has its own, roomier limit: a sync is two requests, and a family on
+  // one home Wi-Fi shares an IP.
+  const limiter = env.SYNC_LIMITER ?? env.LIMITER;
+  if (limiter) {
+    const { success } = await limiter.limit({ key: `sync:${ip}` });
+    if (!success) return reply({ error: "rate_limited" }, 429);
+  }
+  const auth = request.headers.get("x-vault-auth") ?? "";
+  if (!HEX64.test(auth)) return reply({ error: "unauthorized" }, 401);
+  const authHash = await sha256(auth);
+
+  const current = () => env.DB.prepare("SELECT version, data, updated_at, auth_hash FROM vaults WHERE id = ?").bind(id).first();
+  // Why a write didn't happen, given the row as it is now.
+  const explain = (row) => {
+    if (!row) return reply({ error: "not_found" }, 404);
+    if (row.version === -1) return reply({ error: "erased" }, 410);
+    if (row.auth_hash !== authHash) return reply({ error: "unauthorized" }, 401);
+    return reply({ error: "conflict", version: row.version, data: row.data, updatedAt: row.updated_at }, 409);
+  };
+
+  if (request.method === "GET") {
+    const row = await current();
+    if (!row || row.version === -1 || row.auth_hash !== authHash) return explain(row);
+    return reply({ version: row.version, data: row.data, updatedAt: row.updated_at });
+  }
+
+  const now = Date.now();
+  if (request.method === "DELETE") {
+    const row = await current();
+    if (row && row.auth_hash !== authHash) return reply({ error: "unauthorized" }, 401);
+    await env.DB.prepare(
+      "INSERT INTO vaults (id, data, version, updated_at, auth_hash) VALUES (?, '', -1, ?, ?) ON CONFLICT(id) DO UPDATE SET data = '', version = -1, updated_at = excluded.updated_at",
+    )
+      .bind(id, now, authHash)
+      .run();
+    return reply({ deleted: true });
+  }
+
+  let body;
+  try {
+    body = await readJson(request, MAX_VAULT + 1024);
+  } catch (err) {
+    if (err instanceof BadRequest) return reply({ error: "bad_request", detail: err.message }, 400);
+    throw err;
+  }
+  const { base, data } = body ?? {};
+  if (!Number.isInteger(base) || base < 0 || typeof data !== "string" || !data || data.length > MAX_VAULT || !/^[A-Za-z0-9+/=]+\.[A-Za-z0-9+/=]+$/.test(data)) {
+    return reply({ error: "bad_request" }, 400);
+  }
+
+  if (base === 0) {
+    // Creating a vault: a separate, tight per-IP limit and an overall cap.
+    if (env.CREATE_LIMITER) {
+      const { success } = await env.CREATE_LIMITER.limit({ key: `create:${ip}` });
+      if (!success) return reply({ error: "too_many_new" }, 429);
+    }
+    const existing = await current();
+    if (existing) return explain(existing);
+    const count = await env.DB.prepare("SELECT COUNT(*) AS n FROM vaults").first();
+    if ((count?.n ?? 0) >= MAX_VAULTS) return reply({ error: "sync_unavailable" }, 503);
+  }
+
+  // Only write on top of the version this device last saw; otherwise the
+  // device gets the newer copy back to merge first.
+  const result =
+    base === 0
+      ? await env.DB.prepare("INSERT INTO vaults (id, data, version, updated_at, auth_hash) VALUES (?, ?, 1, ?, ?) ON CONFLICT(id) DO NOTHING")
+          .bind(id, data, now, authHash)
+          .run()
+      : await env.DB.prepare("UPDATE vaults SET data = ?, version = version + 1, updated_at = ? WHERE id = ? AND version = ? AND auth_hash = ?")
+          .bind(data, now, id, base, authHash)
+          .run();
+  if (result.meta?.changes === 1) return reply({ version: base + 1, updatedAt: now });
+  return explain(await current());
+}
+
+// Nightly: delete vaults (and erase markers) nobody has used for a year.
+export async function cleanupVaults(env, now = Date.now()) {
+  if (!env.DB) return 0;
+  const result = await env.DB.prepare("DELETE FROM vaults WHERE updated_at < ?").bind(now - YEAR_MS).run();
+  return result.meta?.changes ?? 0;
+}

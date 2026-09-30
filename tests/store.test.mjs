@@ -8,8 +8,8 @@ const memoryStorage = (initial = {}) => {
 };
 
 test("migrate fills defaults for empty or junk input", () => {
-  assert.deepEqual(migrate(null), { decks: [], distractors: {}, settings: {}, activity: {} });
-  assert.deepEqual(migrate("nope"), { decks: [], distractors: {}, settings: {}, activity: {} });
+  assert.deepEqual(migrate(null), { decks: [], distractors: {}, settings: {}, activity: {}, deletedDecks: {}, sync: null });
+  assert.deepEqual(migrate("nope"), { decks: [], distractors: {}, settings: {}, activity: {}, deletedDecks: {}, sync: null });
 });
 
 test("migrate drops an old stored API key and keeps decks", () => {
@@ -96,4 +96,16 @@ test("migrate keeps valid stats and repairs bad ones", () => {
   assert.deepEqual(a.stats, { seen: 4, missed: 2 });
   assert.deepEqual(b.stats, { seen: 0, missed: 0 });
   assert.equal(c.stats, undefined);
+});
+
+test("migrate keeps a valid sync setup and drops a broken one", () => {
+  const good = migrate({ sync: { key: "k7q2m 9xj4t 0000a 11111 zzzzz", version: 3, lastSync: 5 } });
+  assert.deepEqual(good.sync, { key: "K7Q2M-9XJ4T-0000A-11111-ZZZZZ", version: 3, lastSync: 5 });
+  assert.equal(migrate({ sync: { key: "nope" } }).sync, null);
+  assert.deepEqual(migrate({ deletedDecks: { ok: 5, "<bad>": 6, also: "x" } }).deletedDecks, { ok: 5 });
+});
+
+test("decks get an updatedAt, defaulting to createdAt", () => {
+  const out = migrate({ decks: [{ id: "a", createdAt: 42, cards: [] }, { id: "b", updatedAt: 99, cards: [] }] });
+  assert.deepEqual(out.decks.map((d) => d.updatedAt), [42, 99]);
 });

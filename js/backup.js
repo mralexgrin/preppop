@@ -64,6 +64,8 @@ function cleanDeck(deck, { freshIds }) {
     subject: deck?.subject,
     ordered: deck?.ordered === true,
     createdAt: Number.isFinite(deck?.createdAt) ? deck.createdAt : Date.now(),
+    ...(!freshIds && Number.isFinite(deck?.updatedAt) ? { updatedAt: deck.updatedAt } : {}),
+    ...(!freshIds && deck?.deletedCards ? { deletedCards: deck.deletedCards } : {}),
     cards,
   };
 }
@@ -85,7 +87,7 @@ export function readFile(raw) {
     return { kind: "deck", decks: migrate({ decks: [deck] }).decks, createdAt: data.createdAt };
   }
   if (data.kind === "backup") {
-    const decks = (Array.isArray(data.decks) ? data.decks : []).slice(0, MAX_DECKS).map((d) => cleanDeck(d, { freshIds: false }));
+    const decks = (Array.isArray(data.decks) ? data.decks : []).filter((d) => d && typeof d === "object" && !Array.isArray(d)).slice(0, MAX_DECKS).map((d) => cleanDeck(d, { freshIds: false }));
     const cleaned = migrate({ decks, activity: cleanActivity(data.activity), settings: cleanSettings(data.settings) });
     return { kind: "backup", decks: cleaned.decks, activity: cleaned.activity, settings: cleaned.settings, createdAt: data.createdAt };
   }
@@ -127,4 +129,12 @@ export function mergeActivity(existing, incoming) {
     out[day] = !mine || v.answered > mine.answered ? v : mine;
   }
   return out;
+}
+
+// Data downloaded from the sync service gets the same cleaning as a backup
+// file: anyone holding the sync key could have written it.
+export function cleanSyncData(remote) {
+  const decks = (Array.isArray(remote?.decks) ? remote.decks : []).filter((d) => d && typeof d === "object" && !Array.isArray(d)).slice(0, MAX_DECKS).map((d) => cleanDeck(d, { freshIds: false }));
+  const out = migrate({ decks, activity: cleanActivity(remote?.activity), deletedDecks: remote?.deletedDecks });
+  return { decks: out.decks, activity: out.activity, deletedDecks: out.deletedDecks };
 }

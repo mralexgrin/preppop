@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { makeBackup, makeDeckFile, readFile, mergeDecks, mergeActivity } from "../js/backup.js";
+import { makeBackup, makeDeckFile, readFile, mergeDecks, mergeActivity, cleanSyncData } from "../js/backup.js";
 
 const deck = {
   id: "d1",
@@ -102,4 +102,25 @@ test("unsafe or duplicate ids from a file are replaced (XSS via attributes)", ()
   assert.equal(new Set(back.decks.map((d) => d.id)).size, 3, "deck ids are unique");
   assert.equal(new Set(back.decks[0].cards.map((c) => c.id)).size, 3, "card ids are unique");
   assert.equal(back.settings.lastSubject, undefined);
+});
+
+test("synced data from the cloud is cleaned like an imported file", () => {
+  const out = cleanSyncData({
+    decks: [
+      { id: '"><img src=x onerror=alert(1)>', name: "A", subject: '"><b>', updatedAt: 5, cards: "not an array" },
+      null,
+      { id: "ok", name: "B", updatedAt: 7, cards: [{ id: "c", term: "t", definition: "d", status: "known" }], deletedCards: { gone: 3, "<x>": 4 } },
+    ],
+    activity: { "2026-09-30": { answered: "3", correct: 1 }, bad: { answered: 1 } },
+    deletedDecks: { fine: 1, "<bad>": 2 },
+  });
+  assert.equal(out.decks.length, 2);
+  for (const d of out.decks) assert.match(d.id, /^[A-Za-z0-9_-]{1,64}$/);
+  assert.equal(out.decks[0].subject, "other");
+  assert.deepEqual(out.decks[0].cards, []);
+  assert.equal(out.decks[1].updatedAt, 7);
+  assert.deepEqual(out.decks[1].deletedCards, { gone: 3 });
+  assert.deepEqual(out.activity, { "2026-09-30": { answered: 3, correct: 1 } });
+  assert.deepEqual(out.deletedDecks, { fine: 1 });
+  assert.deepEqual(cleanSyncData(null), { decks: [], activity: {}, deletedDecks: {} });
 });

@@ -1,4 +1,4 @@
-import { state, persist, getDeck, dailyGoal } from "../store.js";
+import { state, persist, getDeck, dailyGoal, deleteDeck } from "../store.js";
 import { dueCards, isDue, isNew, streak, dayKey, addDays } from "../srs.js";
 import { esc, plural } from "../util.js";
 import { app, toast, setTitle, view } from "../ui.js";
@@ -52,7 +52,7 @@ export function renderLibrary() {
 function onLibraryClick(e) {
   const deck = getDeck(e.target.closest("[data-delete-deck]")?.dataset.deleteDeck);
   if (!deck || !confirm(`Delete "${deck.name}" and all of its cards? This can't be undone.`)) return;
-  state.decks = state.decks.filter((d) => d !== deck);
+  deleteDeck(deck);
   persist();
   renderLibrary();
   toast("Deck deleted");

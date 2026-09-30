@@ -3,18 +3,36 @@
 Newest entries at the top. This file is the memory of the run: read it at the start of every session.
 
 ## Flagged for human review
+- **Sync (roadmap #14) touches accounts and personal data of a minor. Please review before merging or deploying.** Design: no account; a random 125-bit sync key on the device derives the vault id, an auth secret (the server stores only its SHA-256), and an AES-GCM key. The server holds only ciphertext. Files: `js/sync.js`, `js/cloud.js`, `js/views/settings.js` (Sync section), `worker/src/index.js` (handleVault, cleanupVaults), `worker/migrations/0001_vaults.sql`. Deploying needs `wrangler d1 create preppop-sync`, the database_id in wrangler.jsonc, and `wrangler d1 migrations apply preppop-sync --remote`. Known limits: no daily cap on new vaults per IP (only 3/min) and no recovery if she loses the key (her local data stays). The privacy text says unused cloud copies are deleted after 12 months.
+- **Production ALLOWED_ORIGINS is now only https://mralexgrin.github.io.** localhost moved to .dev.vars for local testing.
 - **Starter deck content (js/starters.js), especially clinical.** The Handwashing steps deck (added in #13) follows a common nursing-assistant checklist order; programs differ slightly. The vital-sign values are standard adult references: HR 60–100, RR 12–20, BP <120/80 (AHA), SpO2 95–100%, fever ≥100.4 °F, stage 1 HTN 130–139/80–89 (AHA 2017). The deck says to follow the instructor, but her clinical program may teach slightly different ranges (e.g. temperature ranges vary by source). A quick human check is worthwhile.
 - **Worker not deployed.** `npx wrangler login` didn't persist on this Mac, so the Worker is undeployed and `SERVICE_URL` in `ai.js` is a placeholder. Until it's deployed, Test mode uses answers from the deck's other cards. To finish: `cd worker && npx wrangler login && npx wrangler deploy && npx wrangler secret put ANTHROPIC_API_KEY`, then put the workers.dev URL in `ai.js`.
 - **New AI prompt: /cards-from-notes (worker/src/index.js, NOTES_SYSTEM).** It tells the model to use only facts from the notes, to leave out unclear items, and to treat the notes as material, not instructions. Output is schema-constrained, trimmed, capped at 30 cards, and escaped when rendered. It's untested against the real model (no valid key here), so worth trying once the Worker is deployed.
 - The branch includes `feat/ai-proxy-worker` (Worker + delete), which was never pushed or PR'd on its own.
 
 ## Current status
-- Last completed: #11 Progress page (c528e12)
-- Next: #13 Steps mode, #16 card extras (hint, star, search), #15 AI cards from notes, #14 anonymous sync
+- Last completed: #14 sync across devices
+- Next: re-audit and polish (editor header on phones, flashcard toolbar), #16 card extras
 - Branch: autonomous/product-improvements
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-09-30: #14 Sync across devices (security reviewed twice)
+- What: Settings → Sync across devices. Turn on (makes a sync key), connect another device with the key, sync now, show or copy the key, turn off (optionally erase the cloud copy). Sync runs on its own after changes, on the deck list, Progress, and Settings, and when the app is hidden.
+- Why: the owner asked for "a basic account and database to store her practices". The design is account-free because the user is a minor.
+- Merge rules: decks from both devices are kept; cards merge per card (union minus per-deck `deletedCards` markers); text follows the most recently edited deck copy; progress follows the most recent practice; deletions carry over via `deletedDecks`; activity keeps the busier count per day.
+- Security review: 1 high, 3 medium, 3 low; every receipt was verified by grep, and all were fixed:
+  - High: cloud data wasn't validated, allowing XSS via ids and stuck syncs. Fixed with cleanSyncData (backup cleaners + migrate) before merge.
+  - Medium: storage abuse. Fixed with a 300 KB cap, CREATE_LIMITER, a 20k-vault cap, and nightly deletion after 12 months unused.
+  - Medium: lost cards on concurrent edits. Fixed with a per-card union plus deletion markers.
+  - Medium: restore undone by sync. Restored decks are marked fresh; Replace adds deletion markers.
+  - Low: erase undone by another device. The server keeps an erased marker (410), and other devices turn sync off.
+  - Low: the id alone gave write access. Fixed with a derived auth secret (server stores a hash) and AES-GCM additional data of id:version.
+  - Low: a failed connect left data behind. Fixed with a full snapshot and rollback.
+  - Also moved localhost out of the production origins.
+- Found in my own end-to-end testing: connecting with a mistyped key created a new empty vault. It now reports that no data was found for that key.
+- Verification: 93 app tests, 14 worker tests, 15/15 smoke flows. Real two-device runs (localhost vs 127.0.0.1, separate storage) against wrangler dev + local D1 covered: enable, connect, a wrong key, concurrent edits merging with no lost cards, deletion propagating, and erase turning sync off on the other device.
+
 ### 2026-09-30: Items 10-12 + reflection
 - Shipped: #10 read aloud (7c4042d), #12 starter decks (bcaa229, clinical content flagged), #11 Progress page + per-card stats (c528e12).
 - Decisions:
