@@ -87,7 +87,9 @@ export async function imageUrl(id) {
 
 // Renders a slot for a card's picture; hydrateImages() puts the real <img>
 // in once it's loaded, so no empty or broken image ever shows.
-export const imageSlot = (image) => (image ? `<span class="card-img-slot" data-image-id="${image.id}"></span>` : "");
+export const imageSlot = (image) =>
+  image ? `<span class="card-img-slot" data-image-id="${image.id}" data-alt="${escAttr(image.alt ?? "")}"></span>` : "";
+const escAttr = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 // Fills every slot under root. Missing pictures (e.g. added on another device,
 // which sync doesn't carry) get a short note instead.
@@ -95,7 +97,7 @@ export async function hydrateImages(root, alt = "Card picture") {
   for (const slot of root.querySelectorAll(".card-img-slot[data-image-id]")) {
     const url = await imageUrl(slot.dataset.imageId);
     if (!slot.isConnected) continue;
-    if (url) slot.replaceWith(Object.assign(document.createElement("img"), { className: "card-img", src: url, alt }));
+    if (url) slot.replaceWith(Object.assign(document.createElement("img"), { className: "card-img", src: url, alt: slot.dataset.alt || alt }));
     else slot.replaceWith(Object.assign(document.createElement("span"), { className: "image-missing", textContent: "Picture is on another device" }));
   }
 }

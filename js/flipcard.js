@@ -6,7 +6,7 @@ import { imageSlot } from "./images.js";
 
 const LABEL = { term: "Term", definition: "Definition" };
 
-export function flipCardHTML({ card, deck = null, front = "term", flipped = false, topLeft = LABEL[front], topRight = "" }) {
+export function flipCardHTML({ card, deck = null, front = "term", flipped = false, topLeft = LABEL[front], topRight = "", canUndo = false }) {
   const back = front === "term" ? "definition" : "term";
   const lang = (side) => (langFor(deck, side, card[side]).startsWith("es") ? ' lang="es"' : "");
   return `
@@ -36,6 +36,7 @@ export function flipCardHTML({ card, deck = null, front = "term", flipped = fals
       <button class="btn btn-learn" type="button" data-mark="learning"><kbd aria-hidden="true">←</kbd> Still learning</button>
       <button class="btn btn-know" type="button" data-mark="known">I know it <kbd aria-hidden="true">→</kbd></button>
     </div>
+    ${canUndo ? UNDO_BUTTON : ""}
     <p class="kbd-hint">Space to flip · ← still learning · → I know it</p>
     <p class="swipe-hint">Tap to flip · swipe right if you know it, left if you're still learning</p>`;
 }
@@ -144,3 +145,5 @@ export function bindHint(root) {
     button.querySelector(".hint-label").textContent = text.hidden ? "Show hint" : "Hide hint";
   });
 }
+
+export const UNDO_BUTTON = `<p class="undo-row"><button class="text-btn" type="button" id="undo"><span aria-hidden="true">↶</span> Undo last card</button></p>`;

@@ -49,7 +49,7 @@ function cleanDeck(deck, { freshIds }) {
     .map((c) => {
       const card = { id: freshIds || typeof c?.id !== "string" ? uid() : c.id, term: text(c?.term).trim(), definition: text(c?.definition).trim() };
       if (typeof c?.hint === "string" && c.hint.trim()) card.hint = c.hint.trim().slice(0, 300);
-      if (c?.image && typeof c.image === "object") card.image = { id: c.image.id, side: c.image.side };
+      if (c?.image && typeof c.image === "object") card.image = { id: c.image.id, side: c.image.side, alt: c.image.alt };
       if (!freshIds) {
         if (["new", "learning", "known"].includes(c?.status)) card.status = c.status;
         if (c?.stats && typeof c.stats === "object") card.stats = { seen: c.stats.seen, missed: c.stats.missed };

@@ -3,15 +3,16 @@
 
 import { state, persist, recordAnswer, shortcutsOn } from "../store.js";
 import { esc, plural, isTyping } from "../util.js";
-import { app, setTitle, view } from "../ui.js";
+import { app, setTitle, view, announce } from "../ui.js";
 import { dueCards, dayKey, ROUND_SIZE } from "../srs.js";
 import { subjectOf } from "../subjects.js";
-import { flipCardHTML, setFlipped, attachSwipe, bindSpeak, bindHint } from "../flipcard.js";
+import { flipCardHTML, setFlipped, attachSwipe, bindSpeak, bindHint, UNDO_BUTTON } from "../flipcard.js";
 import { hydrateImages } from "../images.js";
 
 export function renderReview() {
   setTitle("Today's review");
   const r = { queue: [], requeued: new Set(), i: 0, flipped: false, tally: { known: 0, learning: 0 }, total: 0 };
+  let lastUndo = null;
 
   const startRound = () => {
     r.queue = dueCards(state.decks, dayKey()).slice(0, ROUND_SIZE);
@@ -20,6 +21,7 @@ export function renderReview() {
     r.i = 0;
     r.flipped = false;
     r.tally = { known: 0, learning: 0 };
+    lastUndo = null;
     draw();
   };
 
@@ -52,12 +54,14 @@ export function renderReview() {
             <div class="tally know"><strong>${r.tally.known}</strong>Know it</div>
             <div class="tally learn"><strong>${r.tally.learning}</strong>Still learning</div>
           </div>
+          ${lastUndo ? UNDO_BUTTON : ""}
           <div class="actions">
             ${left ? `<button class="btn btn-primary" type="button" id="next-round">Keep going · ${plural(Math.min(left, ROUND_SIZE), "card")}</button>` : ""}
             <a class="btn ${left ? "btn-soft" : "btn-primary"}" href="#/">Back to decks</a>
           </div>
         </section>`;
       app.querySelector("#next-round")?.addEventListener("click", startRound);
+      app.querySelector("#undo")?.addEventListener("click", undoLast);
       return;
     }
 
@@ -75,6 +79,7 @@ export function renderReview() {
       ${flipCardHTML({
         card,
         deck,
+        canUndo: Boolean(lastUndo),
         flipped: r.flipped,
         topLeft: `<span class="deck-context" data-subject="${subject.id}"><span class="subject-dot" aria-hidden="true"></span>${esc(deck.name)}</span>`,
       })}`;
@@ -85,6 +90,7 @@ export function renderReview() {
     bindSpeak(app, { deck, card, front: "term", isFlipped: () => r.flipped });
     bindHint(app);
     hydrateImages(app);
+    app.querySelector("#undo")?.addEventListener("click", undoLast);
     app.querySelectorAll("[data-mark]").forEach((b) => b.addEventListener("click", () => mark(b.dataset.mark === "known")));
   };
 
@@ -97,16 +103,34 @@ export function renderReview() {
   const mark = (correct) => {
     if (r.i >= r.queue.length) return;
     const item = r.queue[r.i];
-    recordAnswer(item.card, correct, undefined, item.deck);
+    lastUndo = { undo: recordAnswer(item.card, correct, undefined, item.deck), key: correct ? "known" : "learning", requeued: false, id: item.card.id };
     persist();
     r.tally[correct ? "known" : "learning"]++;
     if (!correct && !r.requeued.has(item.card.id)) {
       r.requeued.add(item.card.id);
       r.queue.push(item);
+      lastUndo.requeued = true;
     }
     r.i++;
     r.flipped = false;
     draw();
+    app.querySelector("#flip")?.focus();
+  };
+
+  const undoLast = () => {
+    if (!lastUndo || r.i === 0) return;
+    lastUndo.undo();
+    persist();
+    r.tally[lastUndo.key]--;
+    if (lastUndo.requeued) {
+      r.queue.pop();
+      r.requeued.delete(lastUndo.id);
+    }
+    r.i--;
+    r.flipped = false;
+    lastUndo = null;
+    draw();
+    announce("Undone. Back to the last card.");
     app.querySelector("#flip")?.focus();
   };
 

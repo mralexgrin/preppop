@@ -135,6 +135,25 @@ export async function flows({ stubAnswers = true } = {}) {
     check(deck.cards.some((c) => c.status === "known"), "a card saved as known");
   });
 
+  await step("undo the last card in flashcards", async () => {
+    const snapshot = () => JSON.parse(localStorage.getItem("preppop:v1"));
+    const before = snapshot();
+    const label = $(".progress-label").textContent;
+    const cardId = before.decks[0].cards.find((c) => $(".face.front .face-text").textContent === c.term)?.id;
+    key("ArrowLeft");
+    await wait(50);
+    check($("#undo"), "undo offered after a mark");
+    $("#undo").click();
+    await wait(50);
+    check($(".progress-label").textContent === label, "back on the same card");
+    const after = snapshot();
+    const today = Object.keys(before.activity).sort().pop();
+    check(JSON.stringify(after.activity[today]) === JSON.stringify(before.activity[today]), "today's count restored");
+    const was = before.decks[0].cards.find((c) => c.id === cardId);
+    const now = after.decks[0].cards.find((c) => c.id === cardId);
+    check(JSON.stringify(was) === JSON.stringify(now), "card restored exactly");
+  });
+
   await step("delete a card while studying", async () => {
     const before = JSON.parse(localStorage.getItem("preppop:v1")).decks[0].cards.length;
     $("#delete-card").click();

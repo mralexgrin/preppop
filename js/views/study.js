@@ -1,7 +1,7 @@
 import { persist, recordAnswer, touch, forgetCards, shortcutsOn } from "../store.js";
 import { esc, plural, shuffle, isTyping } from "../util.js";
-import { app, toast, setTitle, statusChip, view, deckHeader, keepFocus } from "../ui.js";
-import { flipCardHTML, setFlipped, attachSwipe, bindSpeak, bindHint } from "../flipcard.js";
+import { app, toast, setTitle, statusChip, view, deckHeader, keepFocus, announce } from "../ui.js";
+import { flipCardHTML, setFlipped, attachSwipe, bindSpeak, bindHint, UNDO_BUTTON } from "../flipcard.js";
 import { hydrateImages } from "../images.js";
 
 const SWAP_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -11,6 +11,7 @@ const SHUFFLE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3
 export function renderStudy(deck, { cram = false } = {}) {
   setTitle(deck.name);
   const s = { front: "term", onlyLearning: false, order: [], i: 0, flipped: false, tally: { known: 0, learning: 0 } };
+  let lastUndo = null;
   if (cram && deck.cards.some((c) => c.status !== "known")) s.onlyLearning = true;
   const notKnown = () => deck.cards.filter((c) => c.status !== "known");
 
@@ -20,6 +21,7 @@ export function renderStudy(deck, { cram = false } = {}) {
     s.i = 0;
     s.flipped = false;
     s.tally = { known: 0, learning: 0 };
+    lastUndo = null;
     draw();
   };
 
@@ -55,6 +57,7 @@ export function renderStudy(deck, { cram = false } = {}) {
             <div class="tally know"><strong>${s.tally.known}</strong>Know it</div>
             <div class="tally learn"><strong>${s.tally.learning}</strong>Still learning</div>
           </div>
+          ${lastUndo ? UNDO_BUTTON : ""}
           <div class="actions">
             ${remaining ? `<button class="btn btn-primary" type="button" id="review">Review ${plural(remaining, "card")} not known yet</button>` : ""}
             <button class="btn ${remaining ? "btn-soft" : "btn-primary"}" type="button" id="restart">Study all again</button>
@@ -62,6 +65,7 @@ export function renderStudy(deck, { cram = false } = {}) {
           </div>
         </section>`;
       bindToolbar();
+      app.querySelector("#undo")?.addEventListener("click", undoLast);
       app.querySelector("#review")?.addEventListener("click", () => {
         s.onlyLearning = true;
         start();
@@ -79,7 +83,7 @@ export function renderStudy(deck, { cram = false } = {}) {
         <div class="progress-track"><span style="width:${(s.i / s.order.length) * 100}%"></span></div>
         <span class="progress-label">${s.i + 1} / ${s.order.length}</span>
       </div>
-      ${flipCardHTML({ card, deck, front: s.front, flipped: s.flipped, topRight: statusChip(card.status) })}
+      ${flipCardHTML({ card, deck, front: s.front, flipped: s.flipped, topRight: statusChip(card.status), canUndo: Boolean(lastUndo) })}
       <p class="card-tools"><button class="text-btn danger" type="button" id="delete-card">Delete this card</button></p>`;
 
     bindToolbar();
@@ -89,6 +93,7 @@ export function renderStudy(deck, { cram = false } = {}) {
     bindSpeak(app, { deck, card, front: s.front, isFlipped: () => s.flipped });
     bindHint(app);
     hydrateImages(app);
+    app.querySelector("#undo")?.addEventListener("click", undoLast);
     app.querySelectorAll("[data-mark]").forEach((b) => b.addEventListener("click", () => mark(b.dataset.mark)));
     app.querySelector("#delete-card").addEventListener("click", () => deleteCard(card));
   };
@@ -133,12 +138,26 @@ export function renderStudy(deck, { cram = false } = {}) {
   const mark = (status) => {
     if (s.i >= s.order.length) return;
     const card = deck.cards.find((c) => c.id === s.order[s.i]);
-    recordAnswer(card, status === "known", undefined, deck);
+    lastUndo = { undo: recordAnswer(card, status === "known", undefined, deck), status };
     persist();
     s.tally[status]++;
     s.i++;
     s.flipped = false;
     draw();
+    app.querySelector("#flip")?.focus();
+  };
+
+  // Undo the last mark (a mis-swipe, a mis-tap) and go back to that card.
+  const undoLast = () => {
+    if (!lastUndo || s.i === 0) return;
+    lastUndo.undo();
+    persist();
+    s.tally[lastUndo.status]--;
+    s.i--;
+    s.flipped = false;
+    lastUndo = null;
+    draw();
+    announce("Undone. Back to the last card.");
     app.querySelector("#flip")?.focus();
   };
 

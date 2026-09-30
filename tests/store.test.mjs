@@ -141,3 +141,25 @@ test("migrate keeps valid picture references only", () => {
   assert.equal("image" in b, false);
   assert.equal("image" in c, false);
 });
+
+test("recordAnswer's undo puts the card and today's count back", () => {
+  state.activity = { "2026-09-30": { answered: 4, correct: 2 } };
+  const card = { id: "u", status: "learning", srs: { box: 0, due: "2026-09-30" }, stats: { seen: 3, missed: 2 } };
+  const snapshot = structuredClone(card);
+  const undo = recordAnswer(card, true, "2026-09-30");
+  assert.equal(card.status, "known");
+  undo();
+  assert.deepEqual(card, snapshot);
+  assert.deepEqual(state.activity["2026-09-30"], { answered: 4, correct: 2 });
+  const fresh = { id: "f", status: "new" };
+  const undoFresh = recordAnswer(fresh, false, "2026-10-01");
+  undoFresh();
+  assert.deepEqual(fresh, { id: "f", status: "new" });
+  assert.equal("2026-10-01" in state.activity, false);
+});
+
+test("picture alt text is kept, trimmed, and capped", () => {
+  const out = migrate({ decks: [{ id: "p", cards: [{ id: "1", image: { id: "img", side: "term", alt: "  Heart diagram  " } }, { id: "2", image: { id: "img2", side: "term", alt: 5 } }] }] });
+  assert.deepEqual(out.decks[0].cards[0].image, { id: "img", side: "term", alt: "Heart diagram" });
+  assert.deepEqual(out.decks[0].cards[1].image, { id: "img2", side: "term" });
+});

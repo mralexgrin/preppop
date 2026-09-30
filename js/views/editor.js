@@ -290,6 +290,12 @@ export function renderEditor(deck) {
   list.addEventListener("input", (e) => {
     const row = e.target.closest(".card-row");
     const card = draft.cards.find((c) => c.id === row.dataset.id);
+    if (e.target.matches("[data-image-alt]")) {
+      const card = draft.cards.find((c) => c.id === e.target.closest(".card-row").dataset.id);
+      card.image = { ...card.image, alt: e.target.value };
+      dirty = true;
+      return;
+    }
     if (!e.target.dataset.side) return; // selects and file inputs are handled on "change"
     card[e.target.dataset.side] = e.target.value;
     row.classList.remove("invalid");
@@ -480,6 +486,10 @@ function cardRow(card, i) {
                   </label>
                   <button class="text-btn danger" type="button" data-remove-image>Remove picture</button>
                 </div>
+                <label class="field pic-alt">
+                  <span class="field-label">Describe the picture (optional, for screen readers)</span>
+                  <input class="input" data-image-alt maxlength="150" value="${esc(card.image.alt ?? "")}" placeholder="e.g. Heart diagram with the left ventricle circled">
+                </label>
               </div>`
             : `<label class="text-btn add-hint add-pic">+ Picture<input class="visually-hidden" type="file" accept="image/*" data-pick-image aria-label="Add a picture to card ${i + 1}"></label>`
         }

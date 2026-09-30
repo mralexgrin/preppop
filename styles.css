@@ -671,3 +671,6 @@ h1[tabindex="-1"]:focus { outline: none; }
 .option.is-wrong .opt-mark { color: var(--learn); }
 .q-card:focus { outline: 3px solid var(--focus); outline-offset: 2px; }
 @media (max-width: 719px) { .match-tile { min-height: 64px; padding: 8px 10px; font-size: .86rem; -webkit-line-clamp: 5; } .match-grid { gap: 8px; } }
+.undo-row { text-align: center; margin-top: 4px; }
+.undo-row .text-btn { color: var(--ink-2); text-decoration: none; }
+.pic-alt { flex: 1 1 100%; }

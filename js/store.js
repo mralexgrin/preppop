@@ -33,7 +33,9 @@ const isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
 // A card's picture reference: { id, side }. The picture itself is in IndexedDB.
 const cleanImageRef = (image) =>
-  image && SAFE_ID.test(image.id) && ["term", "definition"].includes(image.side) ? { id: image.id, side: image.side } : undefined;
+  image && SAFE_ID.test(image.id) && ["term", "definition"].includes(image.side)
+    ? { id: image.id, side: image.side, ...(typeof image.alt === "string" && image.alt.trim() ? { alt: image.alt.trim().slice(0, 150) } : {}) }
+    : undefined;
 
 const withoutEmpty = (card) => {
   if (card.stats === undefined) delete card.stats;
@@ -135,13 +137,26 @@ export const blankCard = () => ({ id: uid(), term: "", definition: "", status: "
 
 // Schedules the card's next review and counts the answer toward today's practice.
 // deck (optional): lets a coming test pull the next review earlier.
+// Returns undo(), which puts the card and today's count back exactly as they were.
 export function recordAnswer(card, correct, today = dayKey(), deck = null) {
+  const before = { status: card.status, srs: card.srs, stats: card.stats };
   Object.assign(card, grade(card, correct, today, deck?.examDate ?? null));
   const stats = card.stats ?? { seen: 0, missed: 0 };
   card.stats = { seen: stats.seen + 1, missed: stats.missed + (correct ? 0 : 1) };
   const day = (state.activity[today] ??= { answered: 0, correct: 0 });
   day.answered++;
   if (correct) day.correct++;
+  return function undo() {
+    for (const [key, value] of Object.entries(before)) {
+      if (value === undefined) delete card[key];
+      else card[key] = value;
+    }
+    const d = state.activity[today];
+    if (!d) return;
+    d.answered = Math.max(0, d.answered - 1);
+    if (correct) d.correct = Math.max(0, d.correct - 1);
+    if (!d.answered) delete state.activity[today];
+  };
 }
 
 export const dailyGoal = () => state.settings.dailyGoal ?? DEFAULT_DAILY_GOAL;

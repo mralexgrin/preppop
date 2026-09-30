@@ -25,8 +25,6 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 |---|------|--------------------|--------|--------|------|
 
 ## Ideas (unranked)
-- Alt text for card pictures (written by the student; currently "Card picture")
-- Undo the last mark in Flashcards and Review
 - Sync pictures across devices (separate encrypted blobs per image; the current vault is capped at 300 KB)
 - Crop or annotate a picture (e.g. hide one label on a diagram)
 - QR code for the sync key (scan instead of typing 25 characters)
@@ -61,4 +59,5 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - #19 Search across all cards (2026-09-30, de6533a)
 - #20 Pictures on cards (IndexedDB; backups and shared decks) (2026-09-30, b0d1776)
 - Code review + accessibility review fixes (2026-09-30, b0974fb, 701fae0)
-- Match game (2026-09-30)
+- Match game (2026-09-30, c26843a)
+- Undo last card + picture descriptions (2026-09-30)
