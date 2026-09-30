@@ -593,3 +593,13 @@ main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .exam-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--surface); border: 1.5px solid var(--sun); }
 .exam-banner p { flex: 1; min-width: 180px; }
 .exam-banner .btn { min-height: 40px; }
+
+/* Hints */
+.hint-slot { grid-column: 2 / 4; }
+@media (max-width: 640px) { .hint-slot { grid-column: 1 / -1; } }
+.add-hint { padding-left: 0; text-decoration: none; color: var(--ink-3); font-size: .85rem; }
+.add-hint:hover { color: var(--ink); }
+.hint-field textarea { min-height: 40px; }
+.hint-box { text-align: center; margin-top: 12px; }
+.hint-box .text-btn { text-decoration: none; color: var(--ink-2); }
+.hint-text { margin: 6px auto 0; max-width: 44ch; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--sun); color: #3a2a00; font-weight: 600; overflow-wrap: anywhere; }

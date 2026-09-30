@@ -33,6 +33,7 @@ const isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
 const withoutEmpty = (card) => {
   if (card.stats === undefined) delete card.stats;
+  if (card.hint === undefined) delete card.hint;
   return card;
 };
 
@@ -83,6 +84,7 @@ export function migrate(saved, today = dayKey()) {
               definition: typeof card.definition === "string" ? card.definition : "",
               status: STATUSES.includes(card.status) ? card.status : "new",
               stats: cleanStats(card.stats),
+              hint: typeof card.hint === "string" && card.hint.trim() ? card.hint.slice(0, 300) : undefined,
             },
             today,
           )),

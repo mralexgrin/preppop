@@ -8,6 +8,7 @@ import { app, setTitle, view, deckHeader } from "../ui.js";
 import { ROUND_SIZE } from "../srs.js";
 import { checkAnswer, countsAsCorrect, needsAccentKeys, ACCENT_KEYS } from "../answer.js";
 import { canSpeak, speak, langFor, SPEAKER_ICON } from "../speech.js";
+import { bindHint } from "../flipcard.js";
 
 const LABEL = { term: "Term", definition: "Definition" };
 
@@ -115,7 +116,8 @@ export function renderWrite(deck) {
             : `<div class="row write-actions">
                 <button class="btn btn-primary" type="submit">Check <kbd>Enter</kbd></button>
                 <button class="btn btn-ghost" type="button" id="dont-know">I don't know</button>
-              </div>`
+              </div>
+              ${card.hint ? `<div class="hint-box"><button class="text-btn" type="button" id="show-hint" aria-expanded="false" aria-controls="hint-text">💡 Show hint</button><p class="hint-text" id="hint-text" hidden>${esc(card.hint)}</p></div>` : ""}`
         }
       </form>`;
 
@@ -134,6 +136,7 @@ export function renderWrite(deck) {
       }
     });
     app.querySelector("#dont-know")?.addEventListener("click", () => check(""));
+    bindHint(app);
     app.querySelectorAll(".accent-key").forEach((b) =>
       b.addEventListener("click", () => {
         const { selectionStart: s, selectionEnd: e, value } = input;

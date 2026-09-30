@@ -1,7 +1,7 @@
 import { persist, recordAnswer, touch, forgetCards } from "../store.js";
 import { esc, plural, shuffle, isTyping } from "../util.js";
 import { app, toast, setTitle, statusChip, view, deckHeader } from "../ui.js";
-import { flipCardHTML, setFlipped, attachSwipe, bindSpeak } from "../flipcard.js";
+import { flipCardHTML, setFlipped, attachSwipe, bindSpeak, bindHint } from "../flipcard.js";
 
 const SWAP_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const SHUFFLE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -86,6 +86,7 @@ export function renderStudy(deck, { cram = false } = {}) {
     flipBtn.addEventListener("click", flip);
     attachSwipe(flipBtn, { onLeft: () => mark("learning"), onRight: () => mark("known") });
     bindSpeak(app, { deck, card, front: s.front, isFlipped: () => s.flipped });
+    bindHint(app);
     app.querySelectorAll("[data-mark]").forEach((b) => b.addEventListener("click", () => mark(b.dataset.mark)));
     app.querySelector("#delete-card").addEventListener("click", () => deleteCard(card));
   };

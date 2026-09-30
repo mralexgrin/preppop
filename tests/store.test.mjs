@@ -121,3 +121,11 @@ test("recordAnswer uses the deck's test date", () => {
   recordAnswer(card, true, "2026-09-30", { examDate: "2026-10-04" });
   assert.equal(card.srs.due, "2026-10-03");
 });
+
+test("migrate keeps short text hints and drops bad ones", () => {
+  const out = migrate({ decks: [{ id: "h", cards: [{ id: "1", hint: "brady = slow" }, { id: "2", hint: 42 }, { id: "3", hint: "   " }, { id: "4", hint: "x".repeat(500) }] }] });
+  const hints = out.decks[0].cards.map((c) => c.hint);
+  assert.deepEqual(hints.slice(0, 3), ["brady = slow", undefined, undefined]);
+  assert.equal(hints[3].length, 300);
+  assert.equal("hint" in out.decks[0].cards[1], false);
+});

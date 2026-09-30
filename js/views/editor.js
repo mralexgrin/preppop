@@ -296,6 +296,14 @@ export function renderEditor(deck) {
   });
 
   list.addEventListener("click", (e) => {
+    const addHint = e.target.closest("[data-add-hint]");
+    if (addHint) {
+      const row = addHint.closest(".card-row");
+      const index = [...list.children].indexOf(row);
+      addHint.parentElement.innerHTML = hintField(draft.cards[index], index);
+      row.querySelector('[data-side="hint"]').focus();
+      return;
+    }
     const move = e.target.closest("[data-move]");
     if (move) {
       const from = draft.cards.findIndex((c) => c.id === move.closest(".card-row").dataset.id);
@@ -347,7 +355,7 @@ export function renderEditor(deck) {
     e.preventDefault();
     const name = draft.name.trim();
     const cards = draft.cards
-      .map((c) => ({ ...c, term: c.term.trim(), definition: c.definition.trim() }))
+      .map(({ hint, ...c }) => ({ ...c, term: c.term.trim(), definition: c.definition.trim(), ...(hint?.trim() ? { hint: hint.trim() } : {}) }))
       .filter((c) => c.term || c.definition);
     const incomplete = cards.filter((c) => !c.term || !c.definition);
 
@@ -388,6 +396,12 @@ export function renderEditor(deck) {
   if (isNew) nameInput.focus();
 }
 
+const hintField = (card, i) => `
+  <label class="field hint-field">
+    <span class="field-label">Hint or memory trick</span>
+    <textarea class="input" data-side="hint" rows="1" maxlength="300" placeholder="e.g. brady sounds like 'broody': slow" aria-label="Card ${i + 1} hint">${esc(card.hint ?? "")}</textarea>
+  </label>`;
+
 function cardRow(card, i) {
   return `
     <li class="card-row" data-id="${card.id}">
@@ -400,6 +414,13 @@ function cardRow(card, i) {
         <span class="field-label">Definition</span>
         <textarea class="input" data-side="definition" rows="2" placeholder="Definition" aria-label="Card ${i + 1} definition">${esc(card.definition)}</textarea>
       </label>
+      <div class="hint-slot">
+        ${
+          card.hint
+            ? hintField(card, i)
+            : `<button class="text-btn add-hint" type="button" data-add-hint>+ Hint or memory trick</button>`
+        }
+      </div>
       <div class="row-tools">
         <button class="icon-btn move" type="button" data-move="-1" aria-label="Move card ${i + 1} up">↑</button>
         <button class="icon-btn move" type="button" data-move="1" aria-label="Move card ${i + 1} down">↓</button>

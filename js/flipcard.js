@@ -27,6 +27,7 @@ export function flipCardHTML({ card, front = "term", flipped = false, topLeft = 
     ${canSpeak() ? `<button type="button" class="speak-btn" id="speak" aria-label="Read the card aloud">${SPEAKER_ICON}</button>` : ""}
     </div>
     <p class="visually-hidden" id="flip-live" aria-live="polite">${flipped ? "Showing back" : "Showing front"}</p>
+    ${card.hint ? `<div class="hint-box"><button class="text-btn" type="button" id="show-hint" aria-expanded="false" aria-controls="hint-text">💡 Show hint</button><p class="hint-text" id="hint-text" hidden>${esc(card.hint)}</p></div>` : ""}
     <div class="mark-row">
       <button class="btn btn-learn" type="button" data-mark="learning"><kbd>←</kbd> Still learning</button>
       <button class="btn btn-know" type="button" data-mark="known">I know it <kbd>→</kbd></button>
@@ -125,5 +126,15 @@ export function bindSpeak(root, { deck, card, front, isFlipped }) {
   root.querySelector("#speak")?.addEventListener("click", () => {
     const side = isFlipped() ? (front === "term" ? "definition" : "term") : front;
     speak(card[side], langFor(deck, side, card[side]));
+  });
+}
+
+export function bindHint(root) {
+  const button = root.querySelector("#show-hint");
+  button?.addEventListener("click", () => {
+    const text = root.querySelector("#hint-text");
+    text.hidden = !text.hidden;
+    button.setAttribute("aria-expanded", !text.hidden);
+    button.textContent = text.hidden ? "💡 Show hint" : "💡 Hide hint";
   });
 }

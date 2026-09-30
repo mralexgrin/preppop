@@ -6,7 +6,7 @@ import { esc, plural, isTyping } from "../util.js";
 import { app, setTitle, view } from "../ui.js";
 import { dueCards, dayKey, ROUND_SIZE } from "../srs.js";
 import { subjectOf } from "../subjects.js";
-import { flipCardHTML, setFlipped, attachSwipe, bindSpeak } from "../flipcard.js";
+import { flipCardHTML, setFlipped, attachSwipe, bindSpeak, bindHint } from "../flipcard.js";
 
 export function renderReview() {
   setTitle("Today's review");
@@ -81,6 +81,7 @@ export function renderReview() {
     flipBtn.addEventListener("click", flip);
     attachSwipe(flipBtn, { onLeft: () => mark(false), onRight: () => mark(true) });
     bindSpeak(app, { deck, card, front: "term", isFlipped: () => r.flipped });
+    bindHint(app);
     app.querySelectorAll("[data-mark]").forEach((b) => b.addEventListener("click", () => mark(b.dataset.mark === "known")));
   };
 

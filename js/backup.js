@@ -35,7 +35,7 @@ export function makeDeckFile(deck, now = new Date()) {
       name: deck.name,
       subject: deck.subject,
       ordered: Boolean(deck.ordered),
-      cards: deck.cards.map(({ term, definition }) => ({ term, definition })),
+      cards: deck.cards.map(({ term, definition, hint }) => ({ term, definition, ...(hint ? { hint } : {}) })),
     },
   };
 }
@@ -47,6 +47,7 @@ function cleanDeck(deck, { freshIds }) {
     .slice(0, MAX_CARDS)
     .map((c) => {
       const card = { id: freshIds || typeof c?.id !== "string" ? uid() : c.id, term: text(c?.term).trim(), definition: text(c?.definition).trim() };
+      if (typeof c?.hint === "string" && c.hint.trim()) card.hint = c.hint.trim().slice(0, 300);
       if (!freshIds) {
         if (["new", "learning", "known"].includes(c?.status)) card.status = c.status;
         if (c?.stats && typeof c.stats === "object") card.stats = { seen: c.stats.seen, missed: c.stats.missed };

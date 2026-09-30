@@ -124,3 +124,11 @@ test("synced data from the cloud is cleaned like an imported file", () => {
   assert.deepEqual(out.deletedDecks, { fine: 1 });
   assert.deepEqual(cleanSyncData(null), { decks: [], activity: {}, deletedDecks: {} });
 });
+
+test("hints travel in shared decks and backups", () => {
+  const withHint = { ...deck, cards: [{ ...deck.cards[0], hint: "sixty to a hundred" }] };
+  const shared = readFile(JSON.stringify(makeDeckFile(withHint)));
+  assert.equal(shared.decks[0].cards[0].hint, "sixty to a hundred");
+  const backup = readFile(JSON.stringify(makeBackup({ ...state, decks: [withHint] })));
+  assert.equal(backup.decks[0].cards[0].hint, "sixty to a hundred");
+});
