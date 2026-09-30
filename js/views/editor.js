@@ -2,13 +2,15 @@ import { state, persist, blankCard } from "../store.js";
 import { esc, plural, uid } from "../util.js";
 import { app, toast, setTitle, view } from "../ui.js";
 import { parseList, SEPARATORS } from "../import.js";
+import { SUBJECTS, guessSubject } from "../subjects.js";
 
 export function renderEditor(deck) {
   const isNew = !deck;
   setTitle(isNew ? "New deck" : `Edit ${deck.name}`);
   const draft = deck
-    ? { name: deck.name, cards: deck.cards.map((c) => ({ ...c })) }
-    : { name: "", cards: [blankCard(), blankCard(), blankCard()] };
+    ? { name: deck.name, subject: deck.subject, cards: deck.cards.map((c) => ({ ...c })) }
+    : { name: "", subject: state.settings.lastSubject ?? "other", cards: [blankCard(), blankCard(), blankCard()] };
+  let subjectPicked = !isNew;
   if (!draft.cards.length) draft.cards.push(blankCard());
 
   let dirty = false;
@@ -35,6 +37,16 @@ export function renderEditor(deck) {
         <span class="field-label">Deck name</span>
         <input class="input input-lg" id="deck-name" value="${esc(draft.name)}" placeholder="e.g. Spanish verbs, Cell biology" maxlength="120" autocomplete="off">
       </label>
+      <fieldset class="subject-picker">
+        <legend class="field-label">Subject</legend>
+        <div class="chips">
+          ${SUBJECTS.map((s) => `
+            <label class="chip-radio" data-subject="${s.id}">
+              <input type="radio" name="subject" value="${s.id}" ${draft.subject === s.id ? "checked" : ""}>
+              <span><span class="subject-dot" aria-hidden="true"></span>${s.name}</span>
+            </label>`).join("")}
+        </div>
+      </fieldset>
       <p class="form-error" id="form-error" role="alert" hidden></p>
       <div class="import-bar">
         <button class="btn btn-soft" type="button" id="toggle-import" aria-expanded="false" aria-controls="import-panel">Paste a list</button>
@@ -87,10 +99,24 @@ export function renderEditor(deck) {
     list.lastElementChild.querySelector("textarea").focus();
   };
 
+  const pickSubject = (id) => {
+    draft.subject = id;
+    const radio = app.querySelector(`input[name="subject"][value="${id}"]`);
+    if (radio) radio.checked = true;
+  };
   nameInput.addEventListener("input", () => {
     draft.name = nameInput.value;
     dirty = true;
+    const guess = !subjectPicked && guessSubject(draft.name);
+    if (guess) pickSubject(guess);
   });
+  app.querySelectorAll('input[name="subject"]').forEach((radio) =>
+    radio.addEventListener("change", () => {
+      subjectPicked = true;
+      dirty = true;
+      draft.subject = radio.value;
+    }),
+  );
 
   // Paste-a-list import
   const importPanel = app.querySelector("#import-panel");
@@ -209,10 +235,11 @@ export function renderEditor(deck) {
     }
 
     if (isNew) {
-      state.decks.push({ id: uid(), name, createdAt: Date.now(), cards });
+      state.decks.push({ id: uid(), name, subject: draft.subject, createdAt: Date.now(), cards });
     } else {
-      Object.assign(deck, { name, cards });
+      Object.assign(deck, { name, subject: draft.subject, cards });
     }
+    state.settings.lastSubject = draft.subject;
     persist();
     dirty = false;
     toast(isNew ? "Deck created" : "Deck saved");

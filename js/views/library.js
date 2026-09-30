@@ -1,6 +1,7 @@
 import { state, persist, blankCard, getDeck } from "../store.js";
 import { esc, plural, uid } from "../util.js";
-import { app, toast, setTitle } from "../ui.js";
+import { app, toast, setTitle, view } from "../ui.js";
+import { SUBJECTS } from "../subjects.js";
 
 export function renderLibrary() {
   setTitle();
@@ -28,16 +29,27 @@ export function renderLibrary() {
       </div>
       <a class="btn btn-primary" href="#/new">+ New deck</a>
     </header>
-    <ul class="deck-grid">${state.decks.map(deckTile).join("")}</ul>`;
+    ${SUBJECTS.map((subject) => {
+      const decks = state.decks.filter((d) => d.subject === subject.id);
+      if (!decks.length) return "";
+      return `
+        <section class="subject-group" data-subject="${subject.id}" aria-labelledby="group-${subject.id}">
+          <h2 class="group-head" id="group-${subject.id}"><span class="subject-dot" aria-hidden="true"></span>${subject.name}<span class="group-count">${plural(decks.length, "deck")}</span></h2>
+          <ul class="deck-grid">${decks.map(deckTile).join("")}</ul>
+        </section>`;
+    }).join("")}`;
 
-  app.querySelector(".deck-grid").addEventListener("click", (e) => {
-    const deck = getDeck(e.target.closest("[data-delete-deck]")?.dataset.deleteDeck);
-    if (!deck || !confirm(`Delete "${deck.name}" and all of its cards? This can't be undone.`)) return;
-    state.decks = state.decks.filter((d) => d !== deck);
-    persist();
-    renderLibrary();
-    toast("Deck deleted");
-  });
+  app.addEventListener("click", onLibraryClick);
+  view.cleanup = () => app.removeEventListener("click", onLibraryClick);
+}
+
+function onLibraryClick(e) {
+  const deck = getDeck(e.target.closest("[data-delete-deck]")?.dataset.deleteDeck);
+  if (!deck || !confirm(`Delete "${deck.name}" and all of its cards? This can't be undone.`)) return;
+  state.decks = state.decks.filter((d) => d !== deck);
+  persist();
+  renderLibrary();
+  toast("Deck deleted");
 }
 
 function deckTile(deck) {
@@ -46,10 +58,16 @@ function deckTile(deck) {
   const learning = deck.cards.filter((c) => c.status === "learning").length;
   const pct = (n) => (total ? (n / total) * 100 : 0);
   return `
-    <li class="deck-tile">
-      <div>
-        <h2>${esc(deck.name)}</h2>
-        <p class="meta">${plural(total, "card")}</p>
+    <li class="deck-tile" data-subject="${deck.subject}">
+      <div class="tile-head">
+        <div>
+          <h3>${esc(deck.name)}</h3>
+          <p class="meta">${plural(total, "card")}</p>
+        </div>
+        <div class="tile-tools">
+          <a class="text-btn" href="#/deck/${deck.id}/edit" aria-label="Edit ${esc(deck.name)}">Edit</a>
+          <button class="text-btn danger" type="button" data-delete-deck="${deck.id}" aria-label="Delete ${esc(deck.name)}">Delete</button>
+        </div>
       </div>
       <div class="meter" role="img" aria-label="${known} of ${total} known, ${learning} still learning">
         <span class="m-know" style="width:${pct(known)}%"></span>
@@ -62,8 +80,6 @@ function deckTile(deck) {
       <div class="deck-actions">
         <a class="btn btn-soft" href="#/deck/${deck.id}/study">Flashcards</a>
         <a class="btn btn-soft" href="#/deck/${deck.id}/test">Test</a>
-        <a class="btn btn-ghost" href="#/deck/${deck.id}/edit" aria-label="Edit ${esc(deck.name)}">Edit</a>
-        <button class="btn btn-danger" type="button" data-delete-deck="${deck.id}" aria-label="Delete ${esc(deck.name)}">Delete</button>
       </div>
     </li>`;
 }
@@ -79,7 +95,7 @@ function addSampleDeck() {
     ["Asteroid belt", "Ring of rocky bodies orbiting between Mars and Jupiter"],
     ["Light-year", "Distance light travels in one year, about 9.46 trillion km"],
   ].map(([term, definition]) => ({ ...blankCard(), term, definition }));
-  state.decks.push({ id: uid(), name: "Solar System basics", createdAt: Date.now(), cards });
+  state.decks.push({ id: uid(), name: "Solar System basics", subject: "other", createdAt: Date.now(), cards });
   persist();
   renderLibrary();
   toast("Sample deck added");

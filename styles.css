@@ -316,3 +316,45 @@ textarea.input { min-height: 52px; line-height: 1.45; }
 .import-preview li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; padding: 8px 12px; border-radius: 10px; background: var(--surface-2); font-size: .92rem; overflow-wrap: anywhere; }
 .import-preview li span { color: var(--ink-2); }
 .import-preview li.more { display: block; background: none; color: var(--ink-3); padding: 2px 12px; }
+
+/* Subjects */
+:root {
+  --subj-biology: #2b8a3e; --subj-clinical: #0b7285; --subj-spanish: #e03131; --subj-history: #b35c00;
+  --subj-english: #1971c2; --subj-geometry: #6741d9; --subj-other: #868e96;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --subj-biology: #51cf66; --subj-clinical: #3bc9db; --subj-spanish: #ff6b6b; --subj-history: #ffa94d;
+    --subj-english: #4dabf7; --subj-geometry: #9775fa; --subj-other: #adb5bd;
+  }
+}
+[data-subject="biology"] { --subj: var(--subj-biology); }
+[data-subject="clinical"] { --subj: var(--subj-clinical); }
+[data-subject="spanish"] { --subj: var(--subj-spanish); }
+[data-subject="history"] { --subj: var(--subj-history); }
+[data-subject="english"] { --subj: var(--subj-english); }
+[data-subject="geometry"] { --subj: var(--subj-geometry); }
+[data-subject="other"] { --subj: var(--subj-other); }
+.subject-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--subj, var(--ink-3)); flex: none; }
+
+.subject-group { margin-bottom: 32px; }
+.group-head { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; margin-bottom: 14px; }
+.group-count { font-family: var(--font-body); font-weight: 500; font-size: .88rem; color: var(--ink-3); }
+.deck-tile { border-top: 4px solid var(--subj, var(--line)); }
+.deck-tile h3 { font-size: 1.2rem; overflow-wrap: anywhere; }
+.tile-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.tile-tools { display: flex; gap: 2px; margin: -6px -8px 0 0; flex: none; }
+.tile-tools .text-btn { text-decoration: none; color: var(--ink-2); }
+.tile-tools .text-btn:hover { color: var(--ink); background: var(--surface-2); }
+.tile-tools .text-btn.danger:hover { color: var(--learn); background: var(--learn-soft); }
+.deck-actions .btn { flex: 1; }
+
+.subject-picker { border: 0; padding: 0; margin: 20px 0 0; }
+.subject-picker legend { margin-bottom: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-radio { position: relative; cursor: pointer; }
+.chip-radio input { position: absolute; opacity: 0; }
+.chip-radio > span { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); font-weight: 600; font-size: .92rem; color: var(--ink-2); transition: border-color .15s, background-color .15s; }
+.chip-radio:hover > span { border-color: var(--ink-3); }
+.chip-radio input:checked + span { border-color: var(--subj); color: var(--ink); background: color-mix(in srgb, var(--subj) 12%, var(--surface)); }
+.chip-radio input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }

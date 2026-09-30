@@ -8,8 +8,8 @@ const memoryStorage = (initial = {}) => {
 };
 
 test("migrate fills defaults for empty or junk input", () => {
-  assert.deepEqual(migrate(null), { decks: [], distractors: {} });
-  assert.deepEqual(migrate("nope"), { decks: [], distractors: {} });
+  assert.deepEqual(migrate(null), { decks: [], distractors: {}, settings: {} });
+  assert.deepEqual(migrate("nope"), { decks: [], distractors: {}, settings: {} });
 });
 
 test("migrate drops an old stored API key and keeps decks", () => {
@@ -34,4 +34,10 @@ test("persist reports failure instead of throwing", () => {
   assert.equal(persist(full), false);
   assert.equal(persist(memoryStorage()), true);
   assert.ok(Array.isArray(state.decks));
+});
+
+test("migrate gives old decks a subject and keeps valid ones", () => {
+  const out = migrate({ decks: [{ id: "a", name: "Old", cards: [] }, { id: "b", name: "Bio", subject: "biology", cards: [] }, { id: "c", name: "Bad", subject: "astrology" }] });
+  assert.deepEqual(out.decks.map((d) => d.subject), ["other", "biology", "other"]);
+  assert.deepEqual(out.decks[2].cards, []);
 });
