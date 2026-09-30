@@ -26,21 +26,12 @@ export function renderSettings() {
   app.innerHTML = `
     <header class="page-head"><div><h1>Settings</h1><p class="lede"><a href="#/help">How PrepPop works</a></p></div></header>
 
-    <section class="panel" aria-labelledby="install-heading">
-      <h2 id="install-heading">${isInstalled() ? "PrepPop is on your home screen" : "Put PrepPop on your home screen"}</h2>
-      ${installHTML()}
-    </section>
-
     <section class="panel" aria-labelledby="goal-heading">
       <h2 id="goal-heading">Daily goal</h2>
       <p>How many cards you want to practice each day. Every answer in Flashcards, Review, Write, and Test counts.</p>
       <div class="seg" role="group" aria-label="Cards per day">
         ${GOALS.map((g) => `<button type="button" data-goal="${g}" aria-pressed="${g === goal}">${g} cards</button>`).join("")}
       </div>
-    </section>
-
-    <section class="panel" aria-labelledby="sync-heading" id="sync-panel">
-      ${syncHTML()}
     </section>
 
     <section class="panel" aria-labelledby="reminder-heading">
@@ -55,10 +46,8 @@ export function renderSettings() {
       <p class="hint">Opens a calendar file. Tap <strong>Add</strong> (iPhone) or open it with your calendar app. To stop, delete the event in your calendar.</p>
     </section>
 
-    <section class="panel" aria-labelledby="keys-heading">
-      <h2 id="keys-heading">Keyboard shortcuts</h2>
-      <p>On a computer: arrow keys mark flashcards, 1–4 and T/F answer test questions, Space flips a card. Turn these off if you use a screen reader or voice control and they get in the way.</p>
-      <label class="check"><input type="checkbox" id="shortcuts" ${shortcutsOn() ? "checked" : ""}> Use keyboard shortcuts</label>
+    <section class="panel" aria-labelledby="sync-heading" id="sync-panel">
+      ${syncHTML()}
     </section>
 
     <section class="panel" aria-labelledby="backup-heading">
@@ -70,6 +59,17 @@ export function renderSettings() {
         <label class="btn btn-soft file-btn">Restore or import a file<input type="file" id="restore" accept=".json,application/json"></label>
       </div>
       <div id="restore-panel" hidden></div>
+    </section>
+
+    <section class="panel" aria-labelledby="install-heading">
+      <h2 id="install-heading">${isInstalled() ? "PrepPop is on your home screen" : "Put PrepPop on your home screen"}</h2>
+      ${installHTML()}
+    </section>
+
+    <section class="panel" aria-labelledby="keys-heading">
+      <h2 id="keys-heading">Keyboard shortcuts</h2>
+      <p>On a computer: arrow keys mark flashcards, 1–4 and T/F answer test questions, Space flips a card. Turn these off if you use a screen reader or voice control and they get in the way.</p>
+      <label class="check"><input type="checkbox" id="shortcuts" ${shortcutsOn() ? "checked" : ""}> Use keyboard shortcuts</label>
     </section>
 
     <section class="panel" aria-labelledby="ai-heading">

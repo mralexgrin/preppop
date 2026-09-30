@@ -13,12 +13,22 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - The branch includes `feat/ai-proxy-worker` (Worker + delete), which was never pushed or PR'd on its own.
 
 ## Current status
-- Last completed: #19 search (de6533a)
-- Next: #20 images on cards (IndexedDB), then re-audit
+- Last completed: starter deck expansion (11b6870); Settings reordered
+- Next: remaining ideas are lower value or bigger (picture sync, crop/annotate, share by link, QR for the sync key, theme toggle). The product is feature-complete for the brief; the priority now is simplicity and polish, not more features.
 - Branch: autonomous/product-improvements
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-09-30: Items since the last reflection + reflection
+- Shipped: pictures (b0d1776), code review fixes (b0974fb), accessibility fixes (701fae0), Match (c26843a), undo + picture descriptions (929f599), daily reminder + share progress (2d3fbe7), Explain this card (c334d6c), README rewrite (02a2800), 7 more starter decks (11b6870), Settings reordered by use.
+- Reflection: the brief said "should be simple". Checks against it:
+  - Every screen has one primary action (Start review; flip + mark; Check; Start test).
+  - Secondary features live as quiet text links (hint, explain, undo, hear it) or in Settings.
+  - The first-run tip and help page explain the model.
+  - The deck list is the busiest screen (search, Today, test banner, groups), but each element is conditional or compact.
+  - I'm not adding more modes. Further value is more in content (starter decks) and in the owner deploying the Worker so the AI features and sync work for real.
+- Settings is now ordered by use: Daily goal, Reminder, Sync, Backup, Install, Keyboard shortcuts, AI answers.
+
 ### 2026-09-30: Code review + accessibility review of the whole app
 - Code review (code-reviewer agent) of the editor, Test, Write, Steps, images, and router: 1 blocker, 5 should-fix, 4 nits; all fixed in b0974fb. Blocker: a sync finishing while a deck screen was open replaced deck/card objects, so saves and grades hit stale copies. Now merged in place (`reconcile`, tested). My own bug surfaced here too: an earlier split/join edit had pasted the SW-registration block into the hashchange handler.
 - Accessibility review (designpowers accessibility-reviewer agent, WCAG 2.2 AA): 3 critical, 6 major, several minor. Fixed:
@@ -104,6 +114,12 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Verification: worker `npm test` 8/8.
 
 ## Model usage
+### Items since 19 (pictures through starters)
+- Calls per tier: CMD ~140, FAST 0, STRONG main session, code-reviewer (inherit) x1, designpowers accessibility-reviewer x1, TOP 0
+- Escalations: none
+- Spot-check failures: 0 (all code-review receipts verified by grep; accessibility findings checked against source before fixing)
+- Routing changes: none. Starter content stayed on STRONG (accuracy); the new AI prompt (/explain) stayed on STRONG.
+- Unexpectedly expensive: the code review found a bug I'd introduced with a split/join edit (the SW block pasted into the hashchange handler). Lesson: after a scripted edit that replaces a common string, check how many times it matched.
 ### Items 13-19
 - Calls per tier: CMD ~120 (tests, node edit scripts, wrangler dev + local D1, git), FAST 0, STRONG main session, security-reviewer (inherit) x1 (sync), TOP 0
 - Escalations: none
