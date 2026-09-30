@@ -403,3 +403,11 @@ input.write-input { min-height: 54px; }
 .write-feedback .typed { color: var(--ink-2); text-decoration: line-through; margin-top: 4px; overflow-wrap: anywhere; }
 .deck-actions .btn { padding: 0 10px; }
 @media (hover: none) { kbd { display: none; } }
+
+/* Mode tabs on deck screens */
+.deck-head { margin-bottom: 14px; }
+.mode-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 22px; overflow-x: auto; scrollbar-width: none; }
+.mode-tabs a { position: relative; padding: 10px 14px 12px; text-decoration: none; font-weight: 700; color: var(--ink-2); white-space: nowrap; border-radius: 10px 10px 0 0; }
+.mode-tabs a:hover { color: var(--ink); background: var(--surface-2); }
+.mode-tabs a[aria-current="page"] { color: var(--ink); }
+.mode-tabs a[aria-current="page"]::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 3px; border-radius: 3px; background: var(--subj, var(--pop)); }

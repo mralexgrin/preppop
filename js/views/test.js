@@ -1,6 +1,6 @@
 import { state, persist, recordAnswer } from "../store.js";
 import { esc, plural, shuffle, hash, normalize, isTyping } from "../util.js";
-import { app, setTitle, view } from "../ui.js";
+import { app, setTitle, view, deckHeader } from "../ui.js";
 import { writeWrongAnswers, MODEL_LABEL } from "../ai.js";
 
 const MODES = {
@@ -14,14 +14,7 @@ export function renderTest(deck) {
   const t = { phase: "setup", mode: "term", questions: [], i: 0, score: 0, notice: "" };
   let alive = true;
 
-  const header = (right = "") => `
-    <header class="page-head">
-      <div>
-        <a class="back" href="#/">← Decks</a>
-        <h1>${esc(deck.name)}</h1>
-      </div>
-      ${right}
-    </header>`;
+  const header = (right = "") => deckHeader(deck, "test", right);
 
   const draw = () => {
     if (t.phase === "setup") return drawSetup();
@@ -40,7 +33,7 @@ export function renderTest(deck) {
 
   const drawSetup = () => {
     const n = deck.cards.length;
-    app.innerHTML = `${header(`<a class="btn btn-soft" href="#/deck/${deck.id}/study">Switch to Flashcards</a>`)}
+    app.innerHTML = `${header()}
       ${t.notice ? `<div class="notice warn" role="alert">${esc(t.notice)}</div>` : ""}
       <div class="notice ai"><span class="spark" aria-hidden="true">✦</span><span>${MODEL_LABEL} writes 3 believable wrong answers for every question.</span></div>
       <fieldset class="choice-fieldset" style="border:0;padding:0;margin:0">

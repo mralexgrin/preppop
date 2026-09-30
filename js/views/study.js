@@ -1,6 +1,6 @@
 import { persist, recordAnswer } from "../store.js";
 import { esc, plural, shuffle, isTyping } from "../util.js";
-import { app, toast, setTitle, statusChip, view } from "../ui.js";
+import { app, toast, setTitle, statusChip, view, deckHeader } from "../ui.js";
 import { flipCardHTML, setFlipped, attachSwipe } from "../flipcard.js";
 
 export function renderStudy(deck) {
@@ -17,14 +17,7 @@ export function renderStudy(deck) {
     draw();
   };
 
-  const header = `
-    <header class="page-head">
-      <div>
-        <a class="back" href="#/">← Decks</a>
-        <h1>${esc(deck.name)}</h1>
-      </div>
-      <a class="btn btn-soft" href="#/deck/${deck.id}/test">Switch to Test</a>
-    </header>`;
+  const header = deckHeader(deck, "study");
 
   const draw = () => {
     if (!deck.cards.length) {

@@ -4,7 +4,7 @@
 
 import { persist, recordAnswer } from "../store.js";
 import { esc, plural, shuffle } from "../util.js";
-import { app, setTitle, view } from "../ui.js";
+import { app, setTitle, view, deckHeader } from "../ui.js";
 import { ROUND_SIZE } from "../srs.js";
 import { checkAnswer, countsAsCorrect, needsAccentKeys, ACCENT_KEYS } from "../answer.js";
 
@@ -31,14 +31,7 @@ export function renderWrite(deck) {
   };
   const restart = () => startRound(buildPool());
 
-  const header = `
-    <header class="page-head">
-      <div>
-        <a class="back" href="#/">← Decks</a>
-        <h1>${esc(deck.name)}</h1>
-      </div>
-      <a class="btn btn-soft" href="#/deck/${deck.id}/study">Switch to Flashcards</a>
-    </header>`;
+  const header = deckHeader(deck, "write");
 
   const toolbar = () => {
     const notKnown = deck.cards.filter((c) => c.status !== "known").length;

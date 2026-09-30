@@ -36,4 +36,4 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Escalations: none
 - Spot-check failures: 0 of 5 reviewer receipts wrong
 - Routing changes: none. Refactors were done by a mechanical slicing script [CMD] instead of a FAST agent, which was cheaper and exact.
-- Unexpectedly expensive: the browser smoke test hit three `$`-in-replacement bugs from JS String.replace. Now I use sed or literal edits for `$`.
+- Unexpectedly expensive: the browser smoke test hit three `$$`-in-replacement bugs from JS String.replace (`$$` becomes `$`). Now I use sed or literal edits when the text contains `$$`.
