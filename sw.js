@@ -18,6 +18,7 @@ const SHELL = [
   "js/backup.js",
   "js/flipcard.js",
   "js/import.js",
+  "js/speech.js",
   "js/srs.js",
   "js/store.js",
   "js/subjects.js",

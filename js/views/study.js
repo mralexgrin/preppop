@@ -1,7 +1,7 @@
 import { persist, recordAnswer } from "../store.js";
 import { esc, plural, shuffle, isTyping } from "../util.js";
 import { app, toast, setTitle, statusChip, view, deckHeader } from "../ui.js";
-import { flipCardHTML, setFlipped, attachSwipe } from "../flipcard.js";
+import { flipCardHTML, setFlipped, attachSwipe, bindSpeak } from "../flipcard.js";
 
 export function renderStudy(deck) {
   setTitle(deck.name);
@@ -81,6 +81,7 @@ export function renderStudy(deck) {
     const flipBtn = app.querySelector("#flip");
     flipBtn.addEventListener("click", flip);
     attachSwipe(flipBtn, { onLeft: () => mark("learning"), onRight: () => mark("known") });
+    bindSpeak(app, { deck, card, front: s.front, isFlipped: () => s.flipped });
     app.querySelectorAll("[data-mark]").forEach((b) => b.addEventListener("click", () => mark(b.dataset.mark)));
     app.querySelector("#delete-card").addEventListener("click", () => deleteCard(card));
   };

@@ -471,3 +471,11 @@ main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .options.tf { grid-template-columns: 1fr 1fr; }
 .q-foot .row { gap: 10px; }
 .nav-badge[hidden] { display: none !important; }
+
+/* Read aloud */
+.card-stage { position: relative; }
+.speak-btn { position: absolute; right: 14px; bottom: 12px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); cursor: pointer; z-index: 2; box-shadow: var(--shadow); }
+.speak-btn:hover { color: var(--pop); border-color: var(--pop); }
+.speak-btn svg, .hear svg { width: 22px; height: 22px; }
+.hear { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding-left: 0; text-decoration: none; color: var(--ink-2); }
+.hear:hover { color: var(--pop); }

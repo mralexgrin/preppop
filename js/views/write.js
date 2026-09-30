@@ -7,6 +7,7 @@ import { esc, plural, shuffle } from "../util.js";
 import { app, setTitle, view, deckHeader } from "../ui.js";
 import { ROUND_SIZE } from "../srs.js";
 import { checkAnswer, countsAsCorrect, needsAccentKeys, ACCENT_KEYS } from "../answer.js";
+import { canSpeak, speak, langFor, SPEAKER_ICON } from "../speech.js";
 
 const LABEL = { term: "Term", definition: "Definition" };
 
@@ -141,6 +142,7 @@ export function renderWrite(deck) {
         input.setSelectionRange(s + 1, s + 1);
       }),
     );
+    app.querySelector("#hear")?.addEventListener("click", () => speak(expected, langFor(deck, w.typeSide, expected)));
     app.querySelector("#overrule")?.addEventListener("click", () => {
       w.result.overruled = true;
       advance();
@@ -163,6 +165,7 @@ export function renderWrite(deck) {
       <div class="write-feedback ${right ? "good" : "bad"}" role="status">
         <p class="feedback ${right ? "good" : "bad"}">${messages[r.verdict]}</p>
         ${r.verdict !== "correct" ? `<p class="expected">${esc(expected)}</p>` : ""}
+        ${canSpeak() ? `<button type="button" class="text-btn hear" id="hear">${SPEAKER_ICON}<span>Hear it</span></button>` : ""}
         ${!right && r.typed.trim() ? `<p class="typed"><span class="visually-hidden">You wrote: </span>${esc(r.typed)}</p>` : ""}
       </div>
       <div class="row write-actions">

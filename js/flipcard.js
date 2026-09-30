@@ -1,12 +1,14 @@
 // The flip card used by Flashcards and Review: markup, flipping, and swipe.
 
 import { esc } from "./util.js";
+import { canSpeak, speak, langFor, SPEAKER_ICON } from "./speech.js";
 
 const LABEL = { term: "Term", definition: "Definition" };
 
 export function flipCardHTML({ card, front = "term", flipped = false, topLeft = LABEL[front], topRight = "" }) {
   const back = front === "term" ? "definition" : "term";
   return `
+    <div class="card-stage">
     <button type="button" class="flip-card ${flipped ? "flipped" : ""}" id="flip" aria-describedby="flip-live">
       <span class="flip-inner">
         <span class="face front" aria-hidden="${flipped}">
@@ -22,6 +24,8 @@ export function flipCardHTML({ card, front = "term", flipped = false, topLeft = 
         </span>
       </span>
     </button>
+    ${canSpeak() ? `<button type="button" class="speak-btn" id="speak" aria-label="Read the card aloud">${SPEAKER_ICON}</button>` : ""}
+    </div>
     <p class="visually-hidden" id="flip-live" aria-live="polite">${flipped ? "Showing back" : "Showing front"}</p>
     <div class="mark-row">
       <button class="btn btn-learn" type="button" data-mark="learning"><kbd>←</kbd> Still learning</button>
@@ -114,4 +118,12 @@ export function attachSwipe(el, { onLeft, onRight, threshold = 90 }) {
     },
     true,
   );
+}
+
+// The speaker button reads whichever side is showing, in that side's language.
+export function bindSpeak(root, { deck, card, front, isFlipped }) {
+  root.querySelector("#speak")?.addEventListener("click", () => {
+    const side = isFlipped() ? (front === "term" ? "definition" : "term") : front;
+    speak(card[side], langFor(deck, side, card[side]));
+  });
 }
