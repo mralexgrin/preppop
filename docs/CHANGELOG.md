@@ -15,6 +15,7 @@ User-facing release notes. Newest first.
 - Text contrast in light mode now meets WCAG AA: dark text on orange buttons, darker orange for small text like "9 due", and darker greens, pinks, and gray labels.
 - The Review badge no longer shows "0" when nothing is due.
 ### Added
+- **Match game:** a new **Match** tab on every deck. Tap a term, then its definition, until every pair is gone. A wrong pair adds a second, and your best time per deck is saved. It's a warm-up, so it doesn't change your review schedule or count toward the daily goal.
 - **Pictures on cards:** in the deck editor, tap **+ Picture** on a card to add a diagram or a photo (on a phone you can use the camera). Choose **Term side** or **Definition side**. Pictures show in Flashcards, Review, Write, and Test, are shrunk on your device so they don't fill it up, and are kept in backups and shared decks. Sync doesn't carry pictures yet; on another device you'll see "Picture is on another device".
 - **Search your cards:** a search box on the deck list finds cards across every deck by term, definition, or hint, ignoring capitals and accents ("nino" finds "niño"). Tap a result to study that deck.
 - **How PrepPop works:** a help page (linked from Settings, the empty screen, and the first-run tip) that explains spaced review, making decks, each practice mode, what to do before a test, and keeping your cards safe. A short "How PrepPop works in 30 seconds" tip appears on the deck list until you tap **Got it**.

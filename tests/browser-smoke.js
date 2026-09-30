@@ -268,6 +268,30 @@ export async function flows({ stubAnswers = true } = {}) {
     check($$("img:not([src])").length === 0, "no empty image tags");
   });
 
+  await step("match game: pair every card, get a time", async () => {
+    await go(`#/deck/${sampleId()}/match`);
+    const deck = JSON.parse(localStorage.getItem("preppop:v1")).decks.find((d) => d.id === sampleId());
+    // One wrong pair first (costs a second), then all the right ones.
+    const tiles = () => $$(".match-tile[data-key]");
+    const [a] = tiles();
+    const wrong = tiles().find((t) => t.dataset.key.split(":")[0] !== a.dataset.key.split(":")[0]);
+    a.click();
+    await wait(10);
+    $(`[data-key="${wrong.dataset.key}"]`).click();
+    await wait(10);
+    check($$(".match-tile.wrong").length === 2, "wrong pair is marked");
+    const cardIds = [...new Set(tiles().map((t) => t.dataset.key.split(":")[0]))];
+    for (const id of cardIds) {
+      $(`[data-key="${id}:t"]`).click();
+      await wait(10);
+      $(`[data-key="${id}:d"]`).click();
+      await wait(10);
+    }
+    await until(() => $(".result .big"), "match results");
+    check(/s$/.test($(".result .big").textContent), "shows a time");
+    check(JSON.parse(localStorage.getItem("preppop:v1")).settings.matchBest?.[deck.id] >= 1000, "best time saved (includes the 1s penalty)");
+  });
+
   await step("test date: countdown badge, Today banner, cram", async () => {
     await go(`#/deck/${sampleId()}/edit`);
     const d = new Date();

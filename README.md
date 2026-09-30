@@ -13,6 +13,7 @@ Make your own flashcards, study them, and test yourself.
 
 - **Today and spaced review.** The deck list opens with a Today panel: cards due across every deck, a daily goal, and a streak. Every answer (in Flashcards, Review, or a Test) reschedules the card. Known cards come back after 1, 3, 7, 14, 30, 60, then 120 days; missed cards come back the same day. The schedule lives in `js/srs.js`.
 - **Steps.** For decks marked "in order" (procedures, timelines): tap the steps into the right order, 8 at a time for long decks (`js/steps.js`).
+- **Match.** A quick timed game pairing terms and definitions (6 pairs, +1s per wrong pair, best time per deck). It doesn't affect the schedule.
 - **Progress.** Streaks, a 12-week practice calendar, weekly accuracy, mastery by subject, what's coming up, and the most-missed cards (`js/progress.js`).
 - **Starter decks.** Ready-made decks (medical terminology, vital signs, cell parts, Spanish greetings, U.S. government, literary terms, geometry formulas) in `js/starters.js`, added from `#/starters`.
 - **Pictures.** Cards can have a picture on either side, stored in IndexedDB after shrinking to 1024px (`js/images.js`). Included in backups and shared decks (validated image data URLs), not in sync. Unused pictures are cleaned up on load.

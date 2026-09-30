@@ -32,7 +32,6 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - QR code for the sync key (scan instead of typing 25 characters)
 - Daily cap on new sync vaults per IP (the Cloudflare rate-limit binding only supports 10s/60s windows)
 - Images on cards (anatomy diagrams, geometry figures) stored in IndexedDB
-- Match game (timed pairs)
 - Share a deck by link (file sharing done in #6)
 - Light/dark toggle
 - AI "explain this" for a card
@@ -60,4 +59,6 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - #17 Hints / memory tricks on cards (2026-09-30, 7e766a5)
 - #18 Help page + first-run tip (2026-09-30, 3626083)
 - #19 Search across all cards (2026-09-30, de6533a)
-- #20 Pictures on cards (IndexedDB; backups and shared decks) (2026-09-30)
+- #20 Pictures on cards (IndexedDB; backups and shared decks) (2026-09-30, b0d1776)
+- Code review + accessibility review fixes (2026-09-30, b0974fb, 701fae0)
+- Match game (2026-09-30)

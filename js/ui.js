@@ -66,6 +66,7 @@ const MODE_TABS = [
   ["study", "Flashcards"],
   ["write", "Write"],
   ["test", "Test"],
+  ["match", "Match"],
 ];
 
 // Deck name plus the Flashcards · Write · Test tabs shared by every study mode.

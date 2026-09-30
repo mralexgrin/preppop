@@ -34,6 +34,7 @@ const SECTIONS = [
         <li><strong>Write:</strong> type the answer. Capitals and punctuation don't matter, a missing accent still counts (you'll see the right spelling), and if you were right but the app disagrees, tap <strong>I was right</strong>.</li>
         <li><strong>Test:</strong> choose how many questions and mix multiple choice, written, and true or false, like a real quiz.</li>
         <li><strong>Steps:</strong> tap the steps of a procedure or events of a timeline in the right order.</li>
+        <li><strong>Match:</strong> a quick game. Tap a term, then its definition, as fast as you can. It's a warm-up, so it doesn't change your review schedule.</li>
       </ul>`,
   },
   {

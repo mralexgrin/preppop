@@ -13,6 +13,7 @@ import { renderStarters } from "./views/starters.js";
 import { renderProgress } from "./views/progress.js";
 import { renderSteps } from "./views/steps.js";
 import { renderHelp } from "./views/help.js";
+import { renderMatch } from "./views/match.js";
 import { syncNow, pushChanges, syncStatus } from "./cloud.js";
 
 hooks.onPersistError = () => toast("Couldn't save. Browser storage is full or blocked.");
@@ -64,6 +65,7 @@ function route() {
   if (deck && mode === "test") return renderTest(deck);
   if (deck && mode === "write") return renderWrite(deck);
   if (deck && mode === "steps") return renderSteps(deck);
+  if (deck && mode === "match") return renderMatch(deck);
   renderLibrary();
 }
 
