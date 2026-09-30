@@ -23,8 +23,6 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 ## Next up
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
-| 1 | Split app.js into modules + `node --test` harness | Finding 1; enables safe growth | H | M | [STRONG] |
-| 2 | Paste-a-list bulk import in the editor | Finding 2 | H | S | [STRONG] |
 | 3 | Subjects on decks, library grouped by subject | Finding 3 | H | S | [STRONG] |
 | 4 | Spaced repetition + "Today" review across decks, streak | Finding 4 | H | M | [STRONG] |
 | 5 | Write mode: type the answer, lenient + accent-aware matching, accent keys | Finding 5 | H | M | [STRONG] |
@@ -49,3 +47,5 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 
 ## Done
 - (Phase 0 docs)
+- #1 Module split + test harness (2026-09-30, 70c13e8)
+- #2 Paste-a-list import (2026-09-30)

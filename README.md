@@ -6,7 +6,7 @@ Make your own flashcards, study them, and test yourself.
 
 ## Features
 
-- **Deck maker.** Create a deck, type a term and a definition for each card, and save. Tab out of the last definition to start a new card.
+- **Deck maker.** Create a deck, type a term and a definition for each card, and save. Tab out of the last definition to start a new card, or tap **Paste a list** to turn a vocab list (one card per line) into cards in one go.
 - **Flashcards.** See the term (or the definition first), flip the card, then mark it **I know it** or **Still learning**. Shuffle, or study only the cards you don't know yet. Keyboard: `Space` flips, `←` still learning, `→` I know it.
 - **Test mode.** Multiple choice. Each question shows a term (pick the definition), a definition (pick the term), or a mix. Claude writes 3 believable wrong answers per question. Missed cards go back into the Still learning pile. Keyboard: `1`–`4` to answer, `Enter` for the next question.
 

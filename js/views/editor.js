@@ -1,6 +1,7 @@
 import { state, persist, blankCard } from "../store.js";
 import { esc, plural, uid } from "../util.js";
 import { app, toast, setTitle, view } from "../ui.js";
+import { parseList, SEPARATORS } from "../import.js";
 
 export function renderEditor(deck) {
   const isNew = !deck;
@@ -35,6 +36,32 @@ export function renderEditor(deck) {
         <input class="input input-lg" id="deck-name" value="${esc(draft.name)}" placeholder="e.g. Spanish verbs, Cell biology" maxlength="120" autocomplete="off">
       </label>
       <p class="form-error" id="form-error" role="alert" hidden></p>
+      <div class="import-bar">
+        <button class="btn btn-soft" type="button" id="toggle-import" aria-expanded="false" aria-controls="import-panel">Paste a list</button>
+        <span class="hint">Have a vocab list from class? Paste it and PrepPop makes the cards.</span>
+      </div>
+      <section class="panel import-panel" id="import-panel" hidden aria-labelledby="import-heading">
+        <h2 id="import-heading">Paste a list</h2>
+        <label class="field">
+          <span class="field-label">One card per line</span>
+          <textarea class="input" id="import-text" rows="7" spellcheck="false" placeholder="mitochondria - makes energy for the cell&#10;ribosome - builds proteins&#10;nucleus - holds the cell's DNA"></textarea>
+        </label>
+        <div class="row import-options">
+          <label class="inline-field">Between term and definition
+            <select class="input select" id="import-sep">
+              <option value="auto">Detect automatically</option>
+              ${Object.entries(SEPARATORS).map(([k, s]) => `<option value="${k}">${s.label}</option>`).join("")}
+            </select>
+          </label>
+          <label class="check"><input type="checkbox" id="import-swap"> Definition comes first</label>
+        </div>
+        <p class="hint" id="import-summary" aria-live="polite">Works with lists like "term - definition", "term: definition", or a Quizlet export.</p>
+        <ul class="import-preview" id="import-preview"></ul>
+        <div class="row">
+          <button class="btn btn-primary" type="button" id="import-add" disabled>Add cards</button>
+          <button class="btn btn-ghost" type="button" id="import-cancel">Cancel</button>
+        </div>
+      </section>
       <ol class="card-list" id="card-list" aria-label="Cards"></ol>
       <button class="add-card" type="button" id="add-card">+ Add card</button>
       <div class="editor-foot">
@@ -63,6 +90,57 @@ export function renderEditor(deck) {
   nameInput.addEventListener("input", () => {
     draft.name = nameInput.value;
     dirty = true;
+  });
+
+  // Paste-a-list import
+  const importPanel = app.querySelector("#import-panel");
+  const importToggle = app.querySelector("#toggle-import");
+  const importText = app.querySelector("#import-text");
+  const importSep = app.querySelector("#import-sep");
+  const importSwap = app.querySelector("#import-swap");
+  const importAdd = app.querySelector("#import-add");
+  let parsed = { cards: [], skipped: [] };
+
+  const showImport = (open) => {
+    importPanel.hidden = !open;
+    importToggle.setAttribute("aria-expanded", open);
+    if (open) importText.focus();
+    else importToggle.focus();
+  };
+  const refreshImport = () => {
+    parsed = parseList(importText.value, { sep: importSep.value, swap: importSwap.checked });
+    const n = parsed.cards.length;
+    const summary = app.querySelector("#import-summary");
+    if (!importText.value.trim()) {
+      summary.textContent = `Works with lists like "term - definition", "term: definition", or a Quizlet export.`;
+    } else if (!n) {
+      summary.textContent = "Couldn't find a term and definition on each line. Try picking the separator yourself.";
+    } else {
+      const skipped = parsed.skipped.length ? ` ${plural(parsed.skipped.length, "line")} skipped (no separator).` : "";
+      summary.textContent = `${plural(n, "card")} found.${skipped}`;
+    }
+    app.querySelector("#import-preview").innerHTML = parsed.cards
+      .slice(0, 4)
+      .map((c) => `<li><strong>${esc(c.term)}</strong><span>${esc(c.definition)}</span></li>`)
+      .join("") + (n > 4 ? `<li class="more">+ ${n - 4} more</li>` : "");
+    importAdd.disabled = !n;
+    importAdd.textContent = n ? `Add ${plural(n, "card")}` : "Add cards";
+  };
+
+  importToggle.addEventListener("click", () => showImport(importPanel.hidden));
+  app.querySelector("#import-cancel").addEventListener("click", () => showImport(false));
+  [importText, importSep, importSwap].forEach((el) => el.addEventListener("input", refreshImport));
+  importAdd.addEventListener("click", () => {
+    const n = parsed.cards.length;
+    if (!n) return;
+    draft.cards = draft.cards.filter((c) => c.term.trim() || c.definition.trim());
+    draft.cards.push(...parsed.cards.map((c) => ({ ...blankCard(), ...c })));
+    dirty = true;
+    draw();
+    importText.value = "";
+    refreshImport();
+    showImport(false);
+    toast(`Added ${plural(n, "card")}. Remember to save.`);
   });
 
   list.addEventListener("input", (e) => {

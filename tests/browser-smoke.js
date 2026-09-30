@@ -75,6 +75,18 @@ export async function flows({ stubAnswers = true } = {}) {
     await until(() => $$(".deck-tile").length === 2, "library with two decks after save");
   });
 
+  await step("paste a list into a new deck", async () => {
+    await go("#/new");
+    $("#toggle-import").click();
+    setValue($("#import-text"), "1. brady- - slow\n2. tachy- - fast\nnot a card\n3. -itis - inflammation");
+    check($("#import-add").textContent === "Add 3 cards", "import button counts 3 cards");
+    $("#import-add").click();
+    check($$(".card-row").length === 3, "blank rows replaced by 3 imported cards");
+    setValue($("#deck-name"), "Pasted deck");
+    $("form").requestSubmit();
+    await until(() => $$(".deck-tile").length === 3, "library with three decks");
+  });
+
   const sampleId = () => JSON.parse(localStorage.getItem("preppop:v1")).decks[0].id;
 
   await step("flashcards flip and mark", async () => {

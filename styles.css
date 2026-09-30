@@ -302,3 +302,17 @@ textarea.input { min-height: 52px; line-height: 1.45; }
 .card-tools { text-align: center; margin-top: 18px; }
 .text-btn { border: 0; background: none; padding: 6px 8px; border-radius: 8px; font-weight: 600; font-size: .9rem; color: var(--ink-3); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .text-btn.danger:hover { color: var(--learn); }
+
+/* Paste-a-list import */
+.import-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+.import-bar .hint { color: var(--ink-2); }
+.import-panel { max-width: none; margin: 16px 0 0; }
+.import-options { gap: 16px; }
+.inline-field { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 600; font-size: .92rem; color: var(--ink-2); }
+.select { width: auto; padding: 8px 12px; resize: none; }
+.check { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: .92rem; color: var(--ink-2); cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--pop); }
+.import-preview { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.import-preview li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; padding: 8px 12px; border-radius: 10px; background: var(--surface-2); font-size: .92rem; overflow-wrap: anywhere; }
+.import-preview li span { color: var(--ink-2); }
+.import-preview li.more { display: block; background: none; color: var(--ink-3); padding: 2px 12px; }
