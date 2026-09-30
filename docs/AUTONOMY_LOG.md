@@ -11,12 +11,20 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - The branch includes `feat/ai-proxy-worker` (Worker + delete), which was never pushed or PR'd on its own.
 
 ## Current status
-- Last completed: #14 sync across devices
-- Next: re-audit and polish (editor header on phones, flashcard toolbar), #16 card extras
+- Last completed: #19 search (de6533a)
+- Next: #20 images on cards (IndexedDB), then re-audit
 - Branch: autonomous/product-improvements
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-09-30: Items 13-19 + reflection
+- Shipped since the last reflection: #13 Steps (5e058ca), #15 cards from notes (0eff230), #14 sync (6ff7a2c), re-audit polish (fc0247f), test dates (8491b8c), #17 hints (7e766a5), #18 help page (3626083), #19 search (de6533a).
+- Decisions:
+  - Test dates cap a known card's next review at the day before the test, not an extra cram schedule. It's one rule inside grade() that every mode already uses.
+  - Hints are revealed on demand and never flip the card, so self-testing stays honest.
+  - Search results link to Flashcards for the deck (not the editor) because studying is the common intent.
+- Re-audit notes: the deck list is getting long on phones (search bar, first-run tip, Today, backup reminder, groups). Watch for clutter. The intro tip disappears after "Got it", and the reminder only shows when relevant.
+
 ### 2026-09-30: Re-audit polish
 - Light-mode contrast measured with a WCAG script. White on the orange buttons was 3.10:1 (fail). Buttons now use dark text (5.57:1), and small orange text uses a new --pop-ink token. know, learn, and ink-3 are darker in light mode, ink-3 lighter in dark mode. All text pairs are now ≥4.5:1.
 - Bug found by screenshot: `.panel { display:flex }` overrode the `hidden` attribute, so the editor's Paste a list and Cards from notes panels were always visible (since #2). Fixed globally with `[hidden] { display:none !important }`. The smoke test now checks computed display, not just the attribute.
@@ -77,6 +85,12 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Verification: worker `npm test` 8/8.
 
 ## Model usage
+### Items 13-19
+- Calls per tier: CMD ~120 (tests, node edit scripts, wrangler dev + local D1, git), FAST 0, STRONG main session, security-reviewer (inherit) x1 (sync), TOP 0
+- Escalations: none
+- Spot-check failures: 0 of 7 sync-review receipts wrong (all grep-verified)
+- Routing changes: none. Sync crypto was kept on STRONG plus a security review (high-risk area), per the rules.
+- Unexpectedly expensive: the two-device sync testing (two origins, a local D1, restarting the Worker for config changes). Worth it: it found the mistyped-key issue and the per-IP rate-limit issue that the unit tests missed.
 ### Items 6-12
 - Calls per tier: CMD ~90, FAST 0, STRONG main session, security-reviewer (inherit) x1, TOP 0
 - Escalations: none
