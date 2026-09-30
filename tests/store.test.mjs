@@ -78,3 +78,22 @@ test("migrate cleans unsafe ids, bad fields, and bad settings already in storage
   assert.deepEqual([card.term, card.definition, card.status], ["", "", "new"]);
   assert.deepEqual(out.settings, {});
 });
+
+test("recordAnswer counts how often a card was seen and missed", () => {
+  const card = { id: "s", status: "new" };
+  recordAnswer(card, false, "2026-09-30");
+  recordAnswer(card, true, "2026-09-30");
+  assert.deepEqual(card.stats, { seen: 2, missed: 1 });
+});
+
+test("migrate keeps valid stats and repairs bad ones", () => {
+  const out = migrate({ decks: [{ id: "d", cards: [
+    { id: "a", stats: { seen: 4, missed: 2 } },
+    { id: "b", stats: { seen: -1, missed: 9 } },
+    { id: "c" },
+  ] }] });
+  const [a, b, c] = out.decks[0].cards;
+  assert.deepEqual(a.stats, { seen: 4, missed: 2 });
+  assert.deepEqual(b.stats, { seen: 0, missed: 0 });
+  assert.equal(c.stats, undefined);
+});

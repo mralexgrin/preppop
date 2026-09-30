@@ -10,6 +10,7 @@ import { renderSettings } from "./views/settings.js";
 import { renderReview } from "./views/review.js";
 import { renderWrite } from "./views/write.js";
 import { renderStarters } from "./views/starters.js";
+import { renderProgress } from "./views/progress.js";
 
 hooks.onPersistError = () => toast("Couldn't save. Browser storage is full or blocked.");
 load();
@@ -45,7 +46,7 @@ function route() {
   window.scrollTo(0, 0);
 
   const [page, id, mode] = currentHash.replace(/^#\/?/, "").split("/");
-  const section = ["settings", "review", "new"].includes(page) ? page : "decks";
+  const section = ["settings", "review", "new", "progress"].includes(page) ? page : "decks";
   document.querySelectorAll("[data-nav]").forEach((a) => {
     a.dataset.nav === section ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current");
   });
@@ -60,6 +61,7 @@ function route() {
   if (page === "settings") return renderSettings();
   if (page === "review") return renderReview();
   if (page === "starters") return renderStarters();
+  if (page === "progress") return renderProgress();
   const deck = page === "deck" && getDeck(id);
   if (deck && mode === "edit") return renderEditor(deck);
   if (deck && mode === "study") return renderStudy(deck);

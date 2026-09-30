@@ -191,6 +191,13 @@ export async function flows({ stubAnswers = true } = {}) {
     check(seen.size === 3, `saw all 3 question types (saw ${[...seen].join(", ")})`);
   });
 
+  await step("progress page shows practice and weak cards", async () => {
+    await go("#/progress");
+    check(Number($(".stat strong").textContent) >= 1, "streak of at least one day after practicing");
+    check($$(".cal .cal-cell").length === 84, "12-week calendar");
+    check($$(".weak li").length >= 1, "missed cards listed to work on");
+  });
+
   await step("backup downloads and restores", async () => {
     await go("#/settings");
     let captured = null;

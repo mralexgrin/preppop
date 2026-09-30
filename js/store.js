@@ -14,6 +14,19 @@ export const DEFAULT_DAILY_GOAL = 20;
 export const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
 const STATUSES = ["new", "learning", "known"];
 
+const count = (n) => (Number.isInteger(n) && n >= 0 ? Math.min(n, 1e6) : 0);
+function cleanStats(stats) {
+  // Returns undefined for "no stats"; migrate removes the key in that case.
+  if (!stats || typeof stats !== "object") return undefined;
+  const seen = count(stats.seen);
+  return { seen, missed: Math.min(seen, count(stats.missed)) };
+}
+
+const withoutEmpty = (card) => {
+  if (card.stats === undefined) delete card.stats;
+  return card;
+};
+
 function safeId(id, seen) {
   const ok = typeof id === "string" && SAFE_ID.test(id) && !seen.has(id);
   const out = ok ? id : uid();
@@ -39,16 +52,17 @@ export function migrate(saved, today = dayKey()) {
         name: typeof deck.name === "string" ? deck.name : "Untitled deck",
         subject: isSubject(deck.subject) ? deck.subject : "other",
         cards: (Array.isArray(deck.cards) ? deck.cards : []).filter(isObject).map((card) =>
-          seedSchedule(
+          withoutEmpty(seedSchedule(
             {
               ...card,
               id: safeId(card.id, cardIds),
               term: typeof card.term === "string" ? card.term : "",
               definition: typeof card.definition === "string" ? card.definition : "",
               status: STATUSES.includes(card.status) ? card.status : "new",
+              stats: cleanStats(card.stats),
             },
             today,
-          ),
+          )),
         ),
       };
     });
@@ -87,6 +101,8 @@ export const blankCard = () => ({ id: uid(), term: "", definition: "", status: "
 // Schedules the card's next review and counts the answer toward today's practice.
 export function recordAnswer(card, correct, today = dayKey()) {
   Object.assign(card, grade(card, correct, today));
+  const stats = card.stats ?? { seen: 0, missed: 0 };
+  card.stats = { seen: stats.seen + 1, missed: stats.missed + (correct ? 0 : 1) };
   const day = (state.activity[today] ??= { answered: 0, correct: 0 });
   day.answered++;
   if (correct) day.correct++;

@@ -48,6 +48,7 @@ function cleanDeck(deck, { freshIds }) {
       const card = { id: freshIds || typeof c?.id !== "string" ? uid() : c.id, term: text(c?.term).trim(), definition: text(c?.definition).trim() };
       if (!freshIds) {
         if (["new", "learning", "known"].includes(c?.status)) card.status = c.status;
+        if (c?.stats && typeof c.stats === "object") card.stats = { seen: c.stats.seen, missed: c.stats.missed };
         if (c?.srs && typeof c.srs.due === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.srs.due) && Number.isInteger(c.srs.box)) {
           card.srs = { box: Math.max(0, Math.min(7, c.srs.box)), due: c.srs.due, ...(DAY.test(c.srs.last) ? { last: c.srs.last } : {}) };
         }

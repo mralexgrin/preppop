@@ -23,7 +23,6 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 ## Next up
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
-| 11 | Progress page: streak calendar, practice log, weakest cards | Finding 10 | M | M | [STRONG] |
 | 13 | Steps mode: put ordered cards in order (procedures, timelines) | Finding 11 | M | M | [STRONG] |
 | 14 | Anonymous account + cloud sync (sync key, Worker + D1) | Finding 6; cross-device | H | L | [STRONG] + security review, flag |
 | 15 | AI: make cards from pasted notes (Worker endpoint) | Finding 2 | H | M | [STRONG] (AI prompt) |
@@ -49,4 +48,5 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - #8 Phone tab bar with due badge (2026-09-30, 0cf363b)
 - #9 Test options: count, types (choice/written/true-false), remembered (2026-09-30, daac252)
 - #10 Read aloud (Web Speech, per-subject language) (2026-09-30, 7c4042d)
-- #12 Starter decks for all her subjects (2026-09-30)
+- #12 Starter decks for all her subjects (2026-09-30, bcaa229)
+- #11 Progress page + per-card miss stats (2026-09-30)
