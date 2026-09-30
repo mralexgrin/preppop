@@ -386,3 +386,20 @@ textarea.input { min-height: 52px; line-height: 1.45; }
 .flip-card.swipe-right .face { box-shadow: 0 0 0 3px var(--know), var(--shadow-lg); }
 .flip-card.swipe-left .face { box-shadow: 0 0 0 3px var(--learn), var(--shadow-lg); }
 @media (prefers-reduced-motion: reduce) { .flip-card { transition: none; } }
+
+/* Write mode */
+.write-form { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
+.write-input { font-size: 1.15rem; padding: 14px 16px; }
+input.write-input { min-height: 54px; }
+.write-input[readonly] { background: var(--surface-2); }
+.accent-keys { display: flex; flex-wrap: wrap; gap: 6px; }
+.accent-key { min-width: 44px; min-height: 44px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); font-size: 1.1rem; font-weight: 600; cursor: pointer; }
+.accent-key:hover { border-color: var(--pop); }
+.write-actions { gap: 10px; }
+.write-feedback { border-radius: var(--radius-sm); padding: 14px 16px; border: 1.5px solid; }
+.write-feedback.good { border-color: var(--know); background: var(--know-soft); }
+.write-feedback.bad { border-color: var(--learn); background: var(--learn-soft); }
+.write-feedback .expected { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; margin-top: 4px; overflow-wrap: anywhere; }
+.write-feedback .typed { color: var(--ink-2); text-decoration: line-through; margin-top: 4px; overflow-wrap: anywhere; }
+.deck-actions .btn { padding: 0 10px; }
+@media (hover: none) { kbd { display: none; } }

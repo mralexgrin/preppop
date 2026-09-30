@@ -123,6 +123,7 @@ function deckTile(deck) {
       </p>
       <div class="deck-actions">
         <a class="btn btn-soft" href="#/deck/${deck.id}/study">Flashcards</a>
+        <a class="btn btn-soft" href="#/deck/${deck.id}/write">Write</a>
         <a class="btn btn-soft" href="#/deck/${deck.id}/test">Test</a>
       </div>
     </li>`;

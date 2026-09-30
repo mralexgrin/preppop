@@ -6,6 +6,7 @@ import { renderStudy } from "./views/study.js";
 import { renderTest } from "./views/test.js";
 import { renderSettings } from "./views/settings.js";
 import { renderReview } from "./views/review.js";
+import { renderWrite } from "./views/write.js";
 
 hooks.onPersistError = () => toast("Couldn't save. Browser storage is full or blocked.");
 load();
@@ -40,6 +41,7 @@ function route() {
   if (deck && mode === "edit") return renderEditor(deck);
   if (deck && mode === "study") return renderStudy(deck);
   if (deck && mode === "test") return renderTest(deck);
+  if (deck && mode === "write") return renderWrite(deck);
   renderLibrary();
 }
 

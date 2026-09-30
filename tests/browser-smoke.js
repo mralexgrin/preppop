@@ -126,6 +126,23 @@ export async function flows({ stubAnswers = true } = {}) {
     check(!$(".today-line").textContent.includes("ready to review"), "nothing due after review");
   });
 
+  await step("write mode grades typed answers leniently", async () => {
+    await go(`#/deck/${sampleId()}/write`);
+    const deck = JSON.parse(localStorage.getItem("preppop:v1")).decks[0];
+    const prompt = $("#w-prompt").textContent;
+    const card = deck.cards.find((c) => c.definition === prompt);
+    $("#answer").value = "  " + card.term.toUpperCase() + "!";
+    $(".write-form").requestSubmit();
+    await wait(30);
+    check($(".write-feedback.good"), "shouted answer with punctuation still correct");
+    $(".write-form").requestSubmit();
+    await wait(30);
+    $("#answer").value = "zzzz";
+    $(".write-form").requestSubmit();
+    await wait(30);
+    check($(".write-feedback.bad") && $("#overrule"), "wrong answer shows the right one and an override");
+  });
+
   await step("test mode with AI answers (stubbed)", async () => {
     await go(`#/deck/${sampleId()}/test`);
     $("#start").click();
