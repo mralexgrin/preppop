@@ -10,6 +10,7 @@ import { checkAnswer, countsAsCorrect, needsAccentKeys, ACCENT_KEYS } from "../a
 import { canSpeak, speak, langFor, SPEAKER_ICON } from "../speech.js";
 import { bindHint } from "../flipcard.js";
 import { imageSlot, hydrateImages } from "../images.js";
+import { explainButtonHTML, bindExplain } from "../explain.js";
 
 const LABEL = { term: "Term", definition: "Definition" };
 
@@ -141,6 +142,7 @@ export function renderWrite(deck) {
     app.querySelector("#dont-know")?.addEventListener("click", () => check(""));
     bindHint(app);
     hydrateImages(app);
+    bindExplain(app, { deck, card });
     app.querySelectorAll(".accent-key").forEach((b) =>
       b.addEventListener("click", () => {
         const { selectionStart: s, selectionEnd: e, value } = input;
@@ -173,6 +175,7 @@ export function renderWrite(deck) {
         <p class="feedback ${right ? "good" : "bad"}">${messages[r.verdict]}</p>
         ${r.verdict !== "correct" ? `<p class="expected"${langAttr(deck, w.typeSide, expected)}>${esc(expected)}</p>` : ""}
         ${canSpeak() ? `<button type="button" class="text-btn hear" id="hear">${SPEAKER_ICON}<span>Hear it</span></button>` : ""}
+        ${right ? "" : explainButtonHTML()}
         ${!right && r.typed.trim() ? `<p class="typed"><span class="visually-hidden">You wrote: </span>${esc(r.typed)}</p>` : ""}
       </div>
       <div class="row write-actions">

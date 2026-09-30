@@ -30,6 +30,7 @@ const SECTIONS = [
     title: "Ways to practice",
     body: `
       <ul class="help-list">
+        <li><strong>✦ Explain this card:</strong> stuck on an idea? Under any flashcard (and after a wrong answer in Write), AI explains it in plain words with an example and a memory trick. Double-check it with your notes.</li>
         <li><strong>Flashcards:</strong> tap to flip. On a phone, swipe right if you know it, left if you're still learning. The speaker button reads the card aloud.</li>
         <li><strong>Write:</strong> type the answer. Capitals and punctuation don't matter, a missing accent still counts (you'll see the right spelling), and if you were right but the app disagrees, tap <strong>I was right</strong>.</li>
         <li><strong>Test:</strong> choose how many questions and mix multiple choice, written, and true or false, like a real quiz.</li>

@@ -32,7 +32,6 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - Images on cards (anatomy diagrams, geometry figures) stored in IndexedDB
 - Share a deck by link (file sharing done in #6)
 - Light/dark toggle
-- AI "explain this" for a card
 
 ## Done
 - (Phase 0 docs)
@@ -61,4 +60,5 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - Code review + accessibility review fixes (2026-09-30, b0974fb, 701fae0)
 - Match game (2026-09-30, c26843a)
 - Undo last card + picture descriptions (2026-09-30, 929f599)
-- Daily reminder (.ics) + share progress summary (2026-09-30)
+- Daily reminder (.ics) + share progress summary (2026-09-30, 2d3fbe7)
+- Explain this card (AI) (2026-09-30)

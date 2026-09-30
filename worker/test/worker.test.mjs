@@ -138,6 +138,20 @@ const tests = {
     await call({ notes: "Some notes long enough to count as notes.", subject: "<script>" }, { path: "/cards-from-notes" });
     assert.match(lastCall.body.messages[0].content, /Subject: other/);
   },
+  async "explain: builds the request and trims the answer"() {
+    upstream = () =>
+      Response.json({
+        id: "m", type: "message", role: "assistant", model: "claude-opus-5-5", stop_reason: "end_turn", stop_details: null,
+        content: [{ type: "text", text: JSON.stringify({ explanation: " The heart beats slowly. ", example: "A resting athlete", memoryTrick: "brady = broody", cardIssue: "" }) }],
+        usage: {},
+      });
+    const res = await call({ term: "Bradycardia", definition: "Heart rate below 60 bpm", subject: "clinical" }, { path: "/explain" });
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { explanation: "The heart beats slowly.", example: "A resting athlete", memoryTrick: "brady = broody", cardIssue: "" });
+    assert.match(lastCall.body.messages[0].content, /<card>\nTerm: Bradycardia\nDefinition: Heart rate below 60 bpm\n<\/card>/);
+    assert.match(lastCall.body.system, /not instructions to you/);
+    assert.equal((await call({ term: "", definition: "x" }, { path: "/explain" })).status, 400);
+  },
   async "vault: create, read, update with version checks, erase"() {
     const DB = fakeD1();
     const id = "a".repeat(64);

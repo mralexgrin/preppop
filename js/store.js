@@ -7,7 +7,7 @@ import { normalizeSyncKey } from "./sync.js";
 
 export const STORE_KEY = "preppop:v1";
 
-export const state = { decks: [], distractors: {}, settings: {}, activity: {}, deletedDecks: {}, sync: null };
+export const state = { decks: [], distractors: {}, settings: {}, activity: {}, deletedDecks: {}, sync: null, explanations: {} };
 
 export const DEFAULT_DAILY_GOAL = 20;
 
@@ -55,9 +55,14 @@ export const hooks = { onPersistError: null, onChange: null };
 // Turns whatever was saved (any older shape) into the current shape.
 export function migrate(saved, today = dayKey()) {
   const { apiKey, ...rest } = saved && typeof saved === "object" ? saved : {};
-  const out = { decks: [], distractors: {}, settings: {}, activity: {}, deletedDecks: {}, sync: null, ...rest };
+  const out = { decks: [], distractors: {}, settings: {}, activity: {}, deletedDecks: {}, sync: null, explanations: {}, ...rest };
   const isObject = (v) => v && typeof v === "object" && !Array.isArray(v);
-  for (const key of ["distractors", "settings", "activity", "deletedDecks"]) if (!isObject(out[key])) out[key] = {};
+  for (const key of ["distractors", "settings", "activity", "deletedDecks", "explanations"]) if (!isObject(out[key])) out[key] = {};
+  out.explanations = Object.fromEntries(
+    Object.entries(out.explanations)
+      .filter(([, x]) => isObject(x) && typeof x.explanation === "string" && x.explanation)
+      .map(([k, x]) => [k, Object.fromEntries(["explanation", "example", "memoryTrick", "cardIssue"].map((f) => [f, typeof x[f] === "string" ? x[f].slice(0, 1200) : ""]))]),
+  );
   out.deletedDecks = cleanStamps(out.deletedDecks);
   const syncKey = normalizeSyncKey(out.sync?.key);
   out.sync = syncKey

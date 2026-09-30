@@ -8,8 +8,8 @@ const memoryStorage = (initial = {}) => {
 };
 
 test("migrate fills defaults for empty or junk input", () => {
-  assert.deepEqual(migrate(null), { decks: [], distractors: {}, settings: {}, activity: {}, deletedDecks: {}, sync: null });
-  assert.deepEqual(migrate("nope"), { decks: [], distractors: {}, settings: {}, activity: {}, deletedDecks: {}, sync: null });
+  assert.deepEqual(migrate(null), { decks: [], distractors: {}, settings: {}, activity: {}, deletedDecks: {}, sync: null, explanations: {} });
+  assert.deepEqual(migrate("nope"), { decks: [], distractors: {}, settings: {}, activity: {}, deletedDecks: {}, sync: null, explanations: {} });
 });
 
 test("migrate drops an old stored API key and keeps decks", () => {
@@ -162,4 +162,9 @@ test("picture alt text is kept, trimmed, and capped", () => {
   const out = migrate({ decks: [{ id: "p", cards: [{ id: "1", image: { id: "img", side: "term", alt: "  Heart diagram  " } }, { id: "2", image: { id: "img2", side: "term", alt: 5 } }] }] });
   assert.deepEqual(out.decks[0].cards[0].image, { id: "img", side: "term", alt: "Heart diagram" });
   assert.deepEqual(out.decks[0].cards[1].image, { id: "img2", side: "term" });
+});
+
+test("cached explanations are validated", () => {
+  const out = migrate({ explanations: { a: { explanation: "ok", example: 5 }, b: { explanation: "" }, c: "junk" } });
+  assert.deepEqual(out.explanations, { a: { explanation: "ok", example: "", memoryTrick: "", cardIssue: "" } });
 });

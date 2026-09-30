@@ -1,6 +1,6 @@
 // AI features go through the PrepPop answer service, a Cloudflare Worker (see
 // worker/) that holds the Anthropic key and calls Claude: wrong answers for
-// Test mode, and flashcards made from class notes.
+// Test mode, flashcards made from class notes, and card explanations.
 
 export const MODEL_LABEL = "Claude Opus 5.5";
 
@@ -27,6 +27,14 @@ export async function writeWrongAnswers({ deckName, items }) {
 export async function makeCardsFromNotes({ notes, subject, deckName }) {
   const { cards } = await request("/cards-from-notes", { notes: notes.slice(0, MAX_NOTES), subject, deckName });
   return Array.isArray(cards) ? cards.filter((c) => typeof c?.term === "string" && typeof c?.definition === "string") : [];
+}
+
+// Returns { explanation, example, memoryTrick, cardIssue }.
+export async function explainCard({ term, definition, subject }) {
+  const x = await request("/explain", { term, definition, subject });
+  if (typeof x?.explanation !== "string" || !x.explanation) throw new Error("the AI service had a problem");
+  const text = (v) => (typeof v === "string" ? v : "");
+  return { explanation: x.explanation, example: text(x.example), memoryTrick: text(x.memoryTrick), cardIssue: text(x.cardIssue) };
 }
 
 async function request(path, body) {

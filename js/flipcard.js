@@ -3,6 +3,7 @@
 import { esc } from "./util.js";
 import { canSpeak, speak, langFor, SPEAKER_ICON } from "./speech.js";
 import { imageSlot } from "./images.js";
+import { explainButtonHTML } from "./explain.js";
 
 const LABEL = { term: "Term", definition: "Definition" };
 
@@ -36,6 +37,7 @@ export function flipCardHTML({ card, deck = null, front = "term", flipped = fals
       <button class="btn btn-learn" type="button" data-mark="learning"><kbd aria-hidden="true">←</kbd> Still learning</button>
       <button class="btn btn-know" type="button" data-mark="known">I know it <kbd aria-hidden="true">→</kbd></button>
     </div>
+    ${explainButtonHTML()}
     ${canUndo ? UNDO_BUTTON : ""}
     <p class="kbd-hint">Space to flip · ← still learning · → I know it</p>
     <p class="swipe-hint">Tap to flip · swipe right if you know it, left if you're still learning</p>`;

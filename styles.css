@@ -674,3 +674,11 @@ h1[tabindex="-1"]:focus { outline: none; }
 .undo-row { text-align: center; margin-top: 4px; }
 .undo-row .text-btn { color: var(--ink-2); text-decoration: none; }
 .pic-alt { flex: 1 1 100%; }
+
+/* Explain this card */
+.explain { text-align: center; margin-top: 4px; }
+.explain-btn { text-decoration: none; color: var(--ink-2); }
+.explain-box { text-align: left; margin: 8px auto 0; max-width: 60ch; padding: 14px 16px; border-radius: var(--radius-sm); background: var(--surface); border: 1.5px solid var(--line); display: grid; gap: 8px; }
+.explain-box p { color: var(--ink); }
+.explain-issue { background: var(--learn-soft); border-radius: 8px; padding: 8px 10px; }
+.write-feedback .explain { text-align: left; }

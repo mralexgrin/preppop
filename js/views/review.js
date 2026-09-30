@@ -8,6 +8,7 @@ import { dueCards, dayKey, ROUND_SIZE } from "../srs.js";
 import { subjectOf } from "../subjects.js";
 import { flipCardHTML, setFlipped, attachSwipe, bindSpeak, bindHint, UNDO_BUTTON } from "../flipcard.js";
 import { hydrateImages } from "../images.js";
+import { bindExplain } from "../explain.js";
 
 export function renderReview() {
   setTitle("Today's review");
@@ -90,6 +91,7 @@ export function renderReview() {
     bindSpeak(app, { deck, card, front: "term", isFlipped: () => r.flipped });
     bindHint(app);
     hydrateImages(app);
+    bindExplain(app, { deck, card });
     app.querySelector("#undo")?.addEventListener("click", undoLast);
     app.querySelectorAll("[data-mark]").forEach((b) => b.addEventListener("click", () => mark(b.dataset.mark === "known")));
   };
