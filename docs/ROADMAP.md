@@ -60,4 +60,5 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - #20 Pictures on cards (IndexedDB; backups and shared decks) (2026-09-30, b0d1776)
 - Code review + accessibility review fixes (2026-09-30, b0974fb, 701fae0)
 - Match game (2026-09-30, c26843a)
-- Undo last card + picture descriptions (2026-09-30)
+- Undo last card + picture descriptions (2026-09-30, 929f599)
+- Daily reminder (.ics) + share progress summary (2026-09-30)

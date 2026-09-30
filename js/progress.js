@@ -70,3 +70,13 @@ export function upcoming(decks, today) {
   const dueBy = (day) => cards.filter((c) => isDue(c, day)).length;
   return { today: dueBy(today), tomorrow: dueBy(addDays(today, 1)), week: dueBy(addDays(today, 7)) };
 }
+
+// A short plain-text summary to share (e.g. with a parent).
+export function progressSummary({ streakDays, week, mastery, next }) {
+  const lines = ["My PrepPop progress"];
+  lines.push(`Streak: ${streakDays} day${streakDays === 1 ? "" : "s"}`);
+  lines.push(`This week: ${week.answered} card${week.answered === 1 ? "" : "s"} practiced${week.accuracy === null ? "" : `, ${week.accuracy}% right`}`);
+  for (const m of mastery) lines.push(`${m.subject.name}: ${m.known} of ${m.total} card${m.total === 1 ? "" : "s"} known`);
+  if (next.today) lines.push(`${next.today} card${next.today === 1 ? "" : "s"} to review today`);
+  return lines.join("\n");
+}

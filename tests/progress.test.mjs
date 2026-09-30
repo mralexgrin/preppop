@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { longestStreak, weekSummary, calendar, subjectMastery, weakCards, upcoming } from "../js/progress.js";
+import { longestStreak, weekSummary, calendar, subjectMastery, weakCards, upcoming, progressSummary } from "../js/progress.js";
 
 const T = "2026-09-30"; // a Wednesday
 
@@ -57,4 +57,19 @@ test("weakCards lists the most-missed cards she hasn't learned yet", () => {
 test("upcoming counts cards due today, tomorrow, and within a week", () => {
   const decks = [{ cards: [{ srs: { due: T } }, { srs: { due: "2026-10-01" } }, { srs: { due: "2026-10-05" } }, { srs: { due: "2026-11-01" } }, {}] }];
   assert.deepEqual(upcoming(decks, T), { today: 1, tomorrow: 2, week: 3 });
+});
+
+test("progressSummary reads naturally", () => {
+  const text = progressSummary({
+    streakDays: 1,
+    week: { answered: 42, accuracy: 81 },
+    mastery: [{ subject: { name: "Biology" }, known: 10, total: 16 }],
+    next: { today: 3 },
+  });
+  assert.equal(text, "My PrepPop progress\nStreak: 1 day\nThis week: 42 cards practiced, 81% right\nBiology: 10 of 16 cards known\n3 cards to review today");
+});
+
+test("progressSummary says 'card' for one", () => {
+  const text = progressSummary({ streakDays: 0, week: { answered: 1, accuracy: null }, mastery: [{ subject: { name: "History" }, known: 0, total: 1 }], next: { today: 0 } });
+  assert.equal(text, "My PrepPop progress\nStreak: 0 days\nThis week: 1 card practiced\nHistory: 0 of 1 card known");
 });

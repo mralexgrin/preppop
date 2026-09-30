@@ -15,6 +15,8 @@ User-facing release notes. Newest first.
 - Text contrast in light mode now meets WCAG AA: dark text on orange buttons, darker orange for small text like "9 due", and darker greens, pinks, and gray labels.
 - The Review badge no longer shows "0" when nothing is due.
 ### Added
+- **Daily reminder:** Settings → **Daily reminder** → pick a time → **Add to my calendar** adds a daily "Study with PrepPop" event with an alert to your phone's calendar. No notifications permission or account needed.
+- **Share my progress:** a button on the Progress page shares a short summary (streak, this week, cards known per subject, what's due) through Messages or anything else, or copies it.
 - **Undo last card:** after marking a card in Flashcards or Review (including a mis-swipe), tap **↶ Undo last card** to go back to it. Its progress and today's count are restored exactly.
 - **Describe a picture:** pictures on cards can have a short description, read by screen readers.
 - **Match game:** a new **Match** tab on every deck. Tap a term, then its definition, until every pair is gone. A wrong pair adds a second, and your best time per deck is saved. It's a warm-up, so it doesn't change your review schedule or count toward the daily goal.

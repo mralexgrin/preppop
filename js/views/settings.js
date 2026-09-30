@@ -4,7 +4,8 @@ import { app, toast, setTitle, saveFile, install, isInstalled, isIOS, keepFocus 
 import { MODEL_LABEL } from "../ai.js";
 import { makeBackup, readFile, mergeDecks, mergeActivity, imageIds } from "../backup.js";
 import { exportImages, importImages } from "../images.js";
-import { dayKey } from "../srs.js";
+import { dayKey, addDays } from "../srs.js";
+import { reminderIcs } from "../reminder.js";
 import { syncStatus, syncNow, enableSync, connectSync, disableSync } from "../cloud.js";
 
 const GOALS = [10, 20, 30, 50];
@@ -42,6 +43,18 @@ export function renderSettings() {
       ${syncHTML()}
     </section>
 
+    <section class="panel" aria-labelledby="reminder-heading">
+      <h2 id="reminder-heading">Daily reminder</h2>
+      <p>Add a daily "Study with PrepPop" event to your phone's calendar, so it reminds you at the same time every day.</p>
+      <div class="row">
+        <label class="inline-field">Remind me at
+          <input class="input select" type="time" id="reminder-time" value="${esc(state.settings.reminderTime ?? "19:00")}">
+        </label>
+        <button class="btn btn-soft" type="button" id="reminder-add">Add to my calendar</button>
+      </div>
+      <p class="hint">Opens a calendar file. Tap <strong>Add</strong> (iPhone) or open it with your calendar app. To stop, delete the event in your calendar.</p>
+    </section>
+
     <section class="panel" aria-labelledby="keys-heading">
       <h2 id="keys-heading">Keyboard shortcuts</h2>
       <p>On a computer: arrow keys mark flashcards, 1–4 and T/F answer test questions, Space flips a card. Turn these off if you use a screen reader or voice control and they get in the way.</p>
@@ -66,6 +79,19 @@ export function renderSettings() {
     </section>`;
 
   bindSync();
+
+  app.querySelector("#reminder-add").addEventListener("click", async () => {
+    const time = app.querySelector("#reminder-time").value || "19:00";
+    state.settings.reminderTime = time;
+    persist();
+    // Start tomorrow if today's time has already passed.
+    const [h, m] = time.split(":").map(Number);
+    const now = new Date();
+    const passed = now.getHours() * 60 + now.getMinutes() >= h * 60 + m;
+    const start = passed ? addDays(dayKey(), 1) : dayKey();
+    const saved = await saveFile("preppop-reminder.ics", reminderIcs(time, start), "text/calendar", { share: false });
+    if (saved) toast("Open the file to add the reminder to your calendar");
+  });
 
   app.querySelector("#shortcuts").addEventListener("change", (e) => {
     state.settings.shortcuts = e.target.checked;

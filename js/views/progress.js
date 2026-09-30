@@ -3,9 +3,9 @@
 
 import { state, dailyGoal } from "../store.js";
 import { esc, plural } from "../util.js";
-import { app, setTitle } from "../ui.js";
+import { app, setTitle, toast } from "../ui.js";
 import { dayKey, streak } from "../srs.js";
-import { longestStreak, weekSummary, calendar, subjectMastery, weakCards, upcoming } from "../progress.js";
+import { longestStreak, weekSummary, calendar, subjectMastery, weakCards, upcoming, progressSummary } from "../progress.js";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
@@ -37,7 +37,10 @@ export function renderProgress() {
   };
 
   app.innerHTML = `
-    <header class="page-head"><div><h1>Progress</h1><p class="lede">Daily goal: ${plural(dailyGoal(), "card")}. <a href="#/settings">Change</a></p></div></header>
+    <header class="page-head">
+      <div><h1>Progress</h1><p class="lede">Daily goal: ${plural(dailyGoal(), "card")}. <a href="#/settings">Change</a></p></div>
+      <button class="btn btn-soft" type="button" id="share-progress">Share my progress</button>
+    </header>
 
     <section class="stat-grid" aria-label="Summary">
       <div class="stat"><strong>${current}</strong><span>day streak</span></div>
@@ -112,4 +115,22 @@ export function renderProgress() {
           : `<p>Nothing yet. Cards you miss in Flashcards, Review, Write, or Test will show up here.</p>`
       }
     </section>`;
+
+  app.querySelector("#share-progress").addEventListener("click", async () => {
+    const text = progressSummary({ streakDays: current, week, mastery, next });
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "My PrepPop progress", text });
+        return;
+      } catch (err) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("Progress copied. Paste it in a message.");
+    } catch {
+      toast("Couldn't share or copy on this device.");
+    }
+  });
 }

@@ -21,6 +21,7 @@ const SHELL = [
   "js/images.js",
   "js/import.js",
   "js/progress.js",
+  "js/reminder.js",
   "js/search.js",
   "js/speech.js",
   "js/srs.js",

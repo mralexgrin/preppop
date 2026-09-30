@@ -86,10 +86,11 @@ export function deckHeader(deck, active, right = "") {
 
 // Saves a text file: the share sheet on phones (AirDrop, Files, Messages),
 // a normal download elsewhere. Resolves false if the student cancels.
-export async function saveFile(name, text, type = "application/json") {
+// share: false always downloads (calendar files open "Add to Calendar" that way).
+export async function saveFile(name, text, type = "application/json", { share = true } = {}) {
   const file = new File([text], name, { type });
   const touch = matchMedia("(hover: none)").matches;
-  if (touch && navigator.canShare?.({ files: [file] })) {
+  if (share && touch && navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: name });
       return true;
