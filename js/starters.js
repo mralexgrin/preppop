@@ -3,7 +3,7 @@
 // Vital-sign values are standard adult reference ranges (AHA and common
 // nursing-assistant curricula); the deck says to follow the instructor.
 
-const deck = (id, subject, name, note, pairs) => ({ id, subject, name, note, cards: pairs.map(([term, definition]) => ({ term, definition })) });
+const deck = (id, subject, name, note, pairs, ordered = false) => ({ id, subject, name, note, ordered, cards: pairs.map(([term, definition]) => ({ term, definition })) });
 
 export const STARTERS = [
   deck("med-terms", "clinical", "Medical terminology: prefixes and suffixes", "Word parts you'll see in charts and doctors' notes.", [
@@ -57,6 +57,24 @@ export const STARTERS = [
     ["Sphygmomanometer", "The blood pressure cuff and gauge"],
     ["Pulse oximeter", "Clips on a finger to measure oxygen saturation and pulse"],
   ]),
+  deck(
+    "handwashing",
+    "clinical",
+    "Handwashing steps",
+    "A common skills-checklist order. Follow your program's checklist if it differs.",
+    [
+      ["Turn on the water and adjust it to a comfortable warm temperature", "Use a clean paper towel if the faucet has hand controls, per your program"],
+      ["Wet hands and wrists, keeping fingertips pointed down", "Hands lower than elbows so water runs off the fingertips"],
+      ["Apply soap", "Enough to cover all hand surfaces"],
+      ["Lather and scrub all surfaces for at least 20 seconds", "Palms, backs, between fingers, thumbs, and wrists, using friction"],
+      ["Clean under the fingernails", "Rub nails against the opposite palm or use a nail brush"],
+      ["Rinse from wrists to fingertips, fingertips pointed down", "Don't touch the inside of the sink"],
+      ["Dry hands with a clean paper towel", "From fingertips to wrists"],
+      ["Turn off the faucet with a clean, dry paper towel", "Keeps clean hands off the dirty faucet"],
+      ["Throw the paper towel away", "Without touching the trash can"],
+    ],
+    true,
+  ),
   deck("cell-parts", "biology", "Cell parts and what they do", "Organelles for cell biology units.", [
     ["Nucleus", "Holds the cell's DNA and controls the cell's activities"],
     ["Nucleolus", "Inside the nucleus; makes ribosomes"],
@@ -113,6 +131,26 @@ export const STARTERS = [
     ["Number of voting members of the House", "435"],
     ["Judicial review", "The courts' power to strike down laws that violate the Constitution"],
   ]),
+  deck(
+    "us-timeline",
+    "history",
+    "U.S. history timeline",
+    "Key events in order. Practice them with Steps.",
+    [
+      ["Declaration of Independence", "1776"],
+      ["U.S. Constitution written", "1787"],
+      ["Louisiana Purchase", "1803"],
+      ["Civil War begins", "1861"],
+      ["Emancipation Proclamation", "1863"],
+      ["19th Amendment gives women the right to vote", "1920"],
+      ["Stock market crash starts the Great Depression", "1929"],
+      ["Attack on Pearl Harbor; U.S. enters World War II", "1941"],
+      ["Brown v. Board of Education", "1954"],
+      ["Civil Rights Act", "1964"],
+      ["Apollo 11 Moon landing", "1969"],
+    ],
+    true,
+  ),
   deck("literary-terms", "english", "Literary terms", "For English class reading and essays.", [
     ["Simile", "A comparison using \"like\" or \"as\""],
     ["Metaphor", "A comparison that says one thing is another, without \"like\" or \"as\""],

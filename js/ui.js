@@ -43,7 +43,7 @@ export function deckHeader(deck, active, right = "") {
       ${right}
     </header>
     <nav class="mode-tabs" aria-label="Study modes" data-subject="${deck.subject}">
-      ${MODE_TABS.map(([mode, label]) => `<a href="#/deck/${deck.id}/${mode}" ${mode === active ? 'aria-current="page"' : ""}>${label}</a>`).join("")}
+      ${[...MODE_TABS, ...(deck.ordered ? [["steps", "Steps"]] : [])].map(([mode, label]) => `<a href="#/deck/${deck.id}/${mode}" ${mode === active ? 'aria-current="page"' : ""}>${label}</a>`).join("")}
     </nav>`;
 }
 

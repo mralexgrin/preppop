@@ -9,7 +9,7 @@ test("starter decks are well-formed", () => {
   for (const s of STARTERS) {
     assert.match(s.id, SAFE_ID);
     assert.ok(isSubject(s.subject), `${s.id} has a real subject`);
-    assert.ok(s.cards.length >= 10, `${s.id} has enough cards`);
+    assert.ok(s.cards.length >= (s.ordered ? 5 : 10), `${s.id} has enough cards`);
     const terms = s.cards.map((c) => c.term.toLowerCase());
     assert.equal(new Set(terms).size, terms.length, `${s.id} has no duplicate terms`);
     for (const c of s.cards) assert.ok(c.term.trim() && c.definition.trim(), `${s.id}: every card has both sides`);
@@ -19,4 +19,9 @@ test("starter decks are well-formed", () => {
 test("there's a starter deck for each of her subjects", () => {
   const covered = new Set(STARTERS.map((s) => s.subject));
   for (const id of ["biology", "clinical", "spanish", "history", "english", "geometry"]) assert.ok(covered.has(id), id);
+});
+
+test("ordered starter decks are flagged for Steps", () => {
+  const ordered = STARTERS.filter((s) => s.ordered).map((s) => s.id);
+  assert.ok(ordered.includes("handwashing") && ordered.includes("us-timeline"));
 });

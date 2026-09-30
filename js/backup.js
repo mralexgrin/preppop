@@ -34,6 +34,7 @@ export function makeDeckFile(deck, now = new Date()) {
     deck: {
       name: deck.name,
       subject: deck.subject,
+      ordered: Boolean(deck.ordered),
       cards: deck.cards.map(({ term, definition }) => ({ term, definition })),
     },
   };
@@ -61,6 +62,7 @@ function cleanDeck(deck, { freshIds }) {
     id: freshIds || typeof deck?.id !== "string" ? uid() : deck.id,
     name: text(deck?.name).trim().slice(0, 120) || "Imported deck",
     subject: deck?.subject,
+    ordered: deck?.ordered === true,
     createdAt: Number.isFinite(deck?.createdAt) ? deck.createdAt : Date.now(),
     cards,
   };

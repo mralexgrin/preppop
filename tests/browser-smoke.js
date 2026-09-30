@@ -191,6 +191,29 @@ export async function flows({ stubAnswers = true } = {}) {
     check(seen.size === 3, `saw all 3 question types (saw ${[...seen].join(", ")})`);
   });
 
+  await step("steps: reorder in the editor, then put steps in order", async () => {
+    await go("#/new");
+    setValue($("#deck-name"), "Morning routine");
+    $("#toggle-import").click();
+    setValue($("#import-text"), "second - b\nfirst - a\nthird - c");
+    $("#import-add").click();
+    $$(".card-row")[1].querySelector("[data-move='-1']").click(); // move "first" above "second"
+    check($$("#card-list textarea[data-side='term']")[0].value === "first", "moved card up");
+    $("#ordered").click();
+    $("form").requestSubmit();
+    await wait(150);
+    const deck = JSON.parse(localStorage.getItem("preppop:v1")).decks.find((d) => d.name === "Morning routine");
+    check(deck.ordered === true, "deck saved as ordered");
+    await go(`#/deck/${deck.id}/steps`);
+    for (const term of ["first", "second", "third"]) {
+      [...$$("[data-place]")].find((b) => b.textContent.trim() === term).click();
+      await wait(10);
+    }
+    $("#check").click();
+    await wait(30);
+    check($(".steps-result .big").textContent === "3/3", "all three steps in the right place");
+  });
+
   await step("progress page shows practice and weak cards", async () => {
     await go("#/progress");
     check(Number($(".stat strong").textContent) >= 1, "streak of at least one day after practicing");

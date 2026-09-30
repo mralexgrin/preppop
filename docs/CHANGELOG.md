@@ -10,6 +10,8 @@ User-facing release notes. Newest first.
 ### Fixed
 - The Review badge no longer shows "0" when nothing is due.
 ### Added
+- **Steps practice for things that come in order:** in the deck editor, tick **Cards are in order** for a procedure (handwashing, taking a pulse) or a timeline. The deck gets a **Steps** tab. Tap the steps in the order you think is right (tap one again to take it back), then **Check my order** to see what's in the right place and the full correct order. Long decks are practiced 8 steps at a time. New starter decks: **Handwashing steps** and **U.S. history timeline**.
+- **Reorder cards:** ↑ and ↓ buttons on each card in the editor.
 - **Progress page** (the Progress tab): current and best streak, cards practiced this week and how many you got right, a 12-week practice calendar, what's due today, tomorrow, and this week, how many cards you know in each subject, and **Cards to work on** (the cards you've missed most). Every answer now counts how often a card was seen and missed. Backups include this; shared decks don't.
 - **Starter decks:** ready-made decks for common classes, added in one tap from the empty screen or **Starter decks** on the deck list. Medical terminology (prefixes/suffixes), Vital signs (adult ranges), Cell parts, Spanish greetings, U.S. government basics, Literary terms, and Geometry formulas. Each becomes your own deck to edit.
 - **Hear it:** the speaker button on a flashcard (and in Review) reads the side that's showing, using your device's built-in voices. Spanish decks read Spanish words in Spanish and English definitions in English. In Write mode, **Hear it** reads the right answer after you check.

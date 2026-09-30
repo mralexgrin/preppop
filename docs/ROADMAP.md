@@ -23,12 +23,13 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 ## Next up
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
-| 13 | Steps mode: put ordered cards in order (procedures, timelines) | Finding 11 | M | M | [STRONG] |
 | 14 | Anonymous account + cloud sync (sync key, Worker + D1) | Finding 6; cross-device | H | L | [STRONG] + security review, flag |
 | 15 | AI: make cards from pasted notes (Worker endpoint) | Finding 2 | H | M | [STRONG] (AI prompt) |
 | 16 | Card extras: hint/mnemonic, star, search | polish | M | S | [STRONG] |
 
 ## Ideas (unranked)
+- Editor header buttons wrap to two lines on phones (Delete/Share/Save); put Save first or move Delete/Share into a menu
+- Flashcard toolbar is heavy on phones (two toggle rows + Shuffle)
 - Images on cards (anatomy diagrams, geometry figures) stored in IndexedDB
 - Match game (timed pairs)
 - Share a deck by link (file sharing done in #6)
@@ -49,4 +50,5 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - #9 Test options: count, types (choice/written/true-false), remembered (2026-09-30, daac252)
 - #10 Read aloud (Web Speech, per-subject language) (2026-09-30, 7c4042d)
 - #12 Starter decks for all her subjects (2026-09-30, bcaa229)
-- #11 Progress page + per-card miss stats (2026-09-30)
+- #11 Progress page + per-card miss stats (2026-09-30, c528e12)
+- #13 Steps mode for ordered decks + card reordering (2026-09-30)

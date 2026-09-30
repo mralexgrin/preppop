@@ -51,6 +51,7 @@ export function migrate(saved, today = dayKey()) {
         id: safeId(deck.id, deckIds),
         name: typeof deck.name === "string" ? deck.name : "Untitled deck",
         subject: isSubject(deck.subject) ? deck.subject : "other",
+        ordered: deck.ordered === true,
         cards: (Array.isArray(deck.cards) ? deck.cards : []).filter(isObject).map((card) =>
           withoutEmpty(seedSchedule(
             {

@@ -9,8 +9,8 @@ export function renderEditor(deck) {
   const isNew = !deck;
   setTitle(isNew ? "New deck" : `Edit ${deck.name}`);
   const draft = deck
-    ? { name: deck.name, subject: deck.subject, cards: deck.cards.map((c) => ({ ...c })) }
-    : { name: "", subject: state.settings.lastSubject ?? "other", cards: [blankCard(), blankCard(), blankCard()] };
+    ? { name: deck.name, subject: deck.subject, ordered: Boolean(deck.ordered), cards: deck.cards.map((c) => ({ ...c })) }
+    : { name: "", subject: state.settings.lastSubject ?? "other", ordered: false, cards: [blankCard(), blankCard(), blankCard()] };
   let subjectPicked = !isNew;
   if (!draft.cards.length) draft.cards.push(blankCard());
 
@@ -49,6 +49,7 @@ export function renderEditor(deck) {
             </label>`).join("")}
         </div>
       </fieldset>
+      <label class="check order-check"><input type="checkbox" id="ordered" ${draft.ordered ? "checked" : ""}> <span>Cards are in order, like the steps of a procedure or a timeline. Adds <strong>Steps</strong> practice.</span></label>
       <p class="form-error" id="form-error" role="alert" hidden></p>
       <div class="import-bar">
         <button class="btn btn-soft" type="button" id="toggle-import" aria-expanded="false" aria-controls="import-panel">Paste a list</button>
@@ -111,6 +112,10 @@ export function renderEditor(deck) {
     dirty = true;
     const guess = !subjectPicked && guessSubject(draft.name);
     if (guess) pickSubject(guess);
+  });
+  app.querySelector("#ordered").addEventListener("change", (e) => {
+    draft.ordered = e.target.checked;
+    dirty = true;
   });
   app.querySelectorAll('input[name="subject"]').forEach((radio) =>
     radio.addEventListener("change", () => {
@@ -182,6 +187,17 @@ export function renderEditor(deck) {
   });
 
   list.addEventListener("click", (e) => {
+    const move = e.target.closest("[data-move]");
+    if (move) {
+      const from = draft.cards.findIndex((c) => c.id === move.closest(".card-row").dataset.id);
+      const to = from + Number(move.dataset.move);
+      if (to < 0 || to >= draft.cards.length) return;
+      [draft.cards[from], draft.cards[to]] = [draft.cards[to], draft.cards[from]];
+      dirty = true;
+      draw();
+      list.children[to]?.querySelector(`[data-move="${move.dataset.move}"]`)?.focus();
+      return;
+    }
     const btn = e.target.closest("[data-remove]");
     if (!btn) return;
     const index = draft.cards.findIndex((c) => c.id === btn.closest(".card-row").dataset.id);
@@ -243,9 +259,9 @@ export function renderEditor(deck) {
     }
 
     if (isNew) {
-      state.decks.push({ id: uid(), name, subject: draft.subject, createdAt: Date.now(), cards });
+      state.decks.push({ id: uid(), name, subject: draft.subject, ordered: draft.ordered, createdAt: Date.now(), cards });
     } else {
-      Object.assign(deck, { name, subject: draft.subject, cards });
+      Object.assign(deck, { name, subject: draft.subject, ordered: draft.ordered, cards });
     }
     state.settings.lastSubject = draft.subject;
     persist();
@@ -270,6 +286,10 @@ function cardRow(card, i) {
         <span class="field-label">Definition</span>
         <textarea class="input" data-side="definition" rows="2" placeholder="Definition" aria-label="Card ${i + 1} definition">${esc(card.definition)}</textarea>
       </label>
-      <button class="icon-btn" type="button" data-remove aria-label="Delete card ${i + 1}">×</button>
+      <div class="row-tools">
+        <button class="icon-btn move" type="button" data-move="-1" aria-label="Move card ${i + 1} up">↑</button>
+        <button class="icon-btn move" type="button" data-move="1" aria-label="Move card ${i + 1} down">↓</button>
+        <button class="icon-btn" type="button" data-remove aria-label="Delete card ${i + 1}">×</button>
+      </div>
     </li>`;
 }

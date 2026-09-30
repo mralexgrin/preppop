@@ -58,6 +58,7 @@ export function renderStarters() {
         id: uid(),
         name: starter.name,
         subject: starter.subject,
+        ordered: starter.ordered,
         starter: starter.id,
         createdAt: Date.now(),
         cards: starter.cards.map((c) => ({ ...blankCard(), ...c })),
