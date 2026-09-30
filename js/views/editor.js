@@ -315,6 +315,7 @@ export function renderEditor(deck) {
       card.image = { id: await addImage(file), side: "term" };
       dirty = true;
       draw();
+      list.querySelector(`.card-row[data-id="${card.id}"] [data-image-side]`)?.focus();
     } catch (err) {
       label.firstChild.textContent = "+ Picture";
       e.target.value = ""; // so picking the same file again tries again
@@ -323,9 +324,11 @@ export function renderEditor(deck) {
   });
   list.addEventListener("click", (e) => {
     if (e.target.closest("[data-remove-image]")) {
-      delete rowCard(e.target).image; // the stored picture is cleaned up later
+      const card = rowCard(e.target);
+      delete card.image; // the stored picture is cleaned up later
       dirty = true;
       draw();
+      list.querySelector(`.card-row[data-id="${card.id}"] [data-pick-image]`)?.focus();
       return;
     }
     const addHint = e.target.closest("[data-add-hint]");
@@ -403,14 +406,20 @@ export function renderEditor(deck) {
       focusEl?.focus();
     };
     list.querySelectorAll(".card-row").forEach((row) => {
-      row.classList.toggle("invalid", incomplete.some((c) => c.id === row.dataset.id));
+      const bad = incomplete.some((c) => c.id === row.dataset.id);
+      row.classList.toggle("invalid", bad);
+      row.querySelectorAll('textarea[data-side="term"], textarea[data-side="definition"]').forEach((t) => {
+        if (bad && !t.value.trim()) t.setAttribute("aria-invalid", "true");
+        else t.removeAttribute("aria-invalid");
+      });
     });
     if (!name) return fail("Give your deck a name.", nameInput);
     if (!cards.length) return fail("Add at least one card with a term and a definition.", list.querySelector("textarea"));
     if (incomplete.length) {
       const row = list.querySelector(".card-row.invalid");
       const empty = [...row.querySelectorAll("textarea")].find((t) => !t.value.trim());
-      return fail("Every card needs both a term and a definition.", empty);
+      const number = [...list.children].indexOf(row) + 1;
+      return fail(`Card ${number} needs both a term and a definition.`, empty);
     }
 
     if (isNew) {
@@ -437,7 +446,7 @@ export function renderEditor(deck) {
 const hintField = (card, i) => `
   <label class="field hint-field">
     <span class="field-label">Hint or memory trick</span>
-    <textarea class="input" data-side="hint" rows="1" maxlength="300" placeholder="e.g. brady sounds like 'broody': slow" aria-label="Card ${i + 1} hint">${esc(card.hint ?? "")}</textarea>
+    <textarea class="input" data-side="hint" rows="1" maxlength="300" placeholder="e.g. brady sounds like 'broody': slow" aria-label="Hint or memory trick, card ${i + 1}">${esc(card.hint ?? "")}</textarea>
   </label>`;
 
 function cardRow(card, i) {
@@ -464,7 +473,7 @@ function cardRow(card, i) {
                 ${imageSlot(card.image)}
                 <div class="pic-tools">
                   <label class="inline-field">Show on
-                    <select class="input select" data-image-side aria-label="Card ${i + 1} picture side">
+                    <select class="input select" data-image-side aria-label="Show on, card ${i + 1} picture">
                       <option value="term" ${card.image.side === "term" ? "selected" : ""}>Term side</option>
                       <option value="definition" ${card.image.side === "definition" ? "selected" : ""}>Definition side</option>
                     </select>

@@ -1,7 +1,7 @@
 import { load, getDeck, hooks, state } from "./store.js";
 import { dueCards, dayKey } from "./srs.js";
 import { isTyping } from "./util.js";
-import { toast, view, install } from "./ui.js";
+import { toast, view, install, focusHeading } from "./ui.js";
 import { renderLibrary } from "./views/library.js";
 import { renderEditor } from "./views/editor.js";
 import { renderStudy } from "./views/study.js";
@@ -28,6 +28,7 @@ window.addEventListener("hashchange", () => {
     return;
   }
   route();
+  focusHeading();
 });
 
 function route() {
@@ -45,8 +46,7 @@ function route() {
   const due = dueCards(state.decks, dayKey()).length;
   document.querySelectorAll("[data-due-badge]").forEach((badge) => {
     badge.hidden = !due;
-    badge.textContent = due > 99 ? "99+" : due;
-    badge.setAttribute("aria-label", `${due} due`);
+    badge.innerHTML = `${due > 99 ? "99+" : due}<span class="visually-hidden"> due</span>`;
   });
 
   // Screens that don't hold on to a deck can take merged data from other devices.

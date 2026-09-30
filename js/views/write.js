@@ -4,7 +4,7 @@
 
 import { persist, recordAnswer } from "../store.js";
 import { esc, plural, shuffle } from "../util.js";
-import { app, setTitle, view, deckHeader } from "../ui.js";
+import { app, setTitle, view, deckHeader, announce } from "../ui.js";
 import { ROUND_SIZE } from "../srs.js";
 import { checkAnswer, countsAsCorrect, needsAccentKeys, ACCENT_KEYS } from "../answer.js";
 import { canSpeak, speak, langFor, SPEAKER_ICON } from "../speech.js";
@@ -97,15 +97,15 @@ export function renderWrite(deck) {
       <section class="q-card ${showSide === "definition" ? "def" : ""}" aria-labelledby="w-prompt">
         <span class="face-label">${LABEL[showSide]}</span>
         ${card.image?.side === showSide ? imageSlot(card.image) : ""}
-        <p class="q-prompt" id="w-prompt">${esc(card[showSide])}</p>
+        <p class="q-prompt" id="w-prompt"${langAttr(deck, showSide, card[showSide])}>${esc(card[showSide])}</p>
       </section>
       <form class="write-form" novalidate>
         <label class="field">
           <span class="field-label">Type the ${w.typeSide}</span>
           ${
             long
-              ? `<textarea class="input write-input" id="answer" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" ${r ? "readonly" : ""}>${esc(r?.typed ?? "")}</textarea>`
-              : `<input class="input write-input" id="answer" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${esc(r?.typed ?? "")}" ${r ? "readonly" : ""}>`
+              ? `<textarea class="input write-input" id="answer" aria-describedby="w-prompt" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" ${r ? "readonly" : ""}>${esc(r?.typed ?? "")}</textarea>`
+              : `<input class="input write-input" id="answer" aria-describedby="w-prompt" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${esc(r?.typed ?? "")}" ${r ? "readonly" : ""}>`
           }
         </label>
         ${
@@ -155,8 +155,8 @@ export function renderWrite(deck) {
       advance();
     });
     const next = app.querySelector("#next");
-    if (next) next.focus({ preventScroll: true });
-    else input.focus({ preventScroll: true });
+    if (next) next.focus();
+    else input.focus();
   };
 
   const feedbackHTML = (r, expected) => {
@@ -171,7 +171,7 @@ export function renderWrite(deck) {
     return `
       <div class="write-feedback ${right ? "good" : "bad"}" role="status">
         <p class="feedback ${right ? "good" : "bad"}">${messages[r.verdict]}</p>
-        ${r.verdict !== "correct" ? `<p class="expected">${esc(expected)}</p>` : ""}
+        ${r.verdict !== "correct" ? `<p class="expected"${langAttr(deck, w.typeSide, expected)}>${esc(expected)}</p>` : ""}
         ${canSpeak() ? `<button type="button" class="text-btn hear" id="hear">${SPEAKER_ICON}<span>Hear it</span></button>` : ""}
         ${!right && r.typed.trim() ? `<p class="typed"><span class="visually-hidden">You wrote: </span>${esc(r.typed)}</p>` : ""}
       </div>
@@ -185,6 +185,16 @@ export function renderWrite(deck) {
     const card = w.queue[w.i];
     w.result = { typed, ...checkAnswer(typed, card[w.typeSide]) };
     draw();
+    const expected = card[w.typeSide];
+    announce(
+      {
+        correct: "Correct!",
+        accent: `Correct! Watch the accents: ${expected}`,
+        almost: `Almost. The answer is ${expected}`,
+        wrong: `Not quite. The answer is ${expected}`,
+        empty: `The answer is ${expected}`,
+      }[w.result.verdict],
+    );
   };
 
   // The grade is saved when moving on, so "I was right" can still change it.
@@ -206,7 +216,7 @@ export function renderWrite(deck) {
     const pct = Math.round((w.score / total) * 100);
     app.innerHTML = `${header}
       <section class="result">
-        <p class="big">${w.score}/${total}</p>
+        <h2 class="big">${w.score}/${total}</h2>
         <p class="sub">${pct}% correct.${w.pool.length ? ` ${plural(w.pool.length, "card")} left in this deck.` : ""}</p>
         <div class="actions">
           ${w.missed.length ? `<button class="btn btn-primary" type="button" id="retry">Practice ${w.missed.length} missed again</button>` : ""}
@@ -237,3 +247,5 @@ export function renderWrite(deck) {
   view.cleanup = null;
   restart();
 }
+
+const langAttr = (deck, side, text) => (langFor(deck, side, text).startsWith("es") ? ' lang="es"' : "");

@@ -1,6 +1,6 @@
-import { persist, recordAnswer, touch, forgetCards } from "../store.js";
+import { persist, recordAnswer, touch, forgetCards, shortcutsOn } from "../store.js";
 import { esc, plural, shuffle, isTyping } from "../util.js";
-import { app, toast, setTitle, statusChip, view, deckHeader } from "../ui.js";
+import { app, toast, setTitle, statusChip, view, deckHeader, keepFocus } from "../ui.js";
 import { flipCardHTML, setFlipped, attachSwipe, bindSpeak, bindHint } from "../flipcard.js";
 import { hydrateImages } from "../images.js";
 
@@ -49,7 +49,7 @@ export function renderStudy(deck, { cram = false } = {}) {
     if (s.i >= s.order.length) {
       app.innerHTML = `${header}${toolbar}
         <section class="result">
-          <p class="big">Round done</p>
+          <h2 class="big">Round done</h2>
           <p class="sub">You went through ${plural(s.order.length, "card")}.</p>
           <div class="tallies">
             <div class="tally know"><strong>${s.tally.known}</strong>Know it</div>
@@ -79,7 +79,7 @@ export function renderStudy(deck, { cram = false } = {}) {
         <div class="progress-track"><span style="width:${(s.i / s.order.length) * 100}%"></span></div>
         <span class="progress-label">${s.i + 1} / ${s.order.length}</span>
       </div>
-      ${flipCardHTML({ card, front: s.front, flipped: s.flipped, topRight: statusChip(card.status) })}
+      ${flipCardHTML({ card, deck, front: s.front, flipped: s.flipped, topRight: statusChip(card.status) })}
       <p class="card-tools"><button class="text-btn danger" type="button" id="delete-card">Delete this card</button></p>`;
 
     bindToolbar();
@@ -109,17 +109,17 @@ export function renderStudy(deck, { cram = false } = {}) {
     app.querySelector("#swap-sides").addEventListener("click", () => {
       s.front = s.front === "term" ? "definition" : "term";
       s.flipped = false;
-      draw();
+      keepFocus(draw);
       toast(s.front === "term" ? "Showing the term first" : "Showing the definition first");
     });
     app.querySelectorAll("[data-only]").forEach((b) =>
       b.addEventListener("click", () => {
         s.onlyLearning = b.dataset.only === "learning";
-        start();
+        keepFocus(() => start());
       }),
     );
     app.querySelector("#shuffle").addEventListener("click", () => {
-      start({ shuffled: true });
+      keepFocus(() => start({ shuffled: true }));
       toast("Cards shuffled");
     });
   };
@@ -139,11 +139,11 @@ export function renderStudy(deck, { cram = false } = {}) {
     s.i++;
     s.flipped = false;
     draw();
-    app.querySelector("#flip")?.focus({ preventScroll: true });
+    app.querySelector("#flip")?.focus();
   };
 
   const onKey = (e) => {
-    if (isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (!shortcutsOn() || isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === "ArrowRight") mark("known");
     else if (e.key === "ArrowLeft") mark("learning");
     else if ((e.key === " " || e.key === "Enter") && (e.target === document.body || e.target === app)) {

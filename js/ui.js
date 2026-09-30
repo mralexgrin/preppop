@@ -13,7 +13,43 @@ export function toast(message) {
   toastEl.textContent = message;
   toastEl.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2600);
+  // Longer messages (usually problems) stay up long enough to read.
+  toastTimer = setTimeout(() => toastEl.classList.remove("show"), message.length > 40 ? 6000 : 3000);
+}
+
+// Screen reader announcements. The region lives outside #app, so it isn't
+// replaced when a screen redraws (a live region that arrives with its text
+// isn't read out).
+const announcer = document.getElementById("announcer");
+export function announce(text) {
+  if (!announcer) return;
+  announcer.textContent = "";
+  setTimeout(() => (announcer.textContent = text), 50);
+}
+
+// Redraws, then puts focus back on the same control if it still exists
+// (matched by id or data-* attribute), so keyboard and screen reader users
+// don't get dropped at the top of the page.
+export function keepFocus(redraw) {
+  const active = document.activeElement;
+  let selector = null;
+  if (active && active !== document.body && app.contains(active)) {
+    if (active.id) selector = `#${CSS.escape(active.id)}`;
+    else {
+      const attr = [...active.attributes].find((a) => a.name.startsWith("data-"));
+      if (attr) selector = `[${attr.name}="${CSS.escape(attr.value)}"]`;
+    }
+  }
+  redraw();
+  if (selector) app.querySelector(selector)?.focus();
+}
+
+// After moving to another screen, focus its heading so the change is announced.
+export function focusHeading() {
+  const h1 = app.querySelector("h1");
+  if (!h1) return;
+  h1.setAttribute("tabindex", "-1");
+  h1.focus({ preventScroll: true });
 }
 
 export function setTitle(title) {

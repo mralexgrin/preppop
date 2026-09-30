@@ -1,7 +1,7 @@
 // Today's review: cards due across every deck, in rounds of ROUND_SIZE.
 // A missed card comes back once more at the end of the round.
 
-import { state, persist, recordAnswer } from "../store.js";
+import { state, persist, recordAnswer, shortcutsOn } from "../store.js";
 import { esc, plural, isTyping } from "../util.js";
 import { app, setTitle, view } from "../ui.js";
 import { dueCards, dayKey, ROUND_SIZE } from "../srs.js";
@@ -35,7 +35,7 @@ export function renderReview() {
     if (!r.queue.length && r.i === 0) {
       app.innerHTML = `${header}
         <section class="result">
-          <p class="big">All caught up</p>
+          <h2 class="big">All caught up</h2>
           <p class="sub">Nothing is due right now. Cards you study come back here when it's time to review them.</p>
           <div class="actions"><a class="btn btn-primary" href="#/">Back to decks</a></div>
         </section>`;
@@ -46,7 +46,7 @@ export function renderReview() {
       const left = dueCards(state.decks, dayKey()).length;
       app.innerHTML = `${header}
         <section class="result">
-          <p class="big">${left ? "Round done" : "All caught up"}</p>
+          <h2 class="big">${left ? "Round done" : "All caught up"}</h2>
           <p class="sub">${left ? `${plural(left, "card")} still due today.` : "You reviewed everything due today. See you tomorrow."}</p>
           <div class="tallies">
             <div class="tally know"><strong>${r.tally.known}</strong>Know it</div>
@@ -74,6 +74,7 @@ export function renderReview() {
       </div>
       ${flipCardHTML({
         card,
+        deck,
         flipped: r.flipped,
         topLeft: `<span class="deck-context" data-subject="${subject.id}"><span class="subject-dot" aria-hidden="true"></span>${esc(deck.name)}</span>`,
       })}`;
@@ -106,11 +107,11 @@ export function renderReview() {
     r.i++;
     r.flipped = false;
     draw();
-    app.querySelector("#flip")?.focus({ preventScroll: true });
+    app.querySelector("#flip")?.focus();
   };
 
   const onKey = (e) => {
-    if (isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (!shortcutsOn() || isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === "ArrowRight") mark(true);
     else if (e.key === "ArrowLeft") mark(false);
     else if ((e.key === " " || e.key === "Enter") && (e.target === document.body || e.target === app)) {

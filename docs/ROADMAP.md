@@ -25,6 +25,8 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 |---|------|--------------------|--------|--------|------|
 
 ## Ideas (unranked)
+- Alt text for card pictures (written by the student; currently "Card picture")
+- Undo the last mark in Flashcards and Review
 - Sync pictures across devices (separate encrypted blobs per image; the current vault is capped at 300 KB)
 - Crop or annotate a picture (e.g. hide one label on a diagram)
 - QR code for the sync key (scan instead of typing 25 characters)

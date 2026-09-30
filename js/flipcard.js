@@ -6,8 +6,9 @@ import { imageSlot } from "./images.js";
 
 const LABEL = { term: "Term", definition: "Definition" };
 
-export function flipCardHTML({ card, front = "term", flipped = false, topLeft = LABEL[front], topRight = "" }) {
+export function flipCardHTML({ card, deck = null, front = "term", flipped = false, topLeft = LABEL[front], topRight = "" }) {
   const back = front === "term" ? "definition" : "term";
+  const lang = (side) => (langFor(deck, side, card[side]).startsWith("es") ? ' lang="es"' : "");
   return `
     <div class="card-stage">
     <button type="button" class="flip-card ${flipped ? "flipped" : ""}" id="flip" aria-describedby="flip-live">
@@ -16,13 +17,13 @@ export function flipCardHTML({ card, front = "term", flipped = false, topLeft = 
           <span class="face-label">${topLeft}</span>
           <span class="face-status">${topRight}</span>
           ${card.image?.side === front ? imageSlot(card.image) : ""}
-          <span class="face-text">${esc(card[front])}</span>
+          <span class="face-text"${lang(front)}>${esc(card[front])}</span>
           <span class="face-hint">Tap to flip</span>
         </span>
         <span class="face back" aria-hidden="${!flipped}">
           <span class="face-label">${LABEL[back]}</span>
           ${card.image?.side === back ? imageSlot(card.image) : ""}
-          <span class="face-text">${esc(card[back])}</span>
+          <span class="face-text"${lang(back)}>${esc(card[back])}</span>
           <span class="face-hint">Tap to flip back</span>
         </span>
       </span>
@@ -30,10 +31,10 @@ export function flipCardHTML({ card, front = "term", flipped = false, topLeft = 
     ${canSpeak() ? `<button type="button" class="speak-btn" id="speak" aria-label="Read the card aloud">${SPEAKER_ICON}</button>` : ""}
     </div>
     <p class="visually-hidden" id="flip-live" aria-live="polite">${flipped ? "Showing back" : "Showing front"}</p>
-    ${card.hint ? `<div class="hint-box"><button class="text-btn" type="button" id="show-hint" aria-expanded="false" aria-controls="hint-text">💡 Show hint</button><p class="hint-text" id="hint-text" hidden>${esc(card.hint)}</p></div>` : ""}
+    ${card.hint ? `<div class="hint-box"><button class="text-btn" type="button" id="show-hint" aria-expanded="false" aria-controls="hint-text"><span aria-hidden="true">💡</span> <span class="hint-label">Show hint</span></button><p class="hint-text" id="hint-text" hidden>${esc(card.hint)}</p></div>` : ""}
     <div class="mark-row">
-      <button class="btn btn-learn" type="button" data-mark="learning"><kbd>←</kbd> Still learning</button>
-      <button class="btn btn-know" type="button" data-mark="known">I know it <kbd>→</kbd></button>
+      <button class="btn btn-learn" type="button" data-mark="learning"><kbd aria-hidden="true">←</kbd> Still learning</button>
+      <button class="btn btn-know" type="button" data-mark="known">I know it <kbd aria-hidden="true">→</kbd></button>
     </div>
     <p class="kbd-hint">Space to flip · ← still learning · → I know it</p>
     <p class="swipe-hint">Tap to flip · swipe right if you know it, left if you're still learning</p>`;
@@ -45,7 +46,9 @@ export function setFlipped(root, flipped) {
   btn.classList.toggle("flipped", flipped);
   btn.querySelector(".front").setAttribute("aria-hidden", flipped);
   btn.querySelector(".back").setAttribute("aria-hidden", !flipped);
-  root.querySelector("#flip-live").textContent = flipped ? "Showing back" : "Showing front";
+  // Read out what's now showing, not just "flipped".
+  const face = btn.querySelector(flipped ? ".back" : ".front");
+  root.querySelector("#flip-live").textContent = `${face.querySelector(".face-label").textContent}: ${face.querySelector(".face-text").textContent}`;
 }
 
 // Swipe the card right (know it) or left (still learning). A drag suppresses
@@ -138,6 +141,6 @@ export function bindHint(root) {
     const text = root.querySelector("#hint-text");
     text.hidden = !text.hidden;
     button.setAttribute("aria-expanded", !text.hidden);
-    button.textContent = text.hidden ? "💡 Show hint" : "💡 Hide hint";
+    button.querySelector(".hint-label").textContent = text.hidden ? "Show hint" : "Hide hint";
   });
 }

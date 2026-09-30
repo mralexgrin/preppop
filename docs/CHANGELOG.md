@@ -4,6 +4,7 @@ User-facing release notes. Newest first.
 
 ## Unreleased (branch `autonomous/product-improvements`)
 ### Improved
+- **Accessibility:** screen readers now hear answer results in Write and Test, the new question after Next, the card's content when it flips, and the page name after moving between screens. Focus stays on the control you used when a screen redraws. Spanish text is marked as Spanish, so it's read with a Spanish voice. Right and wrong answers are marked with ✓/✗, not just color. Selected buttons and tabs show more than a color change. The practice calendar has a text version, and tap targets are at least 44px. **Settings → Keyboard shortcuts** turns off single-key shortcuts (arrows, 1–4, T/F) for screen reader or voice control users.
 - Flashcards toolbar fits on one row on phones: the All / Not known yet filter plus icon buttons to swap sides and shuffle.
 - Deck editor header fits on one row (Share, Save). **Delete this deck** moved to the bottom of the editor, away from Save.
 - **Phone tab bar:** on phones, Decks, Review, New deck, and Settings sit in a bar at the bottom, in thumb reach. Review shows a badge with how many cards are due. The bar hides while you type. On larger screens, Review is in the top menu with the same badge.

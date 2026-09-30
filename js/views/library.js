@@ -1,12 +1,13 @@
 import { state, persist, getDeck, dailyGoal, deleteDeck } from "../store.js";
 import { dueCards, isDue, isNew, streak, dayKey, addDays } from "../srs.js";
 import { esc, plural } from "../util.js";
-import { app, toast, setTitle, view, examLabel } from "../ui.js";
+import { app, toast, setTitle, view, examLabel, announce, focusHeading } from "../ui.js";
 import { SUBJECTS } from "../subjects.js";
 import { searchCards } from "../search.js";
 
 // Kept while moving between screens, so Back returns to the same search.
 let lastQuery = "";
+let announceTimer;
 
 export function renderLibrary() {
   setTitle();
@@ -41,7 +42,7 @@ export function renderLibrary() {
       <label class="visually-hidden" for="card-search">Search your cards</label>
       <input class="input search-input" id="card-search" type="search" placeholder="Search ${plural(cardTotal, "card")}" autocomplete="off" spellcheck="false" value="${esc(lastQuery)}">
     </div>
-    <div id="search-results" aria-live="polite"></div>
+    <div id="search-results"></div>
     <div id="library-main">
     ${introTip()}
     ${todayPanel()}
@@ -69,6 +70,8 @@ export function renderLibrary() {
       return;
     }
     const hits = searchCards(state.decks, q);
+    clearTimeout(announceTimer);
+    announceTimer = setTimeout(() => announce(hits.length ? `${hits.length === 50 ? "50 or more" : hits.length} match${hits.length === 1 ? "" : "es"}` : "No matches"), 600);
     results.innerHTML = hits.length
       ? `<p class="search-count">${hits.length === 50 ? "First 50 matches" : `${hits.length} match${hits.length === 1 ? "" : "es"}`}</p>
          <ul class="search-hits">${hits
@@ -104,6 +107,7 @@ function onLibraryClick(e) {
   deleteDeck(deck);
   persist();
   renderLibrary();
+  focusHeading();
   toast("Deck deleted");
 }
 

@@ -57,6 +57,10 @@ export function renderProgress() {
             .join("")}
         </div>
       </div>
+      <ul class="visually-hidden">${cells
+        .filter((c) => c.count > 0)
+        .map((c) => `<li>${esc(fmt(c.day))}: ${plural(c.count, "card")}</li>`)
+        .join("")}</ul>
       <p class="cal-legend" aria-hidden="true">Less <span class="cal-cell l0"></span><span class="cal-cell l1"></span><span class="cal-cell l2"></span><span class="cal-cell l3"></span><span class="cal-cell l4"></span> More</p>
     </section>
 

@@ -1,6 +1,6 @@
-import { state, persist, dailyGoal } from "../store.js";
+import { state, persist, dailyGoal, shortcutsOn } from "../store.js";
 import { esc, plural } from "../util.js";
-import { app, toast, setTitle, saveFile, install, isInstalled, isIOS } from "../ui.js";
+import { app, toast, setTitle, saveFile, install, isInstalled, isIOS, keepFocus } from "../ui.js";
 import { MODEL_LABEL } from "../ai.js";
 import { makeBackup, readFile, mergeDecks, mergeActivity, imageIds } from "../backup.js";
 import { exportImages, importImages } from "../images.js";
@@ -42,6 +42,12 @@ export function renderSettings() {
       ${syncHTML()}
     </section>
 
+    <section class="panel" aria-labelledby="keys-heading">
+      <h2 id="keys-heading">Keyboard shortcuts</h2>
+      <p>On a computer: arrow keys mark flashcards, 1–4 and T/F answer test questions, Space flips a card. Turn these off if you use a screen reader or voice control and they get in the way.</p>
+      <label class="check"><input type="checkbox" id="shortcuts" ${shortcutsOn() ? "checked" : ""}> Use keyboard shortcuts</label>
+    </section>
+
     <section class="panel" aria-labelledby="backup-heading">
       <h2 id="backup-heading">Backup</h2>
       <p>Your ${plural(state.decks.length, "deck")} and ${plural(cards, "card")} are saved in this browser only. Clearing Safari or Chrome data, or losing your phone, erases them. Download a backup now and then, and keep it somewhere safe like iCloud Drive or Google Drive.</p>
@@ -61,6 +67,12 @@ export function renderSettings() {
 
   bindSync();
 
+  app.querySelector("#shortcuts").addEventListener("change", (e) => {
+    state.settings.shortcuts = e.target.checked;
+    persist();
+    toast(e.target.checked ? "Keyboard shortcuts on" : "Keyboard shortcuts off");
+  });
+
   app.querySelector("#install")?.addEventListener("click", async () => {
     const prompt = install.prompt;
     if (!prompt) return;
@@ -76,7 +88,7 @@ export function renderSettings() {
       state.settings.dailyGoal = Number(b.dataset.goal);
       persist();
       toast(`Daily goal: ${b.dataset.goal} cards`);
-      renderSettings();
+      keepFocus(renderSettings);
     }),
   );
 
@@ -269,7 +281,7 @@ function bindSync(revealKey = false) {
     await enableSync();
     toast(syncStatus.error ? "Sync is on, but the first upload didn't work yet" : "Sync is on");
     redraw(true);
-    panel.querySelector("#sync-key")?.scrollIntoView({ block: "center", behavior: "smooth" });
+    panel.querySelector("#sync-key")?.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   });
   panel.querySelector("#sync-connect-form")?.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -294,6 +306,7 @@ function bindSync(revealKey = false) {
     await pending;
     toast(syncStatus.error ? "Couldn't sync" : "Synced");
     redraw();
+    panel.querySelector("#sync-now")?.focus();
   });
   panel.querySelector("#sync-show")?.addEventListener("click", () => redraw(true));
   panel.querySelector("#sync-copy")?.addEventListener("click", async () => {

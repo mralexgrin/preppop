@@ -41,7 +41,7 @@ export function renderSteps(deck) {
                 .map((id, i) => {
                   const mark = r ? (r.marks[i] ? "is-right" : "is-wrong") : "";
                   return `<li><button type="button" class="step ${mark}" data-unplace="${i}" ${r ? "disabled" : ""}>
-                    <span class="step-text">${esc(byId(id).term)}</span>${r ? `<span class="step-mark" aria-label="${r.marks[i] ? "right place" : "wrong place"}">${r.marks[i] ? "✓" : "✗"}</span>` : ""}
+                    <span class="step-text">${esc(byId(id).term)}</span>${r ? `<span class="step-mark"><span aria-hidden="true">${r.marks[i] ? "✓" : "✗"}</span><span class="visually-hidden">${r.marks[i] ? "right place" : "wrong place"}</span></span>` : ""}
                   </button></li>`;
                 })
                 .join("")}</ol>`
@@ -66,7 +66,7 @@ export function renderSteps(deck) {
       ${
         r
           ? `<section class="result steps-result">
-              <p class="big">${r.correct}/${r.total}</p>
+              <h2 class="big">${r.correct}/${r.total}</h2>
               <p class="sub">${r.correct === r.total ? "Perfect order." : "steps in the right place."}</p>
               <div class="actions">
                 <button class="btn btn-primary" type="button" id="again">Try again</button>
@@ -87,7 +87,7 @@ export function renderSteps(deck) {
         s.pool = s.pool.filter((id) => id !== b.dataset.place);
         s.placed.push(b.dataset.place);
         draw();
-        (app.querySelector("[data-place]") ?? app.querySelector("#check"))?.focus({ preventScroll: true });
+        (app.querySelector("[data-place]") ?? app.querySelector("#check"))?.focus();
       }),
     );
     app.querySelectorAll("[data-unplace]").forEach((b) =>
@@ -95,7 +95,7 @@ export function renderSteps(deck) {
         const [id] = s.placed.splice(Number(b.dataset.unplace), 1);
         s.pool.push(id);
         draw();
-        app.querySelector(`[data-place="${id}"]`)?.focus({ preventScroll: true });
+        app.querySelector(`[data-place="${id}"]`)?.focus();
       }),
     );
     app.querySelector("#check")?.addEventListener("click", check);
@@ -108,8 +108,8 @@ export function renderSteps(deck) {
     s.placed.forEach((id, i) => recordAnswer(byId(id), s.result.marks[i], undefined, deck));
     persist();
     draw();
-    app.querySelector(".steps-result")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    app.querySelector("#again")?.focus({ preventScroll: true });
+    app.querySelector(".steps-result")?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+    app.querySelector("#again")?.focus();
   };
 
   view.cleanup = null;

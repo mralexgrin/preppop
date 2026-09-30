@@ -2,9 +2,10 @@
 // written, true/false), and which side is shown. Claude writes the wrong
 // answers for choice and true/false; other cards fill in when it can't.
 
-import { state, persist, recordAnswer } from "../store.js";
+import { state, persist, recordAnswer, shortcutsOn } from "../store.js";
 import { esc, plural, hash, isTyping } from "../util.js";
-import { app, setTitle, view, deckHeader } from "../ui.js";
+import { app, setTitle, view, deckHeader, announce, keepFocus } from "../ui.js";
+import { langFor } from "../speech.js";
 import { writeWrongAnswers, MODEL_LABEL } from "../ai.js";
 import { TYPES, buildQuestions, wrongAnswersFor, makeTrueFalse } from "../testbuilder.js";
 import { checkAnswer, countsAsCorrect, needsAccentKeys, ACCENT_KEYS } from "../answer.js";
@@ -94,13 +95,13 @@ export function renderTest(deck) {
     app.querySelectorAll("[data-count]").forEach((b) =>
       b.addEventListener("click", () => {
         t.count = Number(b.dataset.count);
-        drawSetup();
+        keepFocus(drawSetup);
       }),
     );
     app.querySelectorAll("[data-mode]").forEach((b) =>
       b.addEventListener("click", () => {
         t.mode = b.dataset.mode;
-        drawSetup();
+        keepFocus(drawSetup);
       }),
     );
     app.querySelectorAll(".chip-check input").forEach((box) =>
@@ -186,7 +187,7 @@ export function renderTest(deck) {
             .map((opt, i) => {
               const cls = !answered ? "" : opt === q.answer ? "is-correct" : opt === q.picked ? "is-wrong" : "dim";
               return `<button type="button" class="option ${cls}" data-pick="${i}" ${answered ? "disabled" : ""}>
-                <span class="opt-key" aria-hidden="true">${i + 1}</span><span class="opt-text">${esc(opt)}</span></button>`;
+                <span class="opt-key" aria-hidden="true">${i + 1}</span><span class="opt-text"${langAttr(deck, other(q.shows), opt)}>${esc(opt)}</span>${mark(cls)}</button>`;
             })
             .join("")}
         </div>`;
@@ -196,8 +197,8 @@ export function renderTest(deck) {
         <p class="q-instruction" id="q-instruction">True or false: this is the matching ${other(q.shows)}</p>
         <p class="tf-statement">${esc(q.statement)}</p>
         <div class="options tf" role="group" aria-labelledby="q-instruction">
-          <button type="button" class="option ${cls(true)}" data-tf="true" ${answered ? "disabled" : ""}><span class="opt-key" aria-hidden="true">T</span><span class="opt-text">True</span></button>
-          <button type="button" class="option ${cls(false)}" data-tf="false" ${answered ? "disabled" : ""}><span class="opt-key" aria-hidden="true">F</span><span class="opt-text">False</span></button>
+          <button type="button" class="option ${cls(true)}" data-tf="true" ${answered ? "disabled" : ""}><span class="opt-key" aria-hidden="true">T</span><span class="opt-text">True</span>${mark(cls(true))}</button>
+          <button type="button" class="option ${cls(false)}" data-tf="false" ${answered ? "disabled" : ""}><span class="opt-key" aria-hidden="true">F</span><span class="opt-text">False</span>${mark(cls(false))}</button>
         </div>`;
     } else {
       const accents = needsAccentKeys(q.answer, deck.subject);
@@ -205,7 +206,7 @@ export function renderTest(deck) {
         <form class="write-form" novalidate>
           <label class="field">
             <span class="field-label">Type the ${other(q.shows)}</span>
-            <input class="input write-input" id="answer" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${esc(q.picked ?? "")}" ${answered ? "readonly" : ""}>
+            <input class="input write-input" id="answer" aria-describedby="q-prompt" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${esc(q.picked ?? "")}" ${answered ? "readonly" : ""}>
           </label>
           ${accents && !answered ? `<div class="accent-keys" role="group" aria-label="Insert accented letter">${ACCENT_KEYS.map((k) => `<button type="button" class="accent-key" data-char="${k}">${k}</button>`).join("")}</div>` : ""}
           ${answered ? "" : `<div class="row"><button class="btn btn-primary" type="submit">Check <kbd>Enter</kbd></button><button class="btn btn-ghost" type="button" id="dont-know">I don't know</button></div>`}
@@ -228,15 +229,15 @@ export function renderTest(deck) {
         <div class="progress-track"><span style="width:${((t.i + (answered ? 1 : 0)) / t.questions.length) * 100}%"></span></div>
         <span class="progress-label">${t.i + 1} / ${t.questions.length}</span>
       </div>
-      <section class="q-card ${q.shows === "definition" ? "def" : ""}" aria-labelledby="q-prompt">
+      <section class="q-card ${q.shows === "definition" ? "def" : ""}" aria-labelledby="q-prompt" id="q-card" tabindex="-1">
         <span class="face-label">${LABEL[q.shows]}</span>
         <span class="q-type">${TYPES[q.type].label}</span>
         ${q.card.image?.side === q.shows ? imageSlot(q.card.image) : ""}
-        <p class="q-prompt" id="q-prompt">${esc(q.prompt)}</p>
+        <p class="q-prompt" id="q-prompt"${langAttr(deck, q.shows, q.prompt)}>${esc(q.prompt)}</p>
       </section>
       ${body}
       <div class="q-foot">
-        <p class="feedback ${answered ? (right ? "good" : "bad") : ""}" aria-live="polite">${feedback}</p>
+        <p class="feedback ${answered ? (right ? "good" : "bad") : ""}">${feedback}</p>
         ${
           answered
             ? `<div class="row">
@@ -267,7 +268,7 @@ export function renderTest(deck) {
           input.setSelectionRange(s + 1, s + 1);
         }),
       );
-      if (!answered) input.focus({ preventScroll: true });
+      if (!answered) input.focus();
     }
     app.querySelector("#overrule")?.addEventListener("click", () => {
       q.overruled = true;
@@ -276,7 +277,7 @@ export function renderTest(deck) {
     });
     const next = app.querySelector("#next");
     next?.addEventListener("click", advance);
-    next?.focus({ preventScroll: true });
+    next?.focus();
   };
 
   const pick = (value) => {
@@ -285,6 +286,7 @@ export function renderTest(deck) {
     q.picked = value;
     if (isCorrect(q)) t.score++;
     drawQuestion();
+    announceResult(q);
   };
 
   const writeAnswer = (typed) => {
@@ -293,6 +295,12 @@ export function renderTest(deck) {
     q.result = checkAnswer(typed, q.answer);
     if (isCorrect(q)) t.score++;
     drawQuestion();
+    announceResult(q);
+  };
+
+  const announceResult = (q) => {
+    const text = app.querySelector(".q-foot .feedback")?.textContent.trim();
+    if (text) announce(text);
   };
 
   // The grade is saved when moving on, so "I was right" can still change it.
@@ -304,7 +312,12 @@ export function renderTest(deck) {
     recordAnswer(q.card, isCorrect(q), undefined, deck);
     persist();
     t.i++;
-    if (t.i < t.questions.length) return drawQuestion();
+    if (t.i < t.questions.length) {
+      drawQuestion();
+      const q = t.questions[t.i];
+      if (q.type !== "written") app.querySelector("#q-card")?.focus();
+      return;
+    }
     t.phase = "done";
     draw();
     window.scrollTo(0, 0);
@@ -322,7 +335,7 @@ export function renderTest(deck) {
     const verdict = pct === 100 ? "Perfect score." : pct >= 80 ? "Great work." : pct >= 50 ? "Getting there." : "Keep practicing.";
     app.innerHTML = `${header()}
       <section class="result">
-        <p class="big">${t.score}/${total}</p>
+        <h2 class="big">${t.score}/${total}</h2>
         <p class="sub">${pct}% correct. ${verdict}</p>
         <div class="actions">
           <button class="btn btn-primary" type="button" id="retake">New test</button>
@@ -356,12 +369,12 @@ export function renderTest(deck) {
   };
 
   const onKey = (e) => {
-    if (t.phase !== "question" || isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (t.phase !== "question" || !shortcutsOn() || isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
     const q = t.questions[t.i];
     const unanswered = q.picked === null && q.result === null;
     if (q.type === "choice" && unanswered && /^[1-9]$/.test(e.key) && q.options[Number(e.key) - 1] !== undefined) pick(q.options[Number(e.key) - 1]);
     else if (q.type === "truefalse" && unanswered && /^[tf12]$/i.test(e.key)) pick(/^[t1]$/i.test(e.key));
-    else if (e.key === "Enter" && !unanswered && e.target.id !== "next" && e.target.id !== "overrule") {
+    else if (e.key === "Enter" && !unanswered && !e.target.closest?.("a, button, input, select, textarea")) {
       e.preventDefault();
       advance();
     }
@@ -376,3 +389,10 @@ export function renderTest(deck) {
 }
 
 const other = (side) => (side === "term" ? "definition" : "term");
+
+const langAttr = (deck, side, text) => (langFor(deck, side, text).startsWith("es") ? ' lang="es"' : "");
+// Right/wrong shown in words too, not only by color.
+const mark = (cls) =>
+  cls === "is-correct" ? '<span class="opt-mark"><span aria-hidden="true">✓</span><span class="visually-hidden">Correct answer</span></span>'
+  : cls === "is-wrong" ? '<span class="opt-mark"><span aria-hidden="true">✗</span><span class="visually-hidden">Your answer</span></span>'
+  : "";

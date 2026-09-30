@@ -18,6 +18,16 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-09-30: Code review + accessibility review of the whole app
+- Code review (code-reviewer agent) of the editor, Test, Write, Steps, images, and router: 1 blocker, 5 should-fix, 4 nits; all fixed in b0974fb. Blocker: a sync finishing while a deck screen was open replaced deck/card objects, so saves and grades hit stale copies. Now merged in place (`reconcile`, tested). My own bug surfaced here too: an earlier split/join edit had pasted the SW-registration block into the hashchange handler.
+- Accessibility review (designpowers accessibility-reviewer agent, WCAG 2.2 AA): 3 critical, 6 major, several minor. Fixed:
+  - Feedback and screen changes are announced through a persistent live region; focus moves to the heading after navigation and back to the same control after redraws (keepFocus).
+  - Enter on links is no longer hijacked, single-key shortcuts can be turned off, and flipping reads the card's content.
+  - lang="es" on Spanish text; ✓/✗ text marks; scroll-padding under the fixed bars; a text version of the calendar.
+  - Non-color pressed and selected states; aria-invalid plus numbered errors in the editor; accessible names include the visible labels; emoji and kbd are hidden from names; 44px targets; reduced-motion scrolling.
+- Deferred (logged as ideas): letting her write alt text for pictures (currently "Card picture"), and undo for a mark.
+- Verification: 109 unit tests, 17/17 smoke flows, plus browser checks (announcer text, heading focus after navigation, the Enter-on-link fix, focus after Next, shortcuts off).
+
 ### 2026-09-30: #20 Pictures on cards
 - What: + Picture per card in the editor (file picker or camera), shrunk to 1024px WebP/JPEG in IndexedDB, shown on the chosen side in Flashcards, Review, Write, and Test. Included in backups and shared decks. Unused pictures are cleaned up after load, never ones added this session.
 - Decisions: both sides still need text, so every mode (Write, Test answers, search) keeps working; the picture supplements the card. Sync doesn't carry pictures (the vault is capped at 300 KB); a synced device shows "Picture is on another device". Logged as an idea.

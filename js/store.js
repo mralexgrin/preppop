@@ -99,6 +99,7 @@ export function migrate(saved, today = dayKey()) {
     });
   if (!isSubject(out.settings.lastSubject)) delete out.settings.lastSubject;
   if (out.settings.introDone !== undefined && out.settings.introDone !== true) delete out.settings.introDone;
+  if (out.settings.shortcuts !== undefined && typeof out.settings.shortcuts !== "boolean") delete out.settings.shortcuts;
   if (out.settings.matchBest !== undefined) out.settings.matchBest = cleanStamps(out.settings.matchBest);
   const goal = out.settings.dailyGoal;
   if (goal !== undefined && !(Number.isInteger(goal) && goal > 0 && goal <= 500)) delete out.settings.dailyGoal;
@@ -144,6 +145,9 @@ export function recordAnswer(card, correct, today = dayKey(), deck = null) {
 }
 
 export const dailyGoal = () => state.settings.dailyGoal ?? DEFAULT_DAILY_GOAL;
+
+// Single-key shortcuts (arrows, 1-4, T/F) can be turned off in Settings.
+export const shortcutsOn = () => state.settings.shortcuts !== false;
 
 // Removes a deck and remembers the deletion so synced devices drop it too.
 export function deleteDeck(deck) {
