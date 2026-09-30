@@ -23,7 +23,6 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 ## Next up
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
-| 19 | Search across all cards | Find a term quickly across many decks | M | S | [STRONG] |
 | 20 | Images on cards (anatomy diagrams, geometry figures) | Visual subjects; needs IndexedDB and sync size planning | H | L | [STRONG] |
 
 ## Ideas (unranked)
@@ -56,4 +55,5 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - Re-audit polish: WCAG AA contrast, hidden-panel bug, one-row toolbar and editor header (2026-09-30, fc0247f)
 - Test dates: countdown, Today banner, cram, reviews capped before the test (2026-09-30, 8491b8c)
 - #17 Hints / memory tricks on cards (2026-09-30, 7e766a5)
-- #18 Help page + first-run tip (2026-09-30)
+- #18 Help page + first-run tip (2026-09-30, 3626083)
+- #19 Search across all cards (2026-09-30)

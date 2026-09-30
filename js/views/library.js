@@ -3,6 +3,10 @@ import { dueCards, isDue, isNew, streak, dayKey, addDays } from "../srs.js";
 import { esc, plural } from "../util.js";
 import { app, toast, setTitle, view, examLabel } from "../ui.js";
 import { SUBJECTS } from "../subjects.js";
+import { searchCards } from "../search.js";
+
+// Kept while moving between screens, so Back returns to the same search.
+let lastQuery = "";
 
 export function renderLibrary() {
   setTitle();
@@ -33,6 +37,12 @@ export function renderLibrary() {
         <a class="btn btn-primary" href="#/new">+ New deck</a>
       </div>
     </header>
+    <div class="search-bar" role="search">
+      <label class="visually-hidden" for="card-search">Search your cards</label>
+      <input class="input search-input" id="card-search" type="search" placeholder="Search ${plural(cardTotal, "card")}" autocomplete="off" spellcheck="false" value="${esc(lastQuery)}">
+    </div>
+    <div id="search-results" aria-live="polite"></div>
+    <div id="library-main">
     ${introTip()}
     ${todayPanel()}
     ${backupNudge(cardTotal)}
@@ -44,7 +54,39 @@ export function renderLibrary() {
           <h2 class="group-head" id="group-${subject.id}"><span class="subject-dot" aria-hidden="true"></span>${subject.name}<span class="group-count">${plural(decks.length, "deck")}</span></h2>
           <ul class="deck-grid">${decks.map(deckTile).join("")}</ul>
         </section>`;
-    }).join("")}`;
+    }).join("")}
+    </div>`;
+
+  const search = app.querySelector("#card-search");
+  const showResults = () => {
+    lastQuery = search.value;
+    const results = app.querySelector("#search-results");
+    const main = app.querySelector("#library-main");
+    const q = search.value.trim();
+    main.hidden = Boolean(q);
+    if (!q) {
+      results.innerHTML = "";
+      return;
+    }
+    const hits = searchCards(state.decks, q);
+    results.innerHTML = hits.length
+      ? `<p class="search-count">${hits.length === 50 ? "First 50 matches" : `${hits.length} match${hits.length === 1 ? "" : "es"}`}</p>
+         <ul class="search-hits">${hits
+           .map(
+             ({ deck, card }) => `
+           <li data-subject="${deck.subject}">
+             <a href="#/deck/${deck.id}/study">
+               <strong>${esc(card.term)}</strong>
+               <span>${esc(card.definition)}</span>
+               <small><span class="subject-dot" aria-hidden="true"></span>${esc(deck.name)}</small>
+             </a>
+           </li>`,
+           )
+           .join("")}</ul>`
+      : `<p class="search-count">No cards match "${esc(q)}".</p>`;
+  };
+  search.addEventListener("input", showResults);
+  if (lastQuery) showResults();
 
   app.addEventListener("click", onLibraryClick);
   view.cleanup = () => app.removeEventListener("click", onLibraryClick);

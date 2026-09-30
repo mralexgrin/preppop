@@ -20,6 +20,7 @@ const SHELL = [
   "js/flipcard.js",
   "js/import.js",
   "js/progress.js",
+  "js/search.js",
   "js/speech.js",
   "js/srs.js",
   "js/starters.js",

@@ -14,6 +14,7 @@ User-facing release notes. Newest first.
 - Text contrast in light mode now meets WCAG AA: dark text on orange buttons, darker orange for small text like "9 due", and darker greens, pinks, and gray labels.
 - The Review badge no longer shows "0" when nothing is due.
 ### Added
+- **Search your cards:** a search box on the deck list finds cards across every deck by term, definition, or hint, ignoring capitals and accents ("nino" finds "niño"). Tap a result to study that deck.
 - **How PrepPop works:** a help page (linked from Settings, the empty screen, and the first-run tip) that explains spaced review, making decks, each practice mode, what to do before a test, and keeping your cards safe. A short "How PrepPop works in 30 seconds" tip appears on the deck list until you tap **Got it**.
 - **Hints and memory tricks:** in the deck editor, tap **+ Hint or memory trick** under a card to add one (e.g. "brady sounds like 'broody': slow"). While studying, **💡 Show hint** reveals it without flipping the card, in Flashcards, Review, and Write. Hints are kept in backups and shared decks.
 - **Test dates:** in the deck editor, set an optional **Test date**. The deck shows a countdown ("Test in 3 days"), and Today shows a banner for the next test within two weeks with a **Cram** button that opens Flashcards on the cards you don't know yet. Until the test, cards you know come back by the day before it instead of weeks later.
