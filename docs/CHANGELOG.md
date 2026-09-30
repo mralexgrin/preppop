@@ -4,6 +4,7 @@ User-facing release notes. Newest first.
 
 ## Unreleased (branch `autonomous/product-improvements`)
 ### Improved
+- **Phone tab bar:** on phones, Decks, Review, New deck, and Settings sit in a bar at the bottom, in thumb reach. Review shows a badge with how many cards are due. The bar hides while you type. On larger screens, Review is in the top menu with the same badge.
 - Every deck screen now has **Flashcards · Write · Test** tabs under the deck name, so switching modes is one tap.
 - Deck tiles: Edit and Delete sit in the corner, and the Flashcards and Test buttons share the row evenly, so nothing wraps on a phone.
 ### Added
