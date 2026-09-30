@@ -64,3 +64,17 @@ test("migrate repairs non-object activity, settings, and distractors", () => {
   const out = migrate({ activity: null, settings: [], distractors: "x" });
   assert.deepEqual([out.activity, out.settings, out.distractors], [{}, {}, {}]);
 });
+
+test("migrate cleans unsafe ids, bad fields, and bad settings already in storage", () => {
+  const out = migrate({
+    decks: [{ id: "<x>", name: 5, cards: [{ id: "<y>", term: 1, definition: null, status: "hacked" }] }, "junk"],
+    settings: { lastSubject: "<script>", dailyGoal: -3 },
+  });
+  assert.equal(out.decks.length, 1);
+  assert.match(out.decks[0].id, /^[A-Za-z0-9_-]+$/);
+  assert.equal(out.decks[0].name, "Untitled deck");
+  const [card] = out.decks[0].cards;
+  assert.match(card.id, /^[A-Za-z0-9_-]+$/);
+  assert.deepEqual([card.term, card.definition, card.status], ["", "", "new"]);
+  assert.deepEqual(out.settings, {});
+});

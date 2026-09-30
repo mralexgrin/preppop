@@ -23,7 +23,6 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 ## Next up
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
-| 6 | Backup: export/import all data as a file | Finding 6 | H | S | [STRONG] |
 | 7 | Installable PWA + offline | Finding 7 | H | S | [STRONG] |
 | 8 | Mobile polish: bottom tab bar (swipe and tile layout done) | Finding 8 | M | S | [STRONG] |
 | 9 | Test options: question count, question type mix (choice / written / true-false) | Finding 12 | M | S | [STRONG] |
@@ -38,7 +37,7 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 ## Ideas (unranked)
 - Images on cards (anatomy diagrams, geometry figures) stored in IndexedDB
 - Match game (timed pairs)
-- Share a deck with a classmate via file or link
+- Share a deck by link (file sharing done in #6)
 - Light/dark toggle
 - AI "explain this" for a card
 
@@ -49,4 +48,5 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - #3 Subjects + library grouping + tile layout (2026-09-30, 4873f90)
 - #4 Spaced repetition, Today panel, review, streak, daily goal, swipe (2026-09-30, 9ad1839)
 - #5 Write mode with lenient, accent-aware grading (2026-09-30, 40647f9)
-- #5b Mode tabs on deck screens (2026-09-30)
+- #5b Mode tabs on deck screens (2026-09-30, cd7ed9d)
+- #6 Backup/restore, deck sharing, backup reminder, daily goal setting (2026-09-30)

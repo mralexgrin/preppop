@@ -7,12 +7,19 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - The branch includes `feat/ai-proxy-worker` (Worker + delete), which was never pushed or PR'd on its own.
 
 ## Current status
-- Last completed: #5 Write mode (40647f9)
-- Next: deck mode tabs (quick win), then #6 Backup, #7 PWA
+- Last completed: #6 Backup/restore/sharing
+- Next: #7 PWA (icons already generated in icons/)
 - Branch: autonomous/product-improvements (based on feat/ai-proxy-worker)
 - Open PR: none
 
 ## Log
+### 2026-09-30: #6 Backup, restore, deck sharing (security reviewed)
+- What: Settings → Download backup / Restore or import a file (Add or Replace), Share deck in the editor (cards only, no progress), a backup reminder on the library, and a daily goal picker.
+- Why: all data lives in one browser (audit #6). This is also the no-server answer to "share decks with classmates".
+- Security: the security-reviewer agent found a **high** severity stored XSS. A crafted "backup" file could put HTML into deck or card ids, which are rendered unescaped in attributes. There was also a medium one via settings.lastSubject, plus two lows (unbounded sizes with silent save failure, duplicate ids). All four receipts were verified by grep. Fixed at the root in store.migrate(): every load and import now forces safe ids (`/^[A-Za-z0-9_-]{1,64}$/`, unique), string fields, valid statuses, a valid subject, a valid lastSubject, and a valid daily goal. Restore rolls back and says so if saving fails. Regression tests in tests/backup.test.mjs and tests/store.test.mjs. Checked end to end in the browser: a hostile file imported, and every screen visited, with no script run.
+- Fixed along the way: uid()'s fallback made ids containing "." (`String(Date.now()+Math.random())`); it now matches the safe pattern.
+- Verification: 53/53 unit tests, 10/10 smoke flows (new: backup round trip).
+
 ### 2026-09-30: Items 1-5 shipped, reflection
 - Shipped: #1 module split + tests (70c13e8), #2 paste-a-list (61e9f43), #3 subjects (4873f90), #4 spaced repetition + Today + swipe (9ad1839), #5 Write mode (40647f9).
 - Decisions:

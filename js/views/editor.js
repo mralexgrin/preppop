@@ -1,6 +1,7 @@
 import { state, persist, blankCard } from "../store.js";
 import { esc, plural, uid } from "../util.js";
-import { app, toast, setTitle, view } from "../ui.js";
+import { app, toast, setTitle, view, saveFile } from "../ui.js";
+import { makeDeckFile } from "../backup.js";
 import { parseList, SEPARATORS } from "../import.js";
 import { SUBJECTS, guessSubject } from "../subjects.js";
 
@@ -30,6 +31,7 @@ export function renderEditor(deck) {
         </div>
         <div class="head-actions">
           ${isNew ? "" : `<button class="btn btn-danger" type="button" id="delete">Delete deck</button>`}
+          ${isNew ? "" : `<button class="btn btn-soft" type="button" id="share">Share deck</button>`}
           <button class="btn btn-primary" type="submit">Save deck</button>
         </div>
       </header>
@@ -200,6 +202,12 @@ export function renderEditor(deck) {
   });
 
   app.querySelector("#add-card").addEventListener("click", addCard);
+
+  app.querySelector("#share")?.addEventListener("click", async () => {
+    const slug = deck.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "deck";
+    const shared = await saveFile(`${slug}.preppop.json`, JSON.stringify(makeDeckFile(deck), null, 1));
+    if (shared) toast(dirty ? "Shared the last saved version of this deck" : "Deck file ready to share");
+  });
 
   app.querySelector("#delete")?.addEventListener("click", () => {
     if (!confirm(`Delete "${deck.name}" and all of its cards? This can't be undone.`)) return;

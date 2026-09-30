@@ -1,5 +1,5 @@
 import { state, persist, blankCard, getDeck, dailyGoal } from "../store.js";
-import { dueCards, isDue, isNew, streak, dayKey } from "../srs.js";
+import { dueCards, isDue, isNew, streak, dayKey, addDays } from "../srs.js";
 import { esc, plural, uid } from "../util.js";
 import { app, toast, setTitle, view } from "../ui.js";
 import { SUBJECTS } from "../subjects.js";
@@ -16,6 +16,7 @@ export function renderLibrary() {
           <a class="btn btn-primary btn-lg" href="#/new">Create a deck</a>
           <button class="btn btn-soft btn-lg" type="button" id="sample">Try a sample deck</button>
         </div>
+        <p class="restore-hint">New phone? <a href="#/settings">Restore a backup</a> or open a deck a friend shared.</p>
       </section>`;
     app.querySelector("#sample").addEventListener("click", addSampleDeck);
     return;
@@ -31,6 +32,7 @@ export function renderLibrary() {
       <a class="btn btn-primary" href="#/new">+ New deck</a>
     </header>
     ${todayPanel()}
+    ${backupNudge(cardTotal)}
     ${SUBJECTS.map((subject) => {
       const decks = state.decks.filter((d) => d.subject === subject.id);
       if (!decks.length) return "";
@@ -93,6 +95,18 @@ function todayPanel() {
       </div>
       ${action ? `<div class="today-action">${action}</div>` : ""}
     </section>`;
+}
+
+// Everything lives in this browser, so remind her to back up once there's
+// real work to lose (20+ cards) and no backup in the last two weeks.
+function backupNudge(cardTotal) {
+  const last = state.settings.lastBackup;
+  if (cardTotal < 20 || (last && last >= addDays(dayKey(), -14))) return "";
+  return `
+    <p class="notice backup-nudge">
+      <span>${last ? "It's been a while since your last backup." : "Your cards are only saved in this browser."} A backup keeps your cards safe if you clear your browser or get a new phone.</span>
+      <a class="btn btn-soft" href="#/settings">Back up</a>
+    </p>`;
 }
 
 function deckTile(deck) {

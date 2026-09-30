@@ -158,9 +158,34 @@ export async function flows({ stubAnswers = true } = {}) {
     await until(() => $(".result .big"), "results screen");
   });
 
-  await step("settings page renders", async () => {
+  await step("backup downloads and restores", async () => {
     await go("#/settings");
-    check($("#clear-cache"), "clear cache button");
+    let captured = null;
+    const origClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function () {
+      if (this.download) captured = { name: this.download, href: this.href };
+      else origClick.call(this);
+    };
+    try {
+      $("#download").click();
+      await until(() => captured, "backup download");
+    } finally {
+      HTMLAnchorElement.prototype.click = origClick;
+    }
+    const text = await (await fetch(captured.href)).text();
+    const decksBefore = JSON.parse(localStorage.getItem("preppop:v1")).decks.length;
+    await go("#/");
+    $$("[data-delete-deck]")[0].click();
+    await wait(50);
+    await go("#/settings");
+    const dt = new DataTransfer();
+    dt.items.add(new File([text], captured.name, { type: "application/json" }));
+    const input = $("#restore");
+    input.files = dt.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    await until(() => $("#add-decks"), "restore panel");
+    $("#add-decks").click();
+    await until(() => JSON.parse(localStorage.getItem("preppop:v1")).decks.length === decksBefore, "deleted deck restored");
   });
 
   await step("delete a deck from the library", async () => {

@@ -5,7 +5,8 @@ export const esc = (s) =>
 
 export const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-export const uid = () => (globalThis.crypto?.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
+export const uid = () =>
+  globalThis.crypto?.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
 
 export const normalize = (s) => String(s).trim().toLowerCase().replace(/\s+/g, " ");
 

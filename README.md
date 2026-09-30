@@ -41,7 +41,7 @@ Then set `SERVICE_URL` in `ai.js` to the deployed `workers.dev` URL. `npm test` 
 
 ## Data
 
-Everything is saved in the browser's `localStorage`. There's no backend and no account.
+Everything is saved in the browser's `localStorage`. There's no backend and no account. Settings has **Download backup** and **Restore or import a file** (full backups, or single decks shared with **Share deck** in the editor). Imported files are validated and cleaned in `js/backup.js`.
 
 ## Run locally
 

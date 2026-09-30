@@ -9,6 +9,17 @@ export const STORE_KEY = "preppop:v1";
 export const state = { decks: [], distractors: {}, settings: {}, activity: {} };
 
 export const DEFAULT_DAILY_GOAL = 20;
+
+// Ids end up inside HTML attributes and URLs, so only plain ones are kept.
+export const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
+const STATUSES = ["new", "learning", "known"];
+
+function safeId(id, seen) {
+  const ok = typeof id === "string" && SAFE_ID.test(id) && !seen.has(id);
+  const out = ok ? id : uid();
+  seen.add(out);
+  return out;
+}
 export const hooks = { onPersistError: null };
 
 // Turns whatever was saved (any older shape) into the current shape.
@@ -17,11 +28,33 @@ export function migrate(saved, today = dayKey()) {
   const out = { decks: [], distractors: {}, settings: {}, activity: {}, ...rest };
   const isObject = (v) => v && typeof v === "object" && !Array.isArray(v);
   for (const key of ["distractors", "settings", "activity"]) if (!isObject(out[key])) out[key] = {};
-  out.decks = (Array.isArray(out.decks) ? out.decks : []).map((deck) => ({
-    ...deck,
-    subject: isSubject(deck.subject) ? deck.subject : "other",
-    cards: (Array.isArray(deck.cards) ? deck.cards : []).map((card) => seedSchedule(card, today)),
-  }));
+  const deckIds = new Set();
+  out.decks = (Array.isArray(out.decks) ? out.decks : [])
+    .filter(isObject)
+    .map((deck) => {
+      const cardIds = new Set();
+      return {
+        ...deck,
+        id: safeId(deck.id, deckIds),
+        name: typeof deck.name === "string" ? deck.name : "Untitled deck",
+        subject: isSubject(deck.subject) ? deck.subject : "other",
+        cards: (Array.isArray(deck.cards) ? deck.cards : []).filter(isObject).map((card) =>
+          seedSchedule(
+            {
+              ...card,
+              id: safeId(card.id, cardIds),
+              term: typeof card.term === "string" ? card.term : "",
+              definition: typeof card.definition === "string" ? card.definition : "",
+              status: STATUSES.includes(card.status) ? card.status : "new",
+            },
+            today,
+          ),
+        ),
+      };
+    });
+  if (!isSubject(out.settings.lastSubject)) delete out.settings.lastSubject;
+  const goal = out.settings.dailyGoal;
+  if (goal !== undefined && !(Number.isInteger(goal) && goal > 0 && goal <= 500)) delete out.settings.dailyGoal;
   return out;
 }
 
