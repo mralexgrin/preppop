@@ -4,6 +4,7 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 
 ## Flagged for human review
 - **Sync (roadmap #14) touches accounts and personal data of a minor. Please review before merging or deploying.** Design: no account; a random 125-bit sync key on the device derives the vault id, an auth secret (the server stores only its SHA-256), and an AES-GCM key. The server holds only ciphertext. Files: `js/sync.js`, `js/cloud.js`, `js/views/settings.js` (Sync section), `worker/src/index.js` (handleVault, cleanupVaults), `worker/migrations/0001_vaults.sql`. Deploying needs `wrangler d1 create preppop-sync`, the database_id in wrangler.jsonc, and `wrangler d1 migrations apply preppop-sync --remote`. Known limits: no daily cap on new vaults per IP (only 3/min) and no recovery if she loses the key (her local data stays). The privacy text says unused cloud copies are deleted after 12 months.
+- **Pictures don't sync across devices** (#20): backups and shared decks carry them; sync carries only the reference.
 - **Production ALLOWED_ORIGINS is now only https://mralexgrin.github.io.** localhost moved to .dev.vars for local testing.
 - **Starter deck content (js/starters.js), especially clinical.** The Handwashing steps deck (added in #13) follows a common nursing-assistant checklist order; programs differ slightly. The vital-sign values are standard adult references: HR 60–100, RR 12–20, BP <120/80 (AHA), SpO2 95–100%, fever ≥100.4 °F, stage 1 HTN 130–139/80–89 (AHA 2017). The deck says to follow the instructor, but her clinical program may teach slightly different ranges (e.g. temperature ranges vary by source). A quick human check is worthwhile.
 - **Worker not deployed.** `npx wrangler login` didn't persist on this Mac, so the Worker is undeployed and `SERVICE_URL` in `ai.js` is a placeholder. Until it's deployed, Test mode uses answers from the deck's other cards. To finish: `cd worker && npx wrangler login && npx wrangler deploy && npx wrangler secret put ANTHROPIC_API_KEY`, then put the workers.dev URL in `ai.js`.
@@ -17,6 +18,13 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-09-30: #20 Pictures on cards
+- What: + Picture per card in the editor (file picker or camera), shrunk to 1024px WebP/JPEG in IndexedDB, shown on the chosen side in Flashcards, Review, Write, and Test. Included in backups and shared decks. Unused pictures are cleaned up after load, never ones added this session.
+- Decisions: both sides still need text, so every mode (Write, Test answers, search) keeps working; the picture supplements the card. Sync doesn't carry pictures (the vault is capped at 300 KB); a synced device shows "Picture is on another device". Logged as an idea.
+- Security: pictures from files must be `data:image/(png|jpeg|webp|gif);base64` (no SVG), at most 2 MB, and used by a card in the file. Picture refs are validated in migrate() (safe id, term/definition side).
+- Design hook: flagged an `<img>` without src. It was a real flash-of-broken-image risk, so the code now renders an empty slot and creates the `<img>` only once its URL is ready. Fixed, nothing suppressed.
+- Verification: 107 unit tests, 17/17 smoke flows (new picture step). By hand: backup (20 KB with 1 picture), delete the deck, reload (cleanup removed the orphan), restore (picture back and shown).
+
 ### 2026-09-30: Items 13-19 + reflection
 - Shipped since the last reflection: #13 Steps (5e058ca), #15 cards from notes (0eff230), #14 sync (6ff7a2c), re-audit polish (fc0247f), test dates (8491b8c), #17 hints (7e766a5), #18 help page (3626083), #19 search (de6533a).
 - Decisions:

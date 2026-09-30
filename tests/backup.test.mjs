@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { makeBackup, makeDeckFile, readFile, mergeDecks, mergeActivity, cleanSyncData } from "../js/backup.js";
+import { makeBackup, makeDeckFile, readFile, mergeDecks, mergeActivity, cleanSyncData, cleanImages } from "../js/backup.js";
 
 const deck = {
   id: "d1",
@@ -131,4 +131,19 @@ test("hints travel in shared decks and backups", () => {
   assert.equal(shared.decks[0].cards[0].hint, "sixty to a hundred");
   const backup = readFile(JSON.stringify(makeBackup({ ...state, decks: [withHint] })));
   assert.equal(backup.decks[0].cards[0].hint, "sixty to a hundred");
+});
+
+test("pictures in files: only real image data for cards that use them", () => {
+  const decks = [{ cards: [{ image: { id: "img1", side: "term" } }, { image: { id: "img2", side: "definition" } }] }];
+  const png = "data:image/png;base64,iVBORw0KGgo=";
+  const out = cleanImages({ img1: png, img2: "javascript:alert(1)", img3: png, img4: "data:text/html;base64,PHNjcmlwdD4=" }, decks);
+  assert.deepEqual(out, { img1: png });
+});
+
+test("a shared deck keeps its picture reference and pictures", () => {
+  const withPic = { ...deck, cards: [{ ...deck.cards[0], image: { id: "pic1", side: "term" } }] };
+  const file = { ...makeDeckFile(withPic), images: { pic1: "data:image/jpeg;base64,/9j/4AAQ" } };
+  const back = readFile(JSON.stringify(file));
+  assert.deepEqual(back.decks[0].cards[0].image, { id: "pic1", side: "term" });
+  assert.deepEqual(back.images, { pic1: "data:image/jpeg;base64,/9j/4AAQ" });
 });

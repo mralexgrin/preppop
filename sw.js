@@ -18,6 +18,7 @@ const SHELL = [
   "js/backup.js",
   "js/cloud.js",
   "js/flipcard.js",
+  "js/images.js",
   "js/import.js",
   "js/progress.js",
   "js/search.js",

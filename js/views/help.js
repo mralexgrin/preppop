@@ -21,6 +21,7 @@ const SECTIONS = [
         <li><strong>Paste a list:</strong> in the deck editor, paste a vocab list (one card per line, like <em>hola - hello</em>) or a Quizlet export.</li>
         <li><strong>✦ Cards from notes:</strong> paste notes from class and AI suggests cards. Pick the ones you want, then check them over.</li>
         <li><strong>Hints:</strong> add a memory trick to any card. It stays hidden until you tap <em>Show hint</em>.</li>
+        <li><strong>Pictures:</strong> tap <em>+ Picture</em> on a card to add a diagram or a photo of your notes (great for anatomy and geometry). Choose whether it shows on the term side or the definition side. Pictures are saved in backups and shared decks, but sync doesn't carry them yet.</li>
         <li><strong>Cards in order:</strong> tick this for a procedure (like handwashing) or a timeline to get <strong>Steps</strong> practice.</li>
         <li><strong>Share deck:</strong> send a deck to a classmate. They open it from Settings.</li>
       </ul>`,

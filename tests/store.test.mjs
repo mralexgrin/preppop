@@ -129,3 +129,15 @@ test("migrate keeps short text hints and drops bad ones", () => {
   assert.equal(hints[3].length, 300);
   assert.equal("hint" in out.decks[0].cards[1], false);
 });
+
+test("migrate keeps valid picture references only", () => {
+  const out = migrate({ decks: [{ id: "p", cards: [
+    { id: "1", image: { id: "abc123", side: "term" } },
+    { id: "2", image: { id: "<bad>", side: "term" } },
+    { id: "3", image: { id: "ok", side: "sideways" } },
+  ] }] });
+  const [a, b, c] = out.decks[0].cards;
+  assert.deepEqual(a.image, { id: "abc123", side: "term" });
+  assert.equal("image" in b, false);
+  assert.equal("image" in c, false);
+});

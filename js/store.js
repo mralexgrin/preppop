@@ -31,8 +31,13 @@ const cleanStamps = (stamps) =>
 
 const isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
+// A card's picture reference: { id, side }. The picture itself is in IndexedDB.
+const cleanImageRef = (image) =>
+  image && SAFE_ID.test(image.id) && ["term", "definition"].includes(image.side) ? { id: image.id, side: image.side } : undefined;
+
 const withoutEmpty = (card) => {
   if (card.stats === undefined) delete card.stats;
+  if (card.image === undefined) delete card.image;
   if (card.hint === undefined) delete card.hint;
   return card;
 };
@@ -85,6 +90,7 @@ export function migrate(saved, today = dayKey()) {
               status: STATUSES.includes(card.status) ? card.status : "new",
               stats: cleanStats(card.stats),
               hint: typeof card.hint === "string" && card.hint.trim() ? card.hint.slice(0, 300) : undefined,
+              image: cleanImageRef(card.image),
             },
             today,
           )),

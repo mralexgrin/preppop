@@ -1,7 +1,8 @@
 import { state, persist, blankCard, deleteDeck, touch, forgetCards } from "../store.js";
 import { esc, plural, uid } from "../util.js";
 import { app, toast, setTitle, view, saveFile } from "../ui.js";
-import { makeDeckFile } from "../backup.js";
+import { makeDeckFile, imageIds } from "../backup.js";
+import { addImage, imageSlot, hydrateImages, exportImages } from "../images.js";
 import { makeCardsFromNotes, MAX_NOTES, MODEL_LABEL } from "../ai.js";
 import { parseList, SEPARATORS } from "../import.js";
 import { SUBJECTS, guessSubject } from "../subjects.js";
@@ -115,6 +116,7 @@ export function renderEditor(deck) {
 
   const draw = () => {
     list.innerHTML = draft.cards.map(cardRow).join("");
+    hydrateImages(list);
     const filled = draft.cards.filter((c) => c.term.trim() || c.definition.trim()).length;
     app.querySelector("#card-count").textContent = plural(filled, "card");
   };
@@ -295,7 +297,35 @@ export function renderEditor(deck) {
     app.querySelector("#card-count").textContent = plural(filled, "card");
   });
 
+  const rowCard = (el) => draft.cards.find((c) => c.id === el.closest(".card-row").dataset.id);
+  list.addEventListener("change", async (e) => {
+    if (e.target.matches("[data-image-side]")) {
+      rowCard(e.target).image = { ...rowCard(e.target).image, side: e.target.value };
+      dirty = true;
+      return;
+    }
+    if (!e.target.matches("[data-pick-image]")) return;
+    const file = e.target.files?.[0];
+    const card = rowCard(e.target);
+    if (!file) return;
+    const label = e.target.closest("label");
+    label.firstChild.textContent = "Adding picture…";
+    try {
+      card.image = { id: await addImage(file), side: "term" };
+      dirty = true;
+      draw();
+    } catch (err) {
+      label.firstChild.textContent = "+ Picture";
+      toast(err.message || "Couldn't add that picture.");
+    }
+  });
   list.addEventListener("click", (e) => {
+    if (e.target.closest("[data-remove-image]")) {
+      delete rowCard(e.target).image; // the stored picture is cleaned up later
+      dirty = true;
+      draw();
+      return;
+    }
     const addHint = e.target.closest("[data-add-hint]");
     if (addHint) {
       const row = addHint.closest(".card-row");
@@ -338,7 +368,8 @@ export function renderEditor(deck) {
 
   app.querySelector("#share")?.addEventListener("click", async () => {
     const slug = deck.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "deck";
-    const shared = await saveFile(`${slug}.preppop.json`, JSON.stringify(makeDeckFile(deck), null, 1));
+    const file = { ...makeDeckFile(deck), images: await exportImages(imageIds([deck])) };
+    const shared = await saveFile(`${slug}.preppop.json`, JSON.stringify(file, null, 1));
     if (shared) toast(dirty ? "Shared the last saved version of this deck" : "Deck file ready to share");
   });
 
@@ -419,6 +450,22 @@ function cardRow(card, i) {
           card.hint
             ? hintField(card, i)
             : `<button class="text-btn add-hint" type="button" data-add-hint>+ Hint or memory trick</button>`
+        }
+        ${
+          card.image
+            ? `<div class="pic-preview">
+                ${imageSlot(card.image)}
+                <div class="pic-tools">
+                  <label class="inline-field">Show on
+                    <select class="input select" data-image-side aria-label="Card ${i + 1} picture side">
+                      <option value="term" ${card.image.side === "term" ? "selected" : ""}>Term side</option>
+                      <option value="definition" ${card.image.side === "definition" ? "selected" : ""}>Definition side</option>
+                    </select>
+                  </label>
+                  <button class="text-btn danger" type="button" data-remove-image>Remove picture</button>
+                </div>
+              </div>`
+            : `<label class="text-btn add-hint add-pic">+ Picture<input class="visually-hidden" type="file" accept="image/*" data-pick-image aria-label="Add a picture to card ${i + 1}"></label>`
         }
       </div>
       <div class="row-tools">

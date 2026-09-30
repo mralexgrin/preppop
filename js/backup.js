@@ -5,6 +5,7 @@
 import { uid } from "./util.js";
 import { migrate } from "./store.js";
 import { isSubject } from "./subjects.js";
+import { DATA_URL, MAX_IMAGE_BYTES } from "./images.js";
 
 const FORMAT = "preppop";
 const MAX_TEXT = 2000;
@@ -35,7 +36,7 @@ export function makeDeckFile(deck, now = new Date()) {
       name: deck.name,
       subject: deck.subject,
       ordered: Boolean(deck.ordered),
-      cards: deck.cards.map(({ term, definition, hint }) => ({ term, definition, ...(hint ? { hint } : {}) })),
+      cards: deck.cards.map(({ term, definition, hint, image }) => ({ term, definition, ...(hint ? { hint } : {}), ...(image ? { image } : {}) })),
     },
   };
 }
@@ -48,6 +49,7 @@ function cleanDeck(deck, { freshIds }) {
     .map((c) => {
       const card = { id: freshIds || typeof c?.id !== "string" ? uid() : c.id, term: text(c?.term).trim(), definition: text(c?.definition).trim() };
       if (typeof c?.hint === "string" && c.hint.trim()) card.hint = c.hint.trim().slice(0, 300);
+      if (c?.image && typeof c.image === "object") card.image = { id: c.image.id, side: c.image.side };
       if (!freshIds) {
         if (["new", "learning", "known"].includes(c?.status)) card.status = c.status;
         if (c?.stats && typeof c.stats === "object") card.stats = { seen: c.stats.seen, missed: c.stats.missed };
@@ -86,12 +88,13 @@ export function readFile(raw) {
   if (data.kind === "deck") {
     const deck = cleanDeck(data.deck, { freshIds: true });
     if (!deck.cards.length) throw new Error("That deck file has no cards in it.");
-    return { kind: "deck", decks: migrate({ decks: [deck] }).decks, createdAt: data.createdAt };
+    const decks = migrate({ decks: [deck] }).decks;
+    return { kind: "deck", decks, images: cleanImages(data.images, decks), createdAt: data.createdAt };
   }
   if (data.kind === "backup") {
     const decks = (Array.isArray(data.decks) ? data.decks : []).filter((d) => d && typeof d === "object" && !Array.isArray(d)).slice(0, MAX_DECKS).map((d) => cleanDeck(d, { freshIds: false }));
     const cleaned = migrate({ decks, activity: cleanActivity(data.activity), settings: cleanSettings(data.settings) });
-    return { kind: "backup", decks: cleaned.decks, activity: cleaned.activity, settings: cleaned.settings, createdAt: data.createdAt };
+    return { kind: "backup", decks: cleaned.decks, activity: cleaned.activity, settings: cleaned.settings, images: cleanImages(data.images, cleaned.decks), createdAt: data.createdAt };
   }
   throw new Error("That file isn't a PrepPop backup or deck.");
 }
@@ -140,3 +143,19 @@ export function cleanSyncData(remote) {
   const out = migrate({ decks, activity: cleanActivity(remote?.activity), deletedDecks: remote?.deletedDecks });
   return { decks: out.decks, activity: out.activity, deletedDecks: out.deletedDecks };
 }
+
+// Pictures in a file: { imageId: "data:image/...;base64,..." }. Only real
+// image data URLs of a sane size, for pictures a card in the file uses.
+export function cleanImages(images, decks) {
+  const used = new Set(decks.flatMap((d) => d.cards.map((c) => c.image?.id).filter(Boolean)));
+  const out = {};
+  if (!images || typeof images !== "object") return out;
+  for (const [id, url] of Object.entries(images)) {
+    if (!used.has(id) || typeof url !== "string" || !DATA_URL.test(url)) continue;
+    if (url.length * 0.75 > MAX_IMAGE_BYTES) continue;
+    out[id] = url;
+  }
+  return out;
+}
+
+export const imageIds = (decks) => decks.flatMap((d) => d.cards.map((c) => c.image?.id).filter(Boolean));

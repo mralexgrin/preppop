@@ -2,7 +2,8 @@ import { state, persist, dailyGoal } from "../store.js";
 import { esc, plural } from "../util.js";
 import { app, toast, setTitle, saveFile, install, isInstalled, isIOS } from "../ui.js";
 import { MODEL_LABEL } from "../ai.js";
-import { makeBackup, readFile, mergeDecks, mergeActivity } from "../backup.js";
+import { makeBackup, readFile, mergeDecks, mergeActivity, imageIds } from "../backup.js";
+import { exportImages, importImages } from "../images.js";
 import { dayKey } from "../srs.js";
 import { syncStatus, syncNow, enableSync, connectSync, disableSync } from "../cloud.js";
 
@@ -81,7 +82,8 @@ export function renderSettings() {
 
   app.querySelector("#download").addEventListener("click", async () => {
     const today = dayKey();
-    const saved = await saveFile(`preppop-backup-${today}.json`, JSON.stringify(makeBackup(state), null, 1));
+    const backup = { ...makeBackup(state), images: await exportImages(imageIds(state.decks)).catch(() => ({})) };
+    const saved = await saveFile(`preppop-backup-${today}.json`, JSON.stringify(backup, null, 1));
     if (!saved) return;
     state.settings.lastBackup = today;
     persist();
@@ -135,7 +137,12 @@ function showRestore(data) {
     panel.innerHTML = "";
   });
   // Only report success if it actually saved; otherwise put things back.
-  const commit = (change, message) => {
+  const commit = async (change, message) => {
+    try {
+      await importImages(data.images);
+    } catch {
+      toast("Couldn't import the pictures in that file; the cards are coming in without them.");
+    }
     const before = { decks: state.decks, activity: state.activity, settings: state.settings };
     change();
     if (!persist()) {

@@ -246,6 +246,28 @@ export async function flows({ stubAnswers = true } = {}) {
     check($(".steps-result .big").textContent === "3/3", "all three steps in the right place");
   });
 
+  await step("picture on a card: shrunk, saved, shown", async () => {
+    await go("#/");
+    await go(`#/deck/${sampleId()}/edit`);
+    const canvas = Object.assign(document.createElement("canvas"), { width: 1400, height: 1000 });
+    const g = canvas.getContext("2d");
+    g.fillStyle = "#c33";
+    g.fillRect(0, 0, 1400, 1000);
+    const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+    const dt = new DataTransfer();
+    dt.items.add(new File([blob], "diagram.png", { type: "image/png" }));
+    const input = $("[data-pick-image]");
+    input.files = dt.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    const preview = await until(() => $(".pic-preview img")?.naturalWidth && $(".pic-preview img"), "picture preview", 5000);
+    check(preview.naturalWidth === 1024, "picture shrunk to 1024px wide");
+    $("form").requestSubmit();
+    await wait(200);
+    await go(`#/deck/${sampleId()}/study`);
+    await until(() => $(".face.front img.card-img")?.src, "picture on the flashcard");
+    check($$("img:not([src])").length === 0, "no empty image tags");
+  });
+
   await step("test date: countdown badge, Today banner, cram", async () => {
     await go(`#/deck/${sampleId()}/edit`);
     const d = new Date();

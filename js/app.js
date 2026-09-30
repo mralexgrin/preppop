@@ -17,6 +17,8 @@ import { syncNow, pushChanges, syncStatus } from "./cloud.js";
 
 hooks.onPersistError = () => toast("Couldn't save. Browser storage is full or blocked.");
 load();
+// Remove stored pictures no card uses anymore (e.g. from an editor that wasn't saved).
+if ("indexedDB" in window) setTimeout(() => import("./images.js").then((m) => m.collectGarbage(state.decks)).catch(() => {}), 3000);
 
 let currentHash = location.hash || "#/";
 

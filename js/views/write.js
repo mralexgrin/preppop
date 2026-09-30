@@ -9,6 +9,7 @@ import { ROUND_SIZE } from "../srs.js";
 import { checkAnswer, countsAsCorrect, needsAccentKeys, ACCENT_KEYS } from "../answer.js";
 import { canSpeak, speak, langFor, SPEAKER_ICON } from "../speech.js";
 import { bindHint } from "../flipcard.js";
+import { imageSlot, hydrateImages } from "../images.js";
 
 const LABEL = { term: "Term", definition: "Definition" };
 
@@ -94,6 +95,7 @@ export function renderWrite(deck) {
       </div>
       <section class="q-card ${showSide === "definition" ? "def" : ""}" aria-labelledby="w-prompt">
         <span class="face-label">${LABEL[showSide]}</span>
+        ${card.image?.side === showSide ? imageSlot(card.image) : ""}
         <p class="q-prompt" id="w-prompt">${esc(card[showSide])}</p>
       </section>
       <form class="write-form" novalidate>
@@ -137,6 +139,7 @@ export function renderWrite(deck) {
     });
     app.querySelector("#dont-know")?.addEventListener("click", () => check(""));
     bindHint(app);
+    hydrateImages(app);
     app.querySelectorAll(".accent-key").forEach((b) =>
       b.addEventListener("click", () => {
         const { selectionStart: s, selectionEnd: e, value } = input;

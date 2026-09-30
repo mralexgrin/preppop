@@ -2,6 +2,7 @@
 
 import { esc } from "./util.js";
 import { canSpeak, speak, langFor, SPEAKER_ICON } from "./speech.js";
+import { imageSlot } from "./images.js";
 
 const LABEL = { term: "Term", definition: "Definition" };
 
@@ -14,11 +15,13 @@ export function flipCardHTML({ card, front = "term", flipped = false, topLeft = 
         <span class="face front" aria-hidden="${flipped}">
           <span class="face-label">${topLeft}</span>
           <span class="face-status">${topRight}</span>
+          ${card.image?.side === front ? imageSlot(card.image) : ""}
           <span class="face-text">${esc(card[front])}</span>
           <span class="face-hint">Tap to flip</span>
         </span>
         <span class="face back" aria-hidden="${!flipped}">
           <span class="face-label">${LABEL[back]}</span>
+          ${card.image?.side === back ? imageSlot(card.image) : ""}
           <span class="face-text">${esc(card[back])}</span>
           <span class="face-hint">Tap to flip back</span>
         </span>

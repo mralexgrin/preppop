@@ -9,6 +9,7 @@ import { writeWrongAnswers, MODEL_LABEL } from "../ai.js";
 import { TYPES, buildQuestions, wrongAnswersFor, makeTrueFalse } from "../testbuilder.js";
 import { checkAnswer, countsAsCorrect, needsAccentKeys, ACCENT_KEYS } from "../answer.js";
 import { shuffle } from "../util.js";
+import { imageSlot, hydrateImages } from "../images.js";
 
 const SHOWS = { term: "Show term", definition: "Show definition", mix: "Mix" };
 const COUNTS = [10, 20, 0]; // 0 = every card
@@ -230,6 +231,7 @@ export function renderTest(deck) {
       <section class="q-card ${q.shows === "definition" ? "def" : ""}" aria-labelledby="q-prompt">
         <span class="face-label">${LABEL[q.shows]}</span>
         <span class="q-type">${TYPES[q.type].label}</span>
+        ${q.card.image?.side === q.shows ? imageSlot(q.card.image) : ""}
         <p class="q-prompt" id="q-prompt">${esc(q.prompt)}</p>
       </section>
       ${body}
@@ -246,6 +248,7 @@ export function renderTest(deck) {
       </div>
       ${TYPES[q.type].needsWrong ? `<p class="source-tag">${q.ai ? `✦ Wrong answers written by ${MODEL_LABEL}` : "Wrong answers pulled from your other cards"}</p>` : ""}`;
 
+    hydrateImages(app);
     app.querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => pick(q.options[Number(b.dataset.pick)])));
     app.querySelectorAll("[data-tf]").forEach((b) => b.addEventListener("click", () => pick(b.dataset.tf === "true")));
     const form = app.querySelector(".write-form");

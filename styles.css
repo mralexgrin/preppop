@@ -622,3 +622,17 @@ main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .search-hits a:hover { border-color: var(--ink-3); }
 .search-hits span { color: var(--ink-2); }
 .search-hits small { display: flex; align-items: center; gap: 6px; color: var(--ink-3); font-size: .82rem; margin-top: 4px; }
+
+/* Pictures on cards */
+.hint-slot { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: flex-start; }
+.hint-slot .hint-field { flex: 1 1 100%; }
+.add-pic { cursor: pointer; }
+.add-pic:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.pic-preview { flex: 1 1 100%; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+.pic-preview .card-img, .pic-preview .card-img-slot { width: 96px; height: 72px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); display: block; }
+.pic-tools { display: flex; gap: 8px 14px; align-items: center; flex-wrap: wrap; }
+.card-img { display: block; max-width: 100%; max-height: 200px; border-radius: 12px; object-fit: contain; margin: 0 auto; }
+.card-img-slot { display: block; min-height: 40px; }
+.image-missing { display: inline-block; font-size: .82rem; color: var(--ink-3); padding: 6px 10px; border: 1px dashed var(--line); border-radius: 8px; }
+.face .card-img { max-height: min(200px, 26vh); }
+.q-card .card-img { max-height: 220px; margin-bottom: 14px; }
