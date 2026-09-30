@@ -23,9 +23,10 @@ export function renderWrite(deck) {
     return [...shuffle(cards.filter((c) => c.status !== "known")), ...shuffle(cards.filter((c) => c.status === "known"))];
   };
 
-  const startRound = (cards) => {
+  // restPool: cards still to come after this round (kept when retrying misses).
+  const startRound = (cards, restPool = null) => {
     w.queue = cards.slice(0, ROUND_SIZE);
-    w.pool = cards.slice(ROUND_SIZE);
+    w.pool = restPool ?? cards.slice(ROUND_SIZE);
     w.i = 0;
     w.result = null;
     w.score = 0;
@@ -228,7 +229,7 @@ export function renderWrite(deck) {
               .join("")}</ul></section>`
           : ""
       }`;
-    app.querySelector("#retry")?.addEventListener("click", () => startRound(shuffle(w.missed.map((m) => m.card))));
+    app.querySelector("#retry")?.addEventListener("click", () => startRound(shuffle(w.missed.map((m) => m.card)), w.pool));
     app.querySelector("#more")?.addEventListener("click", () => startRound(w.pool));
     app.querySelector("#again").addEventListener("click", restart);
   };

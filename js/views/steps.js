@@ -95,6 +95,7 @@ export function renderSteps(deck) {
         const [id] = s.placed.splice(Number(b.dataset.unplace), 1);
         s.pool.push(id);
         draw();
+        app.querySelector(`[data-place="${id}"]`)?.focus({ preventScroll: true });
       }),
     );
     app.querySelector("#check")?.addEventListener("click", check);
@@ -108,6 +109,7 @@ export function renderSteps(deck) {
     persist();
     draw();
     app.querySelector(".steps-result")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    app.querySelector("#again")?.focus({ preventScroll: true });
   };
 
   view.cleanup = null;

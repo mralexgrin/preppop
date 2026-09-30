@@ -290,6 +290,7 @@ export function renderEditor(deck) {
   list.addEventListener("input", (e) => {
     const row = e.target.closest(".card-row");
     const card = draft.cards.find((c) => c.id === row.dataset.id);
+    if (!e.target.dataset.side) return; // selects and file inputs are handled on "change"
     card[e.target.dataset.side] = e.target.value;
     row.classList.remove("invalid");
     dirty = true;
@@ -316,6 +317,7 @@ export function renderEditor(deck) {
       draw();
     } catch (err) {
       label.firstChild.textContent = "+ Picture";
+      e.target.value = ""; // so picking the same file again tries again
       toast(err.message || "Couldn't add that picture.");
     }
   });
@@ -356,10 +358,15 @@ export function renderEditor(deck) {
     next?.querySelector("textarea").focus();
   });
 
-  // Tab out of the last definition to start a new card.
+  // Tab out of a filled-in last definition to start a new card. An empty
+  // last card lets Tab move on normally, so keyboard users can reach the
+  // rest of the form.
   list.addEventListener("keydown", (e) => {
     if (e.key !== "Tab" || e.shiftKey || e.target.dataset.side !== "definition") return;
-    if (e.target.closest(".card-row") !== list.lastElementChild) return;
+    const row = e.target.closest(".card-row");
+    if (row !== list.lastElementChild) return;
+    const card = draft.cards.find((c) => c.id === row.dataset.id);
+    if (!card?.term.trim() || !card.definition.trim()) return;
     e.preventDefault();
     addCard();
   });

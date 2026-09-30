@@ -99,6 +99,7 @@ export function migrate(saved, today = dayKey()) {
     });
   if (!isSubject(out.settings.lastSubject)) delete out.settings.lastSubject;
   if (out.settings.introDone !== undefined && out.settings.introDone !== true) delete out.settings.introDone;
+  if (out.settings.matchBest !== undefined) out.settings.matchBest = cleanStamps(out.settings.matchBest);
   const goal = out.settings.dailyGoal;
   if (goal !== undefined && !(Number.isInteger(goal) && goal > 0 && goal <= 500)) delete out.settings.dailyGoal;
   return out;

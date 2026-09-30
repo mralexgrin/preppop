@@ -32,10 +32,25 @@ async function tx(mode, run) {
   });
 }
 
-export const getImage = (id) => tx("readonly", (s) => s.get(id));
+// Stored as { blob, at }; older entries may be a bare Blob.
+export const getImage = async (id) => {
+  const value = await tx("readonly", (s) => s.get(id));
+  return value?.blob ?? value;
+};
+const storedAt = (value) => value?.at ?? 0;
 export const deleteImage = (id) => tx("readwrite", (s) => s.delete(id));
-const saveBlob = (id, blob) => tx("readwrite", (s) => s.put(blob, id));
-const allIds = () => tx("readonly", (s) => s.getAllKeys());
+const saveBlob = (id, blob) => tx("readwrite", (s) => s.put({ blob, at: Date.now() }, id));
+const allEntries = () =>
+  tx("readonly", (s) => {
+    const out = [];
+    s.openCursor().onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (!cursor) return;
+      out.push([cursor.key, cursor.value]);
+      cursor.continue();
+    };
+    return out;
+  });
 
 // Shrinks a picked or captured photo and stores it. Returns its id.
 export async function addImage(file) {
@@ -66,7 +81,7 @@ export async function imageUrl(id) {
   if (urls.has(id)) return urls.get(id);
   const blob = await getImage(id).catch(() => null);
   const url = blob ? URL.createObjectURL(blob) : null;
-  urls.set(id, url);
+  if (url) urls.set(id, url); // don't remember "missing": it may be imported later
   return url;
 }
 
@@ -90,10 +105,14 @@ export async function hydrateImages(root, alt = "Card picture") {
 const addedThisSession = new Set();
 
 // Removes stored pictures no card uses anymore.
+// Pictures stored in the last day are kept too: another tab may have an
+// editor open with a picture it hasn't saved yet.
 export async function collectGarbage(decks) {
+  const entries = await allEntries().catch(() => []);
   const used = new Set([...addedThisSession, ...decks.flatMap((d) => d.cards.map((c) => c.image?.id).filter(Boolean))]);
-  const ids = await allIds().catch(() => []);
-  await Promise.all(ids.filter((id) => !used.has(id)).map((id) => deleteImage(id).catch(() => {})));
+  const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+  const unused = entries.filter(([id, value]) => !used.has(id) && storedAt(value) < dayAgo).map(([id]) => id);
+  await Promise.all(unused.map((id) => deleteImage(id).catch(() => {})));
 }
 
 // For backups and shared decks: pictures as data URLs, and back.

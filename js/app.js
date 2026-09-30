@@ -28,19 +28,6 @@ window.addEventListener("hashchange", () => {
     return;
   }
   route();
-
-// Offline support. Skipped on localhost so edits show up immediately while
-// developing; add ?sw to the URL to test it locally.
-const isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);
-if ("serviceWorker" in navigator && (!isLocal || new URLSearchParams(location.search).has("sw"))) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
-}
-
-// Chrome/Android offer an install prompt; keep it for the Settings button.
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  install.prompt = e;
-});
 });
 
 function route() {
@@ -105,7 +92,10 @@ let pushTimer;
 hooks.onChange = () => {
   if (!state.sync) return;
   clearTimeout(pushTimer);
-  pushTimer = setTimeout(pushChanges, 10_000);
+  pushTimer = setTimeout(() => {
+    pushTimer = null;
+    pushChanges();
+  }, 10_000);
 };
 
 document.addEventListener("visibilitychange", () => {

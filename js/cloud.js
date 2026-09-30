@@ -61,10 +61,28 @@ function stopBecauseErased() {
   persist(undefined, { quiet: true });
 }
 
+// Screens hold on to deck and card objects (an open editor, a test in
+// progress), so merged data is written into the existing objects instead of
+// replacing them. Otherwise a save or a grade would land on a stale copy.
+export function reconcile(mergedDecks) {
+  const existing = new Map(state.decks.map((d) => [d.id, d]));
+  const refill = (target, source) => {
+    for (const key of Object.keys(target)) delete target[key];
+    return Object.assign(target, source);
+  };
+  return mergedDecks.map((deck) => {
+    const old = existing.get(deck.id);
+    if (!old) return deck;
+    const oldCards = new Map(old.cards.map((c) => [c.id, c]));
+    const cards = deck.cards.map((card) => (oldCards.has(card.id) ? refill(oldCards.get(card.id), card) : card));
+    return refill(old, { ...deck, cards });
+  });
+}
+
 async function applyRemote(v, sealed, version) {
   const remote = cleanSyncData(await open(v.aesKey, sealed, label(v, version)));
   const merged = mergeState(syncPayload(state), remote);
-  state.decks = merged.decks;
+  state.decks = reconcile(merged.decks);
   state.activity = merged.activity;
   state.deletedDecks = merged.deletedDecks;
 }
@@ -126,7 +144,11 @@ export async function syncNow({ mustExist = false } = {}) {
 }
 
 export async function pushChanges() {
-  if (!state.sync || syncStatus.busy) return;
+  if (!state.sync) return;
+  if (syncStatus.busy) {
+    setTimeout(pushChanges, 5000); // a sync is running; try again after it
+    return;
+  }
   syncStatus.busy = true;
   try {
     const v = await currentVault();
