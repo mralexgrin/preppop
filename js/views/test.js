@@ -1,4 +1,4 @@
-import { state, persist } from "../store.js";
+import { state, persist, recordAnswer } from "../store.js";
 import { esc, plural, shuffle, hash, normalize, isTyping } from "../util.js";
 import { app, setTitle, view } from "../ui.js";
 import { writeWrongAnswers, MODEL_LABEL } from "../ai.js";
@@ -167,7 +167,10 @@ export function renderTest(deck) {
     const q = t.questions[t.i];
     if (q.chosen !== null || !q.options[i]) return;
     q.chosen = i;
-    if (q.options[i] === q.answer) t.score++;
+    const correct = q.options[i] === q.answer;
+    if (correct) t.score++;
+    recordAnswer(q.card, correct);
+    persist();
     drawQuestion();
   };
 
@@ -176,10 +179,6 @@ export function renderTest(deck) {
     t.i++;
     if (t.i < t.questions.length) return drawQuestion();
 
-    // Missed cards go back into the "still learning" pile.
-    const missed = t.questions.filter((q) => q.options[q.chosen] !== q.answer);
-    missed.forEach((q) => (q.card.status = "learning"));
-    persist();
     t.phase = "done";
     draw();
     window.scrollTo(0, 0);

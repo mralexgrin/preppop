@@ -1,6 +1,7 @@
-import { persist } from "../store.js";
+import { persist, recordAnswer } from "../store.js";
 import { esc, plural, shuffle, isTyping } from "../util.js";
 import { app, toast, setTitle, statusChip, view } from "../ui.js";
+import { flipCardHTML, setFlipped, attachSwipe } from "../flipcard.js";
 
 export function renderStudy(deck) {
   setTitle(deck.name);
@@ -75,39 +76,18 @@ export function renderStudy(deck) {
     }
 
     const card = deck.cards.find((c) => c.id === s.order[s.i]);
-    const back = s.front === "term" ? "definition" : "term";
-    const label = { term: "Term", definition: "Definition" };
     app.innerHTML = `${header}${toolbar}
       <div class="progress">
         <div class="progress-track"><span style="width:${(s.i / s.order.length) * 100}%"></span></div>
         <span class="progress-label">${s.i + 1} / ${s.order.length}</span>
       </div>
-      <button type="button" class="flip-card ${s.flipped ? "flipped" : ""}" id="flip" aria-describedby="flip-live">
-        <span class="flip-inner">
-          <span class="face front" aria-hidden="${s.flipped}">
-            <span class="face-label">${label[s.front]}</span>
-            <span class="face-status">${statusChip(card.status)}</span>
-            <span class="face-text">${esc(card[s.front])}</span>
-            <span class="face-hint">Tap to flip</span>
-          </span>
-          <span class="face back" aria-hidden="${!s.flipped}">
-            <span class="face-label">${label[back]}</span>
-            <span class="face-text">${esc(card[back])}</span>
-            <span class="face-hint">Tap to flip back</span>
-          </span>
-        </span>
-      </button>
-      <p class="visually-hidden" id="flip-live" aria-live="polite">${s.flipped ? "Showing back" : "Showing front"}</p>
-      <div class="mark-row">
-        <button class="btn btn-learn" type="button" data-mark="learning"><kbd>←</kbd> Still learning</button>
-        <button class="btn btn-know" type="button" data-mark="known">I know it <kbd>→</kbd></button>
-      </div>
-      <p class="kbd-hint">Space to flip · ← still learning · → I know it</p>
+      ${flipCardHTML({ card, front: s.front, flipped: s.flipped, topRight: statusChip(card.status) })}
       <p class="card-tools"><button class="text-btn danger" type="button" id="delete-card">Delete this card</button></p>`;
 
     bindToolbar();
     const flipBtn = app.querySelector("#flip");
     flipBtn.addEventListener("click", flip);
+    attachSwipe(flipBtn, { onLeft: () => mark("learning"), onRight: () => mark("known") });
     app.querySelectorAll("[data-mark]").forEach((b) => b.addEventListener("click", () => mark(b.dataset.mark)));
     app.querySelector("#delete-card").addEventListener("click", () => deleteCard(card));
   };
@@ -143,19 +123,15 @@ export function renderStudy(deck) {
   };
 
   const flip = () => {
-    const flipBtn = app.querySelector("#flip");
-    if (!flipBtn) return;
+    if (!app.querySelector("#flip")) return;
     s.flipped = !s.flipped;
-    flipBtn.classList.toggle("flipped", s.flipped);
-    flipBtn.querySelector(".front").setAttribute("aria-hidden", s.flipped);
-    flipBtn.querySelector(".back").setAttribute("aria-hidden", !s.flipped);
-    app.querySelector("#flip-live").textContent = s.flipped ? "Showing back" : "Showing front";
+    setFlipped(app, s.flipped);
   };
 
   const mark = (status) => {
     if (s.i >= s.order.length) return;
     const card = deck.cards.find((c) => c.id === s.order[s.i]);
-    card.status = status;
+    recordAnswer(card, status === "known");
     persist();
     s.tally[status]++;
     s.i++;

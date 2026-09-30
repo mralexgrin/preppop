@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { migrate, load, persist, state, STORE_KEY } from "../js/store.js";
+import { migrate, load, persist, state, STORE_KEY, recordAnswer } from "../js/store.js";
 
 const memoryStorage = (initial = {}) => {
   const data = { ...initial };
@@ -8,8 +8,8 @@ const memoryStorage = (initial = {}) => {
 };
 
 test("migrate fills defaults for empty or junk input", () => {
-  assert.deepEqual(migrate(null), { decks: [], distractors: {}, settings: {} });
-  assert.deepEqual(migrate("nope"), { decks: [], distractors: {}, settings: {} });
+  assert.deepEqual(migrate(null), { decks: [], distractors: {}, settings: {}, activity: {} });
+  assert.deepEqual(migrate("nope"), { decks: [], distractors: {}, settings: {}, activity: {} });
 });
 
 test("migrate drops an old stored API key and keeps decks", () => {
@@ -40,4 +40,27 @@ test("migrate gives old decks a subject and keeps valid ones", () => {
   const out = migrate({ decks: [{ id: "a", name: "Old", cards: [] }, { id: "b", name: "Bio", subject: "biology", cards: [] }, { id: "c", name: "Bad", subject: "astrology" }] });
   assert.deepEqual(out.decks.map((d) => d.subject), ["other", "biology", "other"]);
   assert.deepEqual(out.decks[2].cards, []);
+});
+
+test("migrate seeds a schedule for cards saved before spaced repetition", () => {
+  const out = migrate({ decks: [{ id: "d", cards: [{ id: "1", status: "known" }, { id: "2", status: "learning" }, { id: "3", status: "new" }] }] }, "2026-09-30");
+  const [known, learning, fresh] = out.decks[0].cards;
+  assert.deepEqual(known.srs, { box: 1, due: "2026-10-01" });
+  assert.deepEqual(learning.srs, { box: 0, due: "2026-09-30" });
+  assert.equal(fresh.srs, undefined);
+});
+
+test("recordAnswer schedules the card and counts today's practice", () => {
+  state.activity = {};
+  const card = { id: "x", term: "a", definition: "b", status: "new" };
+  recordAnswer(card, true, "2026-09-30");
+  recordAnswer({ id: "y" }, false, "2026-09-30");
+  assert.equal(card.status, "known");
+  assert.equal(card.srs.due, "2026-10-01");
+  assert.deepEqual(state.activity["2026-09-30"], { answered: 2, correct: 1 });
+});
+
+test("migrate repairs non-object activity, settings, and distractors", () => {
+  const out = migrate({ activity: null, settings: [], distractors: "x" });
+  assert.deepEqual([out.activity, out.settings, out.distractors], [{}, {}, {}]);
 });

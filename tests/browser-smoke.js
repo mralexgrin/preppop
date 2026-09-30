@@ -108,6 +108,24 @@ export async function flows({ stubAnswers = true } = {}) {
     check(after === before - 1, "card count dropped by one");
   });
 
+  await step("missed cards show up in Today's review", async () => {
+    await go(`#/deck/${sampleId()}/study`);
+    key("ArrowLeft"); // still learning -> due today
+    await wait(50);
+    await go("#/");
+    check($(".today-line").textContent.includes("ready to review"), "today panel shows due cards");
+    await go("#/review");
+    const total = Number($(".progress-label").textContent.split("/")[1]);
+    check(total >= 1, "review has cards");
+    for (let i = 0; i < total; i++) {
+      key("ArrowRight");
+      await wait(30);
+    }
+    await until(() => $(".result .big"), "review done screen");
+    await go("#/");
+    check(!$(".today-line").textContent.includes("ready to review"), "nothing due after review");
+  });
+
   await step("test mode with AI answers (stubbed)", async () => {
     await go(`#/deck/${sampleId()}/test`);
     $("#start").click();

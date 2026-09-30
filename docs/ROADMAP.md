@@ -23,11 +23,10 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 ## Next up
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
-| 4 | Spaced repetition + "Today" review across decks, streak | Finding 4 | H | M | [STRONG] |
 | 5 | Write mode: type the answer, lenient + accent-aware matching, accent keys | Finding 5 | H | M | [STRONG] |
 | 6 | Backup: export/import all data as a file | Finding 6 | H | S | [STRONG] |
 | 7 | Installable PWA + offline | Finding 7 | H | S | [STRONG] |
-| 8 | Mobile polish: bottom tab bar, swipe flashcards, tile layout | Finding 8 | M | S | [STRONG] |
+| 8 | Mobile polish: bottom tab bar (swipe and tile layout done) | Finding 8 | M | S | [STRONG] |
 | 9 | Test options: question count, question type mix (choice / written / true-false) | Finding 12 | M | S | [STRONG] |
 | 10 | Pronunciation (speech) per deck language | Finding 9 | M | S | [STRONG] |
 | 11 | Progress page: streak calendar, practice log, weakest cards | Finding 10 | M | M | [STRONG] |
@@ -48,4 +47,5 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - (Phase 0 docs)
 - #1 Module split + test harness (2026-09-30, 70c13e8)
 - #2 Paste-a-list import (2026-09-30, 61e9f43)
-- #3 Subjects + library grouping + tile layout (2026-09-30)
+- #3 Subjects + library grouping + tile layout (2026-09-30, 4873f90)
+- #4 Spaced repetition, Today panel, review, streak, daily goal, swipe (2026-09-30)

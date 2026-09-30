@@ -7,8 +7,11 @@ Make your own flashcards, study them, and test yourself.
 ## Features
 
 - **Deck maker.** Create a deck, type a term and a definition for each card, and save. Tab out of the last definition to start a new card, or tap **Paste a list** to turn a vocab list (one card per line) into cards in one go.
-- **Flashcards.** See the term (or the definition first), flip the card, then mark it **I know it** or **Still learning**. Shuffle, or study only the cards you don't know yet. Keyboard: `Space` flips, `←` still learning, `→` I know it.
+- **Flashcards.** See the term (or the definition first), flip the card, then mark it **I know it** or **Still learning**. Shuffle, or study only the cards you don't know yet. Keyboard: `Space` flips, `←` still learning, `→` I know it. On a phone, swipe the card right or left.
 - **Test mode.** Multiple choice. Each question shows a term (pick the definition), a definition (pick the term), or a mix. Claude writes 3 believable wrong answers per question. Missed cards go back into the Still learning pile. Keyboard: `1`–`4` to answer, `Enter` for the next question.
+
+- **Today and spaced review.** The deck list opens with a Today panel: cards due across every deck, a daily goal, and a streak. Every answer (in Flashcards, Review, or a Test) reschedules the card. Known cards come back after 1, 3, 7, 14, 30, 60, then 120 days; missed cards come back the same day. The schedule lives in `js/srs.js`.
+- **Subjects.** Decks are grouped by subject (Biology, Clinical skills, Spanish, History, English, Geometry, Other).
 
 ## AI answer choices
 

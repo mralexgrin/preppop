@@ -358,3 +358,31 @@ textarea.input { min-height: 52px; line-height: 1.45; }
 .chip-radio:hover > span { border-color: var(--ink-3); }
 .chip-radio input:checked + span { border-color: var(--subj); color: var(--ink); background: color-mix(in srgb, var(--subj) 12%, var(--surface)); }
 .chip-radio input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* Today panel */
+.today { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); margin-bottom: 32px; display: grid; gap: 12px; background-image: linear-gradient(135deg, var(--pop-soft), transparent 55%); }
+.today-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.today h2 { font-size: 1.35rem; }
+.today-line { font-size: 1.05rem; }
+.today-line strong { font-family: var(--font-display); font-size: 1.2rem; }
+.streak { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 8px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); font-size: .9rem; }
+.streak .flame { width: 18px; height: 18px; color: var(--ink-3); }
+.streak.on { background: var(--sun); color: #3a2a00; }
+.streak.on .flame { color: var(--pop); }
+.goal { display: flex; align-items: center; gap: 12px; }
+.goal-track { flex: 1; height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.goal-track span { display: block; height: 100%; background: var(--know); border-radius: 999px; }
+.goal-label { font-size: .88rem; color: var(--ink-2); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.today-action .btn { width: 100%; }
+@media (min-width: 720px) { .today-action .btn { width: auto; } }
+.meta .due { color: var(--pop); font-weight: 700; }
+
+.deck-context { display: inline-flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-size: .85rem; color: var(--ink-2); max-width: 70vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Swipe feedback on the flip card */
+.swipe-hint { display: none; text-align: center; color: var(--ink-3); font-size: .85rem; margin-top: 14px; }
+@media (hover: none) { .swipe-hint { display: block; } }
+.flip-card { touch-action: pan-y; transition: transform .2s ease; }
+.flip-card.swipe-right .face { box-shadow: 0 0 0 3px var(--know), var(--shadow-lg); }
+.flip-card.swipe-left .face { box-shadow: 0 0 0 3px var(--learn), var(--shadow-lg); }
+@media (prefers-reduced-motion: reduce) { .flip-card { transition: none; } }
