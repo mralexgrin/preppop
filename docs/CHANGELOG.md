@@ -7,7 +7,10 @@ User-facing release notes. Newest first.
 - **Phone tab bar:** on phones, Decks, Review, New deck, and Settings sit in a bar at the bottom, in thumb reach. Review shows a badge with how many cards are due. The bar hides while you type. On larger screens, Review is in the top menu with the same badge.
 - Every deck screen now has **Flashcards · Write · Test** tabs under the deck name, so switching modes is one tap.
 - Deck tiles: Edit and Delete sit in the corner, and the Flashcards and Test buttons share the row evenly, so nothing wraps on a phone.
+### Fixed
+- The Review badge no longer shows "0" when nothing is due.
 ### Added
+- **Test options:** before a test, choose how many questions (10, 20, or all), which types (**Multiple choice**, **Written**, **True or false**, mixed evenly), and whether each question shows the term, the definition, or a mix. PrepPop remembers your choices. Written questions use the same fair grading as Write mode. True or false shows either the real answer or a believable wrong one. Every answer feeds your review schedule, and the results screen links to **Review missed cards**.
 - **Install on your phone and study offline:** PrepPop can go on your home screen like an app (Settings → *Put PrepPop on your home screen* has the steps for iPhone and Android). It opens full screen, loads instantly, and works with no connection. Updates arrive the next time you open it. AI answers in Test mode still need internet.
 - **Backup and restore:** Settings → **Download backup** saves all decks, progress, and settings to a file (on a phone it opens the share sheet so you can save to Files or iCloud Drive). **Restore or import a file** reads it back. Choose **Add decks I don't have** (keeps everything) or **Replace everything**. The deck list reminds you to back up once you have 20+ cards and haven't backed up in two weeks.
 - **Share a deck:** in the deck editor, **Share deck** makes a file with just the cards (no progress) to send to a classmate. They open it from Settings → **Restore or import a file**.

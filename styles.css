@@ -454,3 +454,20 @@ main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
   .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   body.typing .tab-bar { display: none; }
 }
+
+/* Test setup and question types */
+.setup { display: grid; gap: 18px; margin-bottom: 22px; }
+.setup-row { display: grid; gap: 8px; }
+.setup-row .setup-label { margin: 0; font-weight: 700; }
+.chip-check { position: relative; cursor: pointer; }
+.chip-check input { position: absolute; opacity: 0; }
+.chip-check span { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); font-weight: 600; font-size: .92rem; color: var(--ink-2); }
+.chip-check span::before { content: ""; width: 16px; height: 16px; border-radius: 5px; border: 2px solid var(--ink-3); flex: none; }
+.chip-check input:checked + span { border-color: var(--pop); color: var(--ink); background: var(--pop-soft); }
+.chip-check input:checked + span::before { background: var(--pop) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat; border-color: var(--pop); }
+.chip-check input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+.q-type { position: absolute; top: 14px; right: 18px; font-size: .75rem; font-weight: 700; color: var(--ink-3); }
+.tf-statement { font-size: 1.15rem; font-weight: 600; padding: 16px 18px; border-radius: var(--radius-sm); background: var(--surface-2); margin-bottom: 12px; overflow-wrap: anywhere; }
+.options.tf { grid-template-columns: 1fr 1fr; }
+.q-foot .row { gap: 10px; }
+.nav-badge[hidden] { display: none !important; }

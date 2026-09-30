@@ -21,6 +21,7 @@ const SHELL = [
   "js/srs.js",
   "js/store.js",
   "js/subjects.js",
+  "js/testbuilder.js",
   "js/ui.js",
   "js/util.js",
   "js/views/editor.js",

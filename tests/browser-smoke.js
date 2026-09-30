@@ -158,6 +158,36 @@ export async function flows({ stubAnswers = true } = {}) {
     await until(() => $(".result .big"), "results screen");
   });
 
+  await step("test with every question type", async () => {
+    await go("#/"); // the previous step ends on this same URL
+    await go(`#/deck/${sampleId()}/test`);
+    // Each change re-renders the setup, so look the boxes up again every time.
+    for (let box = $(".chip-check input:not(:checked)"); box; box = $(".chip-check input:not(:checked)")) {
+      box.checked = true;
+      box.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    check($$(".chip-check input:checked").length === 3, "all three types selected");
+    $("#start").click();
+    await until(() => $(".q-prompt"), "first question");
+    const total = Number($$(".progress-label").pop().textContent.split("/")[1]);
+    const seen = new Set();
+    for (let i = 0; i < total; i++) {
+      const type = $(".q-type").textContent;
+      seen.add(type);
+      if ($("[data-pick]")) $("[data-pick]").click();
+      else if ($("[data-tf]")) $("[data-tf]").click();
+      else {
+        $("#answer").value = "zzz";
+        $(".write-form").requestSubmit();
+      }
+      await until(() => $("#next"), "next button");
+      $("#next").click();
+      await wait(20);
+    }
+    await until(() => $(".result .big"), "results");
+    check(seen.size === 3, `saw all 3 question types (saw ${[...seen].join(", ")})`);
+  });
+
   await step("backup downloads and restores", async () => {
     await go("#/settings");
     let captured = null;
