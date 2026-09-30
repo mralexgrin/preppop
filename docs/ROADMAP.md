@@ -23,7 +23,6 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 ## Next up
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
-| 7 | Installable PWA + offline | Finding 7 | H | S | [STRONG] |
 | 8 | Mobile polish: bottom tab bar (swipe and tile layout done) | Finding 8 | M | S | [STRONG] |
 | 9 | Test options: question count, question type mix (choice / written / true-false) | Finding 12 | M | S | [STRONG] |
 | 10 | Pronunciation (speech) per deck language | Finding 9 | M | S | [STRONG] |
@@ -49,4 +48,5 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - #4 Spaced repetition, Today panel, review, streak, daily goal, swipe (2026-09-30, 9ad1839)
 - #5 Write mode with lenient, accent-aware grading (2026-09-30, 40647f9)
 - #5b Mode tabs on deck screens (2026-09-30, cd7ed9d)
-- #6 Backup/restore, deck sharing, backup reminder, daily goal setting (2026-09-30)
+- #6 Backup/restore, deck sharing, backup reminder, daily goal setting (2026-09-30, 98b6742)
+- #7 Installable PWA + offline (2026-09-30)

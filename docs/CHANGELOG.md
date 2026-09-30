@@ -7,6 +7,7 @@ User-facing release notes. Newest first.
 - Every deck screen now has **Flashcards · Write · Test** tabs under the deck name, so switching modes is one tap.
 - Deck tiles: Edit and Delete sit in the corner, and the Flashcards and Test buttons share the row evenly, so nothing wraps on a phone.
 ### Added
+- **Install on your phone and study offline:** PrepPop can go on your home screen like an app (Settings → *Put PrepPop on your home screen* has the steps for iPhone and Android). It opens full screen, loads instantly, and works with no connection. Updates arrive the next time you open it. AI answers in Test mode still need internet.
 - **Backup and restore:** Settings → **Download backup** saves all decks, progress, and settings to a file (on a phone it opens the share sheet so you can save to Files or iCloud Drive). **Restore or import a file** reads it back. Choose **Add decks I don't have** (keeps everything) or **Replace everything**. The deck list reminds you to back up once you have 20+ cards and haven't backed up in two weeks.
 - **Share a deck:** in the deck editor, **Share deck** makes a file with just the cards (no progress) to send to a classmate. They open it from Settings → **Restore or import a file**.
 - **Daily goal setting:** choose 10, 20, 30, or 50 cards a day in Settings.

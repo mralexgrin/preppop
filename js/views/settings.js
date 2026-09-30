@@ -1,6 +1,6 @@
 import { state, persist, dailyGoal } from "../store.js";
 import { esc, plural } from "../util.js";
-import { app, toast, setTitle, saveFile } from "../ui.js";
+import { app, toast, setTitle, saveFile, install, isInstalled, isIOS } from "../ui.js";
 import { MODEL_LABEL } from "../ai.js";
 import { makeBackup, readFile, mergeDecks, mergeActivity } from "../backup.js";
 import { dayKey } from "../srs.js";
@@ -22,6 +22,11 @@ export function renderSettings() {
 
   app.innerHTML = `
     <header class="page-head"><div><h1>Settings</h1></div></header>
+
+    <section class="panel" aria-labelledby="install-heading">
+      <h2 id="install-heading">${isInstalled() ? "PrepPop is on your home screen" : "Put PrepPop on your home screen"}</h2>
+      ${installHTML()}
+    </section>
 
     <section class="panel" aria-labelledby="goal-heading">
       <h2 id="goal-heading">Daily goal</h2>
@@ -47,6 +52,16 @@ export function renderSettings() {
       <p>In Test mode, ${MODEL_LABEL} writes the wrong answers. They're saved so repeat tests are instant. ${plural(cached, "question")} saved.</p>
       <div class="row"><button class="btn btn-ghost" type="button" id="clear-cache" ${cached ? "" : "disabled"}>Clear saved AI answers</button></div>
     </section>`;
+
+  app.querySelector("#install")?.addEventListener("click", async () => {
+    const prompt = install.prompt;
+    if (!prompt) return;
+    install.prompt = null;
+    prompt.prompt();
+    const { outcome } = await prompt.userChoice;
+    if (outcome === "accepted") toast("PrepPop installed");
+    renderSettings();
+  });
 
   app.querySelectorAll("[data-goal]").forEach((b) =>
     b.addEventListener("click", () => {
@@ -139,4 +154,13 @@ function showRestore(data) {
       state.settings = { ...state.settings, ...data.settings };
     }, "Backup restored");
   });
+}
+
+function installHTML() {
+  if (isInstalled()) return "<p>It opens full screen and works without a connection. AI answers in Test mode still need internet.</p>";
+  const why = "<p>It opens like an app, full screen, and works without a connection. Your cards stay on this device.</p>";
+  if (install.prompt) return `${why}<div class="row"><button class="btn btn-primary" type="button" id="install">Install PrepPop</button></div>`;
+  if (isIOS())
+    return `${why}<ol class="steps"><li>Open PrepPop in <strong>Safari</strong>.</li><li>Tap the <strong>Share</strong> button (the square with an arrow).</li><li>Choose <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</li></ol>`;
+  return `${why}<p class="hint">In your browser's menu, choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p>`;
 }

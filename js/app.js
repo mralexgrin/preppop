@@ -1,5 +1,5 @@
 import { load, getDeck, hooks } from "./store.js";
-import { toast, view } from "./ui.js";
+import { toast, view, install } from "./ui.js";
 import { renderLibrary } from "./views/library.js";
 import { renderEditor } from "./views/editor.js";
 import { renderStudy } from "./views/study.js";
@@ -19,6 +19,19 @@ window.addEventListener("hashchange", () => {
     return;
   }
   route();
+
+// Offline support. Skipped on localhost so edits show up immediately while
+// developing; add ?sw to the URL to test it locally.
+const isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);
+if ("serviceWorker" in navigator && (!isLocal || new URLSearchParams(location.search).has("sw"))) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+// Chrome/Android offer an install prompt; keep it for the Settings button.
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  install.prompt = e;
+});
 });
 
 function route() {
@@ -46,3 +59,16 @@ function route() {
 }
 
 route();
+
+// Offline support. Skipped on localhost so edits show up immediately while
+// developing; add ?sw to the URL to test it locally.
+const isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);
+if ("serviceWorker" in navigator && (!isLocal || new URLSearchParams(location.search).has("sw"))) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+// Chrome/Android offer an install prompt; keep it for the Settings button.
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  install.prompt = e;
+});

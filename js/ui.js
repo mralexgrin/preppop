@@ -69,3 +69,8 @@ export async function saveFile(name, text, type = "application/json") {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   return true;
 }
+
+// Install-to-home-screen state, filled in by app.js.
+export const install = { prompt: null };
+export const isInstalled = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+export const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);

@@ -424,3 +424,10 @@ input.write-input { min-height: 54px; }
 .restore-hint a { font-weight: 700; }
 .backup-nudge { align-items: center; justify-content: space-between; flex-wrap: wrap; }
 .backup-nudge .btn { min-height: 38px; }
+
+/* Installed app: keep content clear of the notch and home indicator */
+.site-header { padding-top: env(safe-area-inset-top); }
+main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+.toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
+.steps { margin: 0; padding-left: 22px; color: var(--ink-2); display: grid; gap: 4px; }
+.steps strong { color: var(--ink); }

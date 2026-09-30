@@ -39,6 +39,10 @@ npx wrangler secret put ANTHROPIC_API_KEY
 
 Then set `SERVICE_URL` in `ai.js` to the deployed `workers.dev` URL. `npm test` runs offline tests against a stubbed Anthropic API.
 
+## Install and offline
+
+PrepPop is a Progressive Web App: `manifest.webmanifest` plus `sw.js`, a service worker that caches the app shell and serves every same-origin GET stale-while-revalidate. It can be added to a phone's home screen and works offline. The service worker is skipped on localhost so edits show up right away; open `http://localhost:4190/?sw` to test it. When you add a JS file, add it to `SHELL` in `sw.js` (`tests/sw.test.mjs` fails until you do). Icons are drawn by `node scripts/make-icons.mjs`.
+
 ## Data
 
 Everything is saved in the browser's `localStorage`. There's no backend and no account. Settings has **Download backup** and **Restore or import a file** (full backups, or single decks shared with **Share deck** in the editor). Imported files are validated and cleaned in `js/backup.js`.
