@@ -15,6 +15,7 @@ Make your own flashcards, study them, and test yourself.
 - **Steps.** For decks marked "in order" (procedures, timelines): tap the steps into the right order, 8 at a time for long decks (`js/steps.js`).
 - **Progress.** Streaks, a 12-week practice calendar, weekly accuracy, mastery by subject, what's coming up, and the most-missed cards (`js/progress.js`).
 - **Starter decks.** Ready-made decks (medical terminology, vital signs, cell parts, Spanish greetings, U.S. government, literary terms, geometry formulas) in `js/starters.js`, added from `#/starters`.
+- **Test dates.** A deck can have a test date: a countdown on the deck and on Today, a Cram button, and reviews pulled before the test (`grade()` in `js/srs.js`).
 - **Subjects.** Decks are grouped by subject (Biology, Clinical skills, Spanish, History, English, Geometry, Other).
 
 ## AI answer choices

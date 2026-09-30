@@ -109,3 +109,15 @@ test("decks get an updatedAt, defaulting to createdAt", () => {
   const out = migrate({ decks: [{ id: "a", createdAt: 42, cards: [] }, { id: "b", updatedAt: 99, cards: [] }] });
   assert.deepEqual(out.decks.map((d) => d.updatedAt), [42, 99]);
 });
+
+test("migrate keeps a valid test date and drops a bad one", () => {
+  const out = migrate({ decks: [{ id: "a", examDate: "2026-10-04", cards: [] }, { id: "b", examDate: "<x>", cards: [] }] });
+  assert.equal(out.decks[0].examDate, "2026-10-04");
+  assert.equal("examDate" in out.decks[1], false);
+});
+
+test("recordAnswer uses the deck's test date", () => {
+  const card = { id: "e", srs: { box: 2, due: "2026-09-30" } };
+  recordAnswer(card, true, "2026-09-30", { examDate: "2026-10-04" });
+  assert.equal(card.srs.due, "2026-10-03");
+});

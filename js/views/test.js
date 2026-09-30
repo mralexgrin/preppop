@@ -298,7 +298,7 @@ export function renderTest(deck) {
     const answered = q.type === "written" ? q.result !== null : q.picked !== null;
     if (!answered || q.done) return;
     q.done = true;
-    recordAnswer(q.card, isCorrect(q));
+    recordAnswer(q.card, isCorrect(q), undefined, deck);
     persist();
     t.i++;
     if (t.i < t.questions.length) return drawQuestion();

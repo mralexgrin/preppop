@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { grade, addDays, dayKey, isDue, isNew, dueCards, streak, seedSchedule, INTERVALS, MAX_BOX } from "../js/srs.js";
+import { grade, addDays, dayKey, isDue, isNew, dueCards, streak, seedSchedule, daysUntil, INTERVALS, MAX_BOX } from "../js/srs.js";
 
 const T = "2026-09-30";
 
@@ -77,4 +77,26 @@ test("seedSchedule gives old cards a starting point", () => {
   assert.equal(seedSchedule({ status: "new" }, T).srs, undefined);
   const scheduled = { status: "known", srs: { box: 4, due: "2026-11-01" } };
   assert.equal(seedSchedule(scheduled, T), scheduled);
+});
+
+test("a coming test pulls the next review to the day before it", () => {
+  // Box 3 would normally be 7 days out; the test is in 4 days.
+  const out = grade({ srs: { box: 2, due: T } }, true, T, "2026-10-04");
+  assert.equal(out.srs.box, 3);
+  assert.equal(out.srs.due, "2026-10-03");
+});
+
+test("a test tomorrow brings cards back the morning of the test", () => {
+  assert.equal(grade({ srs: { box: 3, due: T } }, true, T, "2026-10-01").srs.due, "2026-10-01");
+});
+
+test("a far-off or past test doesn't change the schedule", () => {
+  assert.equal(grade({ srs: { box: 0, due: T } }, true, T, "2026-12-01").srs.due, "2026-10-01");
+  assert.equal(grade({ srs: { box: 2, due: T } }, true, T, "2026-09-01").srs.due, addDays(T, 7));
+});
+
+test("daysUntil counts calendar days", () => {
+  assert.equal(daysUntil(T, "2026-10-03"), 3);
+  assert.equal(daysUntil(T, T), 0);
+  assert.equal(daysUntil("2026-03-07", "2026-03-09"), 2); // across DST
 });

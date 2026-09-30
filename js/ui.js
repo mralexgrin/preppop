@@ -74,3 +74,15 @@ export async function saveFile(name, text, type = "application/json") {
 export const install = { prompt: null };
 export const isInstalled = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
 export const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+// "Test today", "Test tomorrow", "Test in 3 days", or "Test Fri, Oct 9".
+export function examLabel(examDate, today) {
+  const [y, m, d] = examDate.split("-").map(Number);
+  const [ty, tm, td] = today.split("-").map(Number);
+  const days = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ty, tm - 1, td)) / 86400000);
+  if (days < 0) return "";
+  if (days === 0) return "Test today";
+  if (days === 1) return "Test tomorrow";
+  if (days <= 7) return `Test in ${days} days`;
+  return `Test ${new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}`;
+}

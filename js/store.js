@@ -29,6 +29,8 @@ const cleanStamps = (stamps) =>
     ? Object.fromEntries(Object.entries(stamps).filter(([id, at]) => SAFE_ID.test(id) && Number.isFinite(at)))
     : {};
 
+const isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+
 const withoutEmpty = (card) => {
   if (card.stats === undefined) delete card.stats;
   return card;
@@ -62,12 +64,14 @@ export function migrate(saved, today = dayKey()) {
     .filter(isObject)
     .map((deck) => {
       const cardIds = new Set();
+      const { examDate, ...rest } = deck;
       return {
-        ...deck,
+        ...rest,
         id: safeId(deck.id, deckIds),
         name: typeof deck.name === "string" ? deck.name : "Untitled deck",
         subject: isSubject(deck.subject) ? deck.subject : "other",
         ordered: deck.ordered === true,
+        ...(isDay(deck.examDate) ? { examDate: deck.examDate } : {}),
         deletedCards: cleanStamps(deck.deletedCards),
         updatedAt: Number.isFinite(deck.updatedAt) ? deck.updatedAt : Number.isFinite(deck.createdAt) ? deck.createdAt : 0,
         cards: (Array.isArray(deck.cards) ? deck.cards : []).filter(isObject).map((card) =>
@@ -119,8 +123,9 @@ export const getDeck = (id) => state.decks.find((d) => d.id === id);
 export const blankCard = () => ({ id: uid(), term: "", definition: "", status: "new" });
 
 // Schedules the card's next review and counts the answer toward today's practice.
-export function recordAnswer(card, correct, today = dayKey()) {
-  Object.assign(card, grade(card, correct, today));
+// deck (optional): lets a coming test pull the next review earlier.
+export function recordAnswer(card, correct, today = dayKey(), deck = null) {
+  Object.assign(card, grade(card, correct, today, deck?.examDate ?? null));
   const stats = card.stats ?? { seen: 0, missed: 0 };
   card.stats = { seen: stats.seen + 1, missed: stats.missed + (correct ? 0 : 1) };
   const day = (state.activity[today] ??= { answered: 0, correct: 0 });

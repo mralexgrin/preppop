@@ -1,7 +1,7 @@
 import { state, persist, getDeck, dailyGoal, deleteDeck } from "../store.js";
 import { dueCards, isDue, isNew, streak, dayKey, addDays } from "../srs.js";
 import { esc, plural } from "../util.js";
-import { app, toast, setTitle, view } from "../ui.js";
+import { app, toast, setTitle, view, examLabel } from "../ui.js";
 import { SUBJECTS } from "../subjects.js";
 
 export function renderLibrary() {
@@ -60,6 +60,20 @@ function onLibraryClick(e) {
 
 const FLAME = `<svg class="flame" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 3.5-1.2 5.3-2.6 7C8 10.8 7 12.4 7 14.5A5 5 0 0 0 12 20a5 5 0 0 0 5-5.3c0-2.2-1.2-3.6-2.1-4.6-.3 1.4-1 2.3-2 2.8.6-3.5-.2-7.4-.9-10.9Z" fill="currentColor"/></svg>`;
 
+// The nearest test in the next two weeks, with a Cram button.
+function examBanner(today) {
+  const soon = state.decks
+    .filter((d) => d.examDate && d.examDate >= today && d.examDate <= addDays(today, 14) && d.cards.length)
+    .sort((a, b) => a.examDate.localeCompare(b.examDate))[0];
+  if (!soon) return "";
+  const left = soon.cards.filter((c) => c.status !== "known").length;
+  return `
+    <div class="exam-banner" data-subject="${soon.subject}">
+      <p><strong>${examLabel(soon.examDate, today)}:</strong> ${esc(soon.name)}. ${left ? `${plural(left, "card")} not known yet.` : "You know every card. A quick review keeps it fresh."}</p>
+      <a class="btn btn-soft" href="#/deck/${soon.id}/study/cram">Cram</a>
+    </div>`;
+}
+
 function todayPanel() {
   const today = dayKey();
   const due = dueCards(state.decks, today).length;
@@ -91,6 +105,7 @@ function todayPanel() {
         <p class="streak ${days ? "on" : ""}">${FLAME}<span>${days ? `<strong>${days}</strong>-day streak` : "No streak yet"}</span></p>
       </div>
       <p class="today-line">${line}</p>
+      ${examBanner(today)}
       <div class="goal" role="img" aria-label="${Math.min(done, goal)} of ${goal} cards practiced today">
         <div class="goal-track"><span style="width:${Math.min(100, (done / goal) * 100)}%"></span></div>
         <span class="goal-label">${done >= goal ? "Daily goal done" : `${done} / ${goal} today`}</span>
@@ -123,6 +138,7 @@ function deckTile(deck) {
         <div>
           <h3>${esc(deck.name)}</h3>
           <p class="meta">${plural(total, "card")}${due ? ` · <span class="due">${due} due</span>` : ""}</p>
+          ${deck.examDate && examLabel(deck.examDate, dayKey()) ? `<p class="exam-badge">${examLabel(deck.examDate, dayKey())}</p>` : ""}
         </div>
         <div class="tile-tools">
           <a class="text-btn" href="#/deck/${deck.id}/edit" aria-label="Edit ${esc(deck.name)}">Edit</a>

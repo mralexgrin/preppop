@@ -246,6 +246,19 @@ export async function flows({ stubAnswers = true } = {}) {
     check($(".steps-result .big").textContent === "3/3", "all three steps in the right place");
   });
 
+  await step("test date: countdown badge, Today banner, cram", async () => {
+    await go(`#/deck/${sampleId()}/edit`);
+    const d = new Date();
+    d.setDate(d.getDate() + 2);
+    const pad = (n) => String(n).padStart(2, "0");
+    setValue($("#exam-date"), `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+    $("form").requestSubmit();
+    await until(() => $(".exam-banner"), "test banner on Today");
+    check($(".exam-badge").textContent === "Test in 2 days", "countdown badge on the deck");
+    $(".exam-banner a").click();
+    await until(() => location.hash.endsWith("/study/cram"), "cram opens flashcards");
+  });
+
   await step("progress page shows practice and weak cards", async () => {
     await go("#/progress");
     check(Number($(".stat strong").textContent) >= 1, "streak of at least one day after practicing");

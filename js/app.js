@@ -47,7 +47,7 @@ function route() {
   currentHash = location.hash || "#/";
   window.scrollTo(0, 0);
 
-  const [page, id, mode] = currentHash.replace(/^#\/?/, "").split("/");
+  const [page, id, mode, option] = currentHash.replace(/^#\/?/, "").split("/");
   const section = ["settings", "review", "new", "progress"].includes(page) ? page : "decks";
   document.querySelectorAll("[data-nav]").forEach((a) => {
     a.dataset.nav === section ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current");
@@ -69,7 +69,7 @@ function route() {
   if (page === "progress") return renderProgress();
   const deck = page === "deck" && getDeck(id);
   if (deck && mode === "edit") return renderEditor(deck);
-  if (deck && mode === "study") return renderStudy(deck);
+  if (deck && mode === "study") return renderStudy(deck, { cram: option === "cram" });
   if (deck && mode === "test") return renderTest(deck);
   if (deck && mode === "write") return renderWrite(deck);
   if (deck && mode === "steps") return renderSteps(deck);

@@ -63,6 +63,7 @@ function cleanDeck(deck, { freshIds }) {
     name: text(deck?.name).trim().slice(0, 120) || "Imported deck",
     subject: deck?.subject,
     ordered: deck?.ordered === true,
+    ...(typeof deck?.examDate === "string" ? { examDate: deck.examDate } : {}),
     createdAt: Number.isFinite(deck?.createdAt) ? deck.createdAt : Date.now(),
     ...(!freshIds && Number.isFinite(deck?.updatedAt) ? { updatedAt: deck.updatedAt } : {}),
     ...(!freshIds && deck?.deletedCards ? { deletedCards: deck.deletedCards } : {}),

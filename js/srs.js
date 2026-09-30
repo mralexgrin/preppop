@@ -20,14 +20,31 @@ export const isNew = (card) => !card.srs;
 export const isDue = (card, today) => Boolean(card.srs) && card.srs.due <= today;
 
 // Returns the card's new fields after an answer. Doesn't mutate.
-export function grade(card, correct, today) {
+// examDate (optional, "YYYY-MM-DD"): the deck has a test coming up, so a
+// known card comes back no later than the day before it (or the morning of
+// the test, if that's tomorrow).
+export function grade(card, correct, today, examDate = null) {
   if (!correct) return { status: "learning", srs: { box: 0, due: today, last: today } };
   // Right again before it's due (e.g. flipping through a deck twice in one
   // night) doesn't push it further out.
   if (card.srs && card.srs.due > today) return { status: "known", srs: { ...card.srs, last: today } };
   const box = Math.min((card.srs?.box ?? 0) + 1, MAX_BOX);
-  return { status: "known", srs: { box, due: addDays(today, INTERVALS[box]), last: today } };
+  let due = addDays(today, INTERVALS[box]);
+  if (examDate && examDate > today) {
+    const dayBefore = addDays(examDate, -1);
+    const cap = dayBefore > today ? dayBefore : examDate;
+    if (due > cap) due = cap;
+  }
+  return { status: "known", srs: { box, due, last: today } };
 }
+
+export const daysUntil = (from, to) => {
+  const [a, b] = [from, to].map((k) => {
+    const [y, m, d] = k.split("-").map(Number);
+    return Date.UTC(y, m - 1, d);
+  });
+  return Math.round((b - a) / 86400000);
+};
 
 // Cards across all decks that are due, most overdue and least known first.
 export function dueCards(decks, today) {

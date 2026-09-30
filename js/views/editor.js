@@ -10,8 +10,8 @@ export function renderEditor(deck) {
   const isNew = !deck;
   setTitle(isNew ? "New deck" : `Edit ${deck.name}`);
   const draft = deck
-    ? { name: deck.name, subject: deck.subject, ordered: Boolean(deck.ordered), cards: deck.cards.map((c) => ({ ...c })) }
-    : { name: "", subject: state.settings.lastSubject ?? "other", ordered: false, cards: [blankCard(), blankCard(), blankCard()] };
+    ? { name: deck.name, subject: deck.subject, ordered: Boolean(deck.ordered), examDate: deck.examDate ?? "", cards: deck.cards.map((c) => ({ ...c })) }
+    : { name: "", subject: state.settings.lastSubject ?? "other", ordered: false, examDate: "", cards: [blankCard(), blankCard(), blankCard()] };
   let subjectPicked = !isNew;
   if (!draft.cards.length) draft.cards.push(blankCard());
 
@@ -49,6 +49,13 @@ export function renderEditor(deck) {
             </label>`).join("")}
         </div>
       </fieldset>
+      <div class="exam-field">
+        <label class="field">
+          <span class="field-label">Test date (optional)</span>
+          <input class="input exam-input" type="date" id="exam-date" value="${esc(draft.examDate)}">
+        </label>
+        <p class="hint">Before the test, cards you know come back by the day before it, and Today shows a countdown.</p>
+      </div>
       <label class="check order-check"><input type="checkbox" id="ordered" ${draft.ordered ? "checked" : ""}> <span>Cards are in order, like the steps of a procedure or a timeline. Adds <strong>Steps</strong> practice.</span></label>
       <p class="form-error" id="form-error" role="alert" hidden></p>
       <div class="import-bar">
@@ -128,6 +135,10 @@ export function renderEditor(deck) {
     dirty = true;
     const guess = !subjectPicked && guessSubject(draft.name);
     if (guess) pickSubject(guess);
+  });
+  app.querySelector("#exam-date").addEventListener("input", (e) => {
+    draft.examDate = e.target.value;
+    dirty = true;
   });
   app.querySelector("#ordered").addEventListener("change", (e) => {
     draft.ordered = e.target.checked;
@@ -357,11 +368,13 @@ export function renderEditor(deck) {
     }
 
     if (isNew) {
-      state.decks.push({ id: uid(), name, subject: draft.subject, ordered: draft.ordered, createdAt: Date.now(), updatedAt: Date.now(), cards });
+      state.decks.push({ id: uid(), name, subject: draft.subject, ordered: draft.ordered, ...(draft.examDate ? { examDate: draft.examDate } : {}), createdAt: Date.now(), updatedAt: Date.now(), cards });
     } else {
       const kept = new Set(cards.map((c) => c.id));
       forgetCards(deck, deck.cards.filter((c) => !kept.has(c.id)).map((c) => c.id));
       Object.assign(deck, { name, subject: draft.subject, ordered: draft.ordered, cards });
+      if (draft.examDate) deck.examDate = draft.examDate;
+      else delete deck.examDate;
       touch(deck);
     }
     state.settings.lastSubject = draft.subject;

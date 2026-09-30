@@ -185,7 +185,7 @@ export function renderWrite(deck) {
     const card = w.queue[w.i];
     const r = w.result;
     const correct = r.overruled || countsAsCorrect(r.verdict);
-    recordAnswer(card, correct);
+    recordAnswer(card, correct, undefined, deck);
     persist();
     if (correct) w.score++;
     else w.missed.push({ card, typed: r.typed });

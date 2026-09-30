@@ -23,7 +23,10 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 ## Next up
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
-| 16 | Card extras: hint/mnemonic, star, search | polish | M | S | [STRONG] |
+| 17 | Hint / memory-trick field on cards (shown on demand in Flashcards and Write) | Mnemonics help with medical terms and Spanish | M | S | [STRONG] |
+| 18 | "How PrepPop works" help page + first-run tips | New features need to be discoverable without outside help | M | S | [STRONG] |
+| 19 | Search across all cards | Find a term quickly across many decks | M | S | [STRONG] |
+| 20 | Images on cards (anatomy diagrams, geometry figures) | Visual subjects; needs IndexedDB and sync size planning | H | L | [STRONG] |
 
 ## Ideas (unranked)
 - QR code for the sync key (scan instead of typing 25 characters)
@@ -52,4 +55,5 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - #13 Steps mode for ordered decks + card reordering (2026-09-30, 5e058ca)
 - #15 Cards from notes via Worker /cards-from-notes (2026-09-30, 0eff230)
 - #14 Sync across devices: sync key, end-to-end encrypted, D1 (2026-09-30, 6ff7a2c, security reviewed)
-- Re-audit polish: WCAG AA contrast, hidden-panel bug, one-row toolbar and editor header (2026-09-30)
+- Re-audit polish: WCAG AA contrast, hidden-panel bug, one-row toolbar and editor header (2026-09-30, fc0247f)
+- Test dates: countdown, Today banner, cram, reviews capped before the test (2026-09-30)

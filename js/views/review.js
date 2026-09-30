@@ -93,7 +93,7 @@ export function renderReview() {
   const mark = (correct) => {
     if (r.i >= r.queue.length) return;
     const item = r.queue[r.i];
-    recordAnswer(item.card, correct);
+    recordAnswer(item.card, correct, undefined, item.deck);
     persist();
     r.tally[correct ? "known" : "learning"]++;
     if (!correct && !r.requeued.has(item.card.id)) {

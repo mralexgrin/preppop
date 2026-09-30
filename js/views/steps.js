@@ -104,7 +104,7 @@ export function renderSteps(deck) {
 
   const check = () => {
     s.result = scoreOrder(s.placed, s.cards.map((c) => c.id));
-    s.placed.forEach((id, i) => recordAnswer(byId(id), s.result.marks[i]));
+    s.placed.forEach((id, i) => recordAnswer(byId(id), s.result.marks[i], undefined, deck));
     persist();
     draw();
     app.querySelector(".steps-result")?.scrollIntoView({ behavior: "smooth", block: "center" });

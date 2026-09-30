@@ -6,9 +6,11 @@ import { flipCardHTML, setFlipped, attachSwipe, bindSpeak } from "../flipcard.js
 const SWAP_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const SHUFFLE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-export function renderStudy(deck) {
+// cram: start on the cards she doesn't know yet (from the Today test banner).
+export function renderStudy(deck, { cram = false } = {}) {
   setTitle(deck.name);
   const s = { front: "term", onlyLearning: false, order: [], i: 0, flipped: false, tally: { known: 0, learning: 0 } };
+  if (cram && deck.cards.some((c) => c.status !== "known")) s.onlyLearning = true;
   const notKnown = () => deck.cards.filter((c) => c.status !== "known");
 
   const start = ({ shuffled = false } = {}) => {
@@ -128,7 +130,7 @@ export function renderStudy(deck) {
   const mark = (status) => {
     if (s.i >= s.order.length) return;
     const card = deck.cards.find((c) => c.id === s.order[s.i]);
-    recordAnswer(card, status === "known");
+    recordAnswer(card, status === "known", undefined, deck);
     persist();
     s.tally[status]++;
     s.i++;
