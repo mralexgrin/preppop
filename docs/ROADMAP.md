@@ -28,8 +28,6 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 ## Ideas (unranked)
 - QR code for the sync key (scan instead of typing 25 characters)
 - Daily cap on new sync vaults per IP (the Cloudflare rate-limit binding only supports 10s/60s windows)
-- Editor header buttons wrap to two lines on phones (Delete/Share/Save); put Save first or move Delete/Share into a menu
-- Flashcard toolbar is heavy on phones (two toggle rows + Shuffle)
 - Images on cards (anatomy diagrams, geometry figures) stored in IndexedDB
 - Match game (timed pairs)
 - Share a deck by link (file sharing done in #6)
@@ -53,4 +51,5 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - #11 Progress page + per-card miss stats (2026-09-30, c528e12)
 - #13 Steps mode for ordered decks + card reordering (2026-09-30, 5e058ca)
 - #15 Cards from notes via Worker /cards-from-notes (2026-09-30, 0eff230)
-- #14 Sync across devices: sync key, end-to-end encrypted, D1 (2026-09-30, security reviewed)
+- #14 Sync across devices: sync key, end-to-end encrypted, D1 (2026-09-30, 6ff7a2c, security reviewed)
+- Re-audit polish: WCAG AA contrast, hidden-panel bug, one-row toolbar and editor header (2026-09-30)

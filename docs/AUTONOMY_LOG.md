@@ -17,6 +17,11 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-09-30: Re-audit polish
+- Light-mode contrast measured with a WCAG script. White on the orange buttons was 3.10:1 (fail). Buttons now use dark text (5.57:1), and small orange text uses a new --pop-ink token. know, learn, and ink-3 are darker in light mode, ink-3 lighter in dark mode. All text pairs are now ≥4.5:1.
+- Bug found by screenshot: `.panel { display:flex }` overrode the `hidden` attribute, so the editor's Paste a list and Cards from notes panels were always visible (since #2). Fixed globally with `[hidden] { display:none !important }`. The smoke test now checks computed display, not just the attribute.
+- Lesson: checking `el.hidden` isn't enough; check what's actually displayed.
+
 ### 2026-09-30: #14 Sync across devices (security reviewed twice)
 - What: Settings → Sync across devices. Turn on (makes a sync key), connect another device with the key, sync now, show or copy the key, turn off (optionally erase the cloud copy). Sync runs on its own after changes, on the deck list, Progress, and Settings, and when the app is hidden.
 - Why: the owner asked for "a basic account and database to store her practices". The design is account-free because the user is a minor.

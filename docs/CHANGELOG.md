@@ -4,10 +4,14 @@ User-facing release notes. Newest first.
 
 ## Unreleased (branch `autonomous/product-improvements`)
 ### Improved
+- Flashcards toolbar fits on one row on phones: the All / Not known yet filter plus icon buttons to swap sides and shuffle.
+- Deck editor header fits on one row (Share, Save). **Delete this deck** moved to the bottom of the editor, away from Save.
 - **Phone tab bar:** on phones, Decks, Review, New deck, and Settings sit in a bar at the bottom, in thumb reach. Review shows a badge with how many cards are due. The bar hides while you type. On larger screens, Review is in the top menu with the same badge.
 - Every deck screen now has **Flashcards · Write · Test** tabs under the deck name, so switching modes is one tap.
 - Deck tiles: Edit and Delete sit in the corner, and the Flashcards and Test buttons share the row evenly, so nothing wraps on a phone.
 ### Fixed
+- The **Paste a list** and **Cards from notes** panels in the editor were always showing instead of opening when tapped.
+- Text contrast in light mode now meets WCAG AA: dark text on orange buttons, darker orange for small text like "9 due", and darker greens, pinks, and gray labels.
 - The Review badge no longer shows "0" when nothing is due.
 ### Added
 - **Sync across devices (no account):** Settings → **Sync across devices** → **Turn on sync** gives you a sync key. Enter it on your other phone, laptop, or a school computer (**I already have a sync key**) and your decks and progress stay the same everywhere, and safe if you lose a device. There's no email, name, or password. Everything is encrypted on your device before it's uploaded, so PrepPop's server can't read it. Sync runs on its own after you study, and **Turn off** can also erase the cloud copy. Needs the PrepPop service to be deployed.

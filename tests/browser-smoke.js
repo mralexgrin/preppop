@@ -109,6 +109,9 @@ export async function flows({ stubAnswers = true } = {}) {
 
   await step("paste a list into a new deck", async () => {
     await go("#/new");
+    for (const id of ["#import-panel", "#notes-panel"]) {
+      check(getComputedStyle($(id)).display === "none", `${id} is really hidden until opened`);
+    }
     $("#toggle-import").click();
     setValue($("#import-text"), "1. brady- - slow\n2. tachy- - fast\nnot a card\n3. -itis - inflammation");
     check($("#import-add").textContent === "Add 3 cards", "import button counts 3 cards");

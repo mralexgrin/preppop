@@ -31,8 +31,7 @@ export function renderEditor(deck) {
           <h1>${isNew ? "New deck" : "Edit deck"}</h1>
         </div>
         <div class="head-actions">
-          ${isNew ? "" : `<button class="btn btn-danger" type="button" id="delete">Delete deck</button>`}
-          ${isNew ? "" : `<button class="btn btn-soft" type="button" id="share">Share deck</button>`}
+          ${isNew ? "" : `<button class="btn btn-soft" type="button" id="share">Share</button>`}
           <button class="btn btn-primary" type="submit">Save deck</button>
         </div>
       </header>
@@ -99,6 +98,7 @@ export function renderEditor(deck) {
         <span id="card-count"></span>
         <button class="btn btn-primary" type="submit">Save deck</button>
       </div>
+      ${isNew ? "" : `<p class="danger-zone"><button class="text-btn danger" type="button" id="delete">Delete this deck</button></p>`}
     </form>`;
 
   const form = app.querySelector("form");

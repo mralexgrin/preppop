@@ -3,6 +3,9 @@ import { esc, plural, shuffle, isTyping } from "../util.js";
 import { app, toast, setTitle, statusChip, view, deckHeader } from "../ui.js";
 import { flipCardHTML, setFlipped, attachSwipe, bindSpeak } from "../flipcard.js";
 
+const SWAP_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const SHUFFLE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
 export function renderStudy(deck) {
   setTitle(deck.name);
   const s = { front: "term", onlyLearning: false, order: [], i: 0, flipped: false, tally: { known: 0, learning: 0 } };
@@ -30,15 +33,14 @@ export function renderStudy(deck) {
     const remaining = notKnown().length;
     const toolbar = `
       <div class="toolbar">
-        <div class="seg" role="group" aria-label="Show first">
-          <button type="button" data-front="term" aria-pressed="${s.front === "term"}">Term first</button>
-          <button type="button" data-front="definition" aria-pressed="${s.front === "definition"}">Definition first</button>
-        </div>
         <div class="seg" role="group" aria-label="Which cards">
           <button type="button" data-only="all" aria-pressed="${!s.onlyLearning}">All (${deck.cards.length})</button>
           <button type="button" data-only="learning" aria-pressed="${s.onlyLearning}" ${remaining ? "" : "disabled"}>Not known yet (${remaining})</button>
         </div>
-        <button class="btn btn-ghost" type="button" id="shuffle">Shuffle</button>
+        <div class="tool-icons">
+          <button class="tool-btn" type="button" id="swap-sides" aria-pressed="${s.front === "definition"}" aria-label="Show the definition first" title="Show the definition first">${SWAP_ICON}</button>
+          <button class="tool-btn" type="button" id="shuffle" aria-label="Shuffle" title="Shuffle">${SHUFFLE_ICON}</button>
+        </div>
       </div>`;
 
     if (s.i >= s.order.length) {
@@ -99,13 +101,12 @@ export function renderStudy(deck) {
   };
 
   const bindToolbar = () => {
-    app.querySelectorAll("[data-front]").forEach((b) =>
-      b.addEventListener("click", () => {
-        s.front = b.dataset.front;
-        s.flipped = false;
-        draw();
-      }),
-    );
+    app.querySelector("#swap-sides").addEventListener("click", () => {
+      s.front = s.front === "term" ? "definition" : "term";
+      s.flipped = false;
+      draw();
+      toast(s.front === "term" ? "Showing the term first" : "Showing the definition first");
+    });
     app.querySelectorAll("[data-only]").forEach((b) =>
       b.addEventListener("click", () => {
         s.onlyLearning = b.dataset.only === "learning";
