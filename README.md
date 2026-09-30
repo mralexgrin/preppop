@@ -6,19 +6,31 @@ Make your own flashcards, study them, and test yourself.
 
 ## Features
 
-- **Deck maker.** Create a deck, type a term and a definition for each card, and save. Tab out of the last definition to start a new card, or tap **Paste a list** to turn a vocab list (one card per line) into cards in one go.
-- **Flashcards.** See the term (or the definition first), flip the card, then mark it **I know it** or **Still learning**. Shuffle, or study only the cards you don't know yet. Keyboard: `Space` flips, `←` still learning, `→` I know it. On a phone, swipe the card right or left.
-- **Write mode.** See one side and type the other. Grading ignores case and punctuation, accepts alternatives ("a / b") and optional words ("(to) eat"), flags missing accents without failing them, and lets you overrule a grade. Spanish decks get accent buttons. The logic is in `js/answer.js`.
-- **Test mode.** Choose 10, 20, or all questions, and mix multiple choice, written, and true or false. Show the term, the definition, or a mix. Claude writes 3 believable wrong answers per question (they also serve as the false statements). Every answer reschedules the card. Keyboard: `1`–`4` or `T`/`F` to answer, `Enter` for the next question.
+A study companion for a high school student: Biology, clinical skills, Spanish, History, English, Geometry. Phone-first, works offline, no account needed.
 
-- **Today and spaced review.** The deck list opens with a Today panel: cards due across every deck, a daily goal, and a streak. Every answer (in Flashcards, Review, or a Test) reschedules the card. Known cards come back after 1, 3, 7, 14, 30, 60, then 120 days; missed cards come back the same day. The schedule lives in `js/srs.js`.
-- **Steps.** For decks marked "in order" (procedures, timelines): tap the steps into the right order, 8 at a time for long decks (`js/steps.js`).
-- **Match.** A quick timed game pairing terms and definitions (6 pairs, +1s per wrong pair, best time per deck). It doesn't affect the schedule.
-- **Progress.** Streaks, a 12-week practice calendar, weekly accuracy, mastery by subject, what's coming up, and the most-missed cards (`js/progress.js`).
-- **Starter decks.** Ready-made decks (medical terminology, vital signs, cell parts, Spanish greetings, U.S. government, literary terms, geometry formulas) in `js/starters.js`, added from `#/starters`.
-- **Pictures.** Cards can have a picture on either side, stored in IndexedDB after shrinking to 1024px (`js/images.js`). Included in backups and shared decks (validated image data URLs), not in sync. Unused pictures are cleaned up on load.
-- **Test dates.** A deck can have a test date: a countdown on the deck and on Today, a Cram button, and reviews pulled before the test (`grade()` in `js/srs.js`).
-- **Subjects.** Decks are grouped by subject (Biology, Clinical skills, Spanish, History, English, Geometry, Other).
+**Study every day**
+- **Today and spaced review.** The deck list opens with a Today panel: cards due across every deck, a daily goal, a streak, and the next test. Every answer reschedules the card: known cards come back after 1, 3, 7, 14, 30, 60, then 120 days, missed ones the same day (`js/srs.js`). **Undo last card** fixes a mis-swipe.
+- **Test dates.** A countdown on the deck and on Today, a **Cram** button, and reviews pulled to the day before the test.
+- **Progress.** Streaks, a 12-week practice calendar, weekly accuracy, mastery by subject, what's coming up, and the most-missed cards. **Share my progress** sends a summary (`js/progress.js`).
+- **Daily reminder.** A repeating calendar event (`.ics`) with an alert, from Settings.
+
+**Practice modes** (tabs on every deck)
+- **Flashcards.** Flip, then mark **I know it** or **Still learning**. Swipe on a phone, arrow keys on a computer. Read aloud (Spanish in a Spanish voice), hints, and **✦ Explain this card**.
+- **Write.** Type the answer. Fair grading: case and punctuation ignored, "a / b" alternatives, "(to) eat" optional words, missing accents flagged but counted, small typos marked "almost", and **I was right** to overrule (`js/answer.js`). Spanish accent keys.
+- **Test.** 10, 20, or all questions; any mix of multiple choice, written, and true or false. Claude writes the wrong answers (`js/testbuilder.js`).
+- **Steps.** For decks marked "in order" (procedures, timelines): tap the steps into order (`js/steps.js`).
+- **Match.** A quick timed game. It doesn't touch the schedule.
+
+**Making cards**
+- **Starter decks** for her subjects (`js/starters.js`): medical terminology, vital signs, handwashing steps, cell parts, Spanish greetings, U.S. government, a U.S. timeline, literary terms, geometry formulas.
+- **Paste a list** (including Quizlet exports; `js/import.js`) and **✦ Cards from notes** (AI).
+- **Pictures** on either side of a card, shrunk on-device into IndexedDB (`js/images.js`). **Hints / memory tricks**, **subjects**, reordering, and **search** across all cards.
+
+**Keeping her data**
+- Saved in the browser. **Backup / restore** and **Share deck** as files (`js/backup.js`, validated on import).
+- **Sync across devices** with no account (see below).
+- **Installable** on a phone's home screen and **offline** (service worker).
+- Accessibility: WCAG 2.2 AA contrast, screen reader announcements, keyboard support with a switch to turn off shortcuts, and `lang="es"` on Spanish text.
 
 ## AI answer choices
 
