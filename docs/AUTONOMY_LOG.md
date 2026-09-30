@@ -8,12 +8,21 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - The branch includes `feat/ai-proxy-worker` (Worker + delete), which was never pushed or PR'd on its own.
 
 ## Current status
-- Last completed: #9 Test options (daac252)
-- Next: #10 pronunciation, #11 progress page, #12 starter decks, #13 steps mode
+- Last completed: #11 Progress page (c528e12)
+- Next: #13 Steps mode, #16 card extras (hint, star, search), #15 AI cards from notes, #14 anonymous sync
 - Branch: autonomous/product-improvements
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-09-30: Items 10-12 + reflection
+- Shipped: #10 read aloud (7c4042d), #12 starter decks (bcaa229, clinical content flagged), #11 Progress page + per-card stats (c528e12).
+- Decisions:
+  - Speech uses the browser's built-in voices: free, offline, no API. The language comes from the deck subject, and Spanish-looking text is always read in Spanish.
+  - Starter decks replace the Solar System sample. The first run now leads to her real subjects.
+  - Seen/missed stats live on each card (not in a separate log) so backups carry them and "Cards to work on" is cheap to compute.
+- Re-audit: the flashcard toolbar is heavy on phones (two toggle rows plus Shuffle), there's no search across cards, and the Worker-backed features (#14, #15) can't be used for real until the owner deploys the Worker.
+- Next order: #13 Steps mode (works fully offline, so it's useful on merge), #16 card extras, then #15 and #14 (built and tested locally with stubs, flagged).
+
 ### 2026-09-30: Items 6-9 + PR
 - Shipped: #6 backup/restore/sharing (98b6742, security reviewed), #7 PWA + offline (cd2a096), #8 phone tab bar (0cf363b), #9 test options + zero-badge fix (daac252).
 - Opened PR #1 to main. No CI on the repo; local gates are `npm test` (61) and the browser smoke test (11 flows).
@@ -44,6 +53,12 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Verification: worker `npm test` 8/8.
 
 ## Model usage
+### Items 6-12
+- Calls per tier: CMD ~90, FAST 0, STRONG main session, security-reviewer (inherit) x1, TOP 0
+- Escalations: none
+- Spot-check failures: 0 of 4 security receipts wrong (all verified by grep)
+- Routing changes: starter-deck content kept on STRONG (accuracy-sensitive medical content), not FAST
+- Unexpectedly expensive: the `$` mangling happened again in one smoke-test insertion. Smoke-test code is now inserted with the Edit tool only.
 ### Items 1-5
 - Calls per tier: CMD ~60 (tests, greps, node edit scripts, git), FAST 0, STRONG main session, code-reviewer (inherit) x1, TOP 0
 - Escalations: none
