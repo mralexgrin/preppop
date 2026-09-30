@@ -10,6 +10,7 @@ User-facing release notes. Newest first.
 ### Fixed
 - The Review badge no longer shows "0" when nothing is due.
 ### Added
+- **Cards from notes (AI):** in the deck editor, tap **✦ Cards from notes**, paste notes from class or a study guide, and tap **Suggest cards**. Claude picks the terms and concepts a teacher would test and writes short, plain-language definitions based only on your notes. Untick the ones you don't want and add the rest, then edit them before saving. Needs the answer service to be deployed and a connection.
 - **Steps practice for things that come in order:** in the deck editor, tick **Cards are in order** for a procedure (handwashing, taking a pulse) or a timeline. The deck gets a **Steps** tab. Tap the steps in the order you think is right (tap one again to take it back), then **Check my order** to see what's in the right place and the full correct order. Long decks are practiced 8 steps at a time. New starter decks: **Handwashing steps** and **U.S. history timeline**.
 - **Reorder cards:** ↑ and ↓ buttons on each card in the editor.
 - **Progress page** (the Progress tab): current and best streak, cards practiced this week and how many you got right, a 12-week practice calendar, what's due today, tomorrow, and this week, how many cards you know in each subject, and **Cards to work on** (the cards you've missed most). Every answer now counts how often a card was seen and missed. Backups include this; shared decks don't.

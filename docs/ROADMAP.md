@@ -24,7 +24,6 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
 | 14 | Anonymous account + cloud sync (sync key, Worker + D1) | Finding 6; cross-device | H | L | [STRONG] + security review, flag |
-| 15 | AI: make cards from pasted notes (Worker endpoint) | Finding 2 | H | M | [STRONG] (AI prompt) |
 | 16 | Card extras: hint/mnemonic, star, search | polish | M | S | [STRONG] |
 
 ## Ideas (unranked)
@@ -51,4 +50,5 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - #10 Read aloud (Web Speech, per-subject language) (2026-09-30, 7c4042d)
 - #12 Starter decks for all her subjects (2026-09-30, bcaa229)
 - #11 Progress page + per-card miss stats (2026-09-30, c528e12)
-- #13 Steps mode for ordered decks + card reordering (2026-09-30)
+- #13 Steps mode for ordered decks + card reordering (2026-09-30, 5e058ca)
+- #15 Cards from notes via Worker /cards-from-notes (2026-09-30)

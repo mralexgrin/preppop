@@ -2,6 +2,7 @@ import { state, persist, blankCard } from "../store.js";
 import { esc, plural, uid } from "../util.js";
 import { app, toast, setTitle, view, saveFile } from "../ui.js";
 import { makeDeckFile } from "../backup.js";
+import { makeCardsFromNotes, MAX_NOTES, MODEL_LABEL } from "../ai.js";
 import { parseList, SEPARATORS } from "../import.js";
 import { SUBJECTS, guessSubject } from "../subjects.js";
 
@@ -53,8 +54,23 @@ export function renderEditor(deck) {
       <p class="form-error" id="form-error" role="alert" hidden></p>
       <div class="import-bar">
         <button class="btn btn-soft" type="button" id="toggle-import" aria-expanded="false" aria-controls="import-panel">Paste a list</button>
-        <span class="hint">Have a vocab list from class? Paste it and PrepPop makes the cards.</span>
+        <button class="btn btn-soft" type="button" id="toggle-notes" aria-expanded="false" aria-controls="notes-panel"><span class="spark" aria-hidden="true">✦</span> Cards from notes</button>
+        <span class="hint">Paste a vocab list, or paste your class notes and let AI suggest cards.</span>
       </div>
+      <section class="panel import-panel" id="notes-panel" hidden aria-labelledby="notes-heading">
+        <h2 id="notes-heading">Make cards from your notes</h2>
+        <p>Paste notes from class or a study guide. ${MODEL_LABEL} suggests flashcards; you pick which to keep and can edit them before saving.</p>
+        <label class="field">
+          <span class="field-label">Your notes</span>
+          <textarea class="input" id="notes-text" rows="8" maxlength="${MAX_NOTES}" placeholder="The heart has four chambers: two atria on top and two ventricles below. The right side pumps blood to the lungs…"></textarea>
+        </label>
+        <p class="hint" id="notes-count">0 / ${MAX_NOTES.toLocaleString()} characters</p>
+        <div class="row">
+          <button class="btn btn-primary" type="button" id="notes-make">Suggest cards</button>
+          <button class="btn btn-ghost" type="button" id="notes-cancel">Cancel</button>
+        </div>
+        <div id="notes-result" aria-live="polite"></div>
+      </section>
       <section class="panel import-panel" id="import-panel" hidden aria-labelledby="import-heading">
         <h2 id="import-heading">Paste a list</h2>
         <label class="field">
@@ -160,7 +176,89 @@ export function renderEditor(deck) {
     importAdd.textContent = n ? `Add ${plural(n, "card")}` : "Add cards";
   };
 
-  importToggle.addEventListener("click", () => showImport(importPanel.hidden));
+  importToggle.addEventListener("click", () => {
+    showNotes(false, false);
+    showImport(importPanel.hidden);
+  });
+
+  // Cards from notes (AI)
+  const notesPanel = app.querySelector("#notes-panel");
+  const notesToggle = app.querySelector("#toggle-notes");
+  const notesText = app.querySelector("#notes-text");
+  const notesResult = app.querySelector("#notes-result");
+  let suggestions = [];
+  const showNotes = (open, moveFocus = true) => {
+    notesPanel.hidden = !open;
+    notesToggle.setAttribute("aria-expanded", open);
+    if (!moveFocus) return;
+    if (open) notesText.focus();
+    else notesToggle.focus();
+  };
+  notesToggle.addEventListener("click", () => {
+    if (!importPanel.hidden) showImport(false);
+    showNotes(notesPanel.hidden);
+  });
+  app.querySelector("#notes-cancel").addEventListener("click", () => showNotes(false));
+  notesText.addEventListener("input", () => {
+    app.querySelector("#notes-count").textContent = `${notesText.value.length.toLocaleString()} / ${MAX_NOTES.toLocaleString()} characters`;
+  });
+  const drawSuggestions = () => {
+    const picked = suggestions.filter((s) => s.keep).length;
+    notesResult.innerHTML = suggestions.length
+      ? `<p class="notes-found">${plural(suggestions.length, "card")} suggested. Untick any you don't want.</p>
+         <ul class="suggestions">${suggestions
+           .map(
+             (s, i) => `<li><label class="suggestion"><input type="checkbox" data-keep="${i}" ${s.keep ? "checked" : ""}>
+               <span><strong>${esc(s.term)}</strong><span>${esc(s.definition)}</span></span></label></li>`,
+           )
+           .join("")}</ul>
+         <div class="row"><button class="btn btn-primary" type="button" id="notes-add" ${picked ? "" : "disabled"}>Add ${plural(picked, "card")}</button></div>`
+      : `<p class="hint">No cards came out of those notes. Try pasting more detail.</p>`;
+    notesResult.querySelectorAll("[data-keep]").forEach((box) =>
+      box.addEventListener("change", () => {
+        suggestions[Number(box.dataset.keep)].keep = box.checked;
+        const n = suggestions.filter((s) => s.keep).length;
+        const add = notesResult.querySelector("#notes-add");
+        add.disabled = !n;
+        add.textContent = `Add ${plural(n, "card")}`;
+      }),
+    );
+    notesResult.querySelector("#notes-add")?.addEventListener("click", () => {
+      const keep = suggestions.filter((s) => s.keep);
+      draft.cards = draft.cards.filter((c) => c.term.trim() || c.definition.trim());
+      draft.cards.push(...keep.map(({ term, definition }) => ({ ...blankCard(), term, definition })));
+      dirty = true;
+      draw();
+      suggestions = [];
+      notesResult.innerHTML = "";
+      notesText.value = "";
+      showNotes(false);
+      toast(`Added ${plural(keep.length, "card")}. Check them over, then save.`);
+    });
+  };
+  app.querySelector("#notes-make").addEventListener("click", async (e) => {
+    const notes = notesText.value.trim();
+    if (notes.length < 20) {
+      notesResult.innerHTML = `<p class="form-error">Paste a bit more of your notes first.</p>`;
+      return;
+    }
+    const button = e.currentTarget;
+    button.disabled = true;
+    button.textContent = "Reading your notes…";
+    notesResult.innerHTML = `<div class="loader small" aria-hidden="true"><span></span><span></span><span></span></div><p class="hint">This can take up to half a minute.</p>`;
+    try {
+      const cards = await makeCardsFromNotes({ notes, subject: draft.subject, deckName: draft.name });
+      if (!notesResult.isConnected) return;
+      suggestions = cards.map((c) => ({ ...c, keep: true }));
+      drawSuggestions();
+    } catch (err) {
+      if (!notesResult.isConnected) return;
+      notesResult.innerHTML = `<p class="form-error">Couldn't make cards: ${esc(err.message)}.</p>`;
+    } finally {
+      button.disabled = false;
+      button.textContent = "Suggest cards";
+    }
+  });
   app.querySelector("#import-cancel").addEventListener("click", () => showImport(false));
   [importText, importSep, importSwap].forEach((el) => el.addEventListener("input", refreshImport));
   importAdd.addEventListener("click", () => {

@@ -21,7 +21,7 @@ Make your own flashcards, study them, and test yourself.
 
 Test mode's wrong answers come from Claude Opus 5.5. Visitors don't need a key. The app calls a small Cloudflare Worker in [`worker/`](worker/), which keeps the Anthropic API key as a secret and calls Claude with the official Anthropic SDK. Answers are cached per card in the browser, so retaking a test doesn't call the service again.
 
-The Worker only does this one job. The prompt, model, and limits are fixed on the server, so it can't be used as a general Claude proxy:
+The Worker does two fixed jobs: wrong answers (`/wrong-answers`) and cards from notes (`/cards-from-notes`). The prompt, model, and limits are fixed on the server, so it can't be used as a general Claude proxy:
 
 - Only browser requests from `mralexgrin.github.io` and `localhost:4190` are allowed (`ALLOWED_ORIGINS` in `worker/wrangler.jsonc`).
 - 10 requests per visitor IP per minute, with at most 30 cards per request and 600 characters per field.

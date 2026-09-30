@@ -78,6 +78,33 @@ export async function flows({ stubAnswers = true } = {}) {
     await until(() => $$(".deck-tile").length === 2, "library with two decks after save");
   });
 
+  await step("cards from notes (AI stubbed)", async () => {
+    const realFetch = window.fetch;
+    window.fetch = async (input, init) => {
+      const url = typeof input === "string" ? input : input.url;
+      if (!url.includes("/cards-from-notes")) return realFetch(input, init);
+      const cards = [
+        { term: "Atria", definition: "Upper chambers of the heart" },
+        { term: "Ventricles", definition: "Lower chambers of the heart" },
+      ];
+      return new Response(JSON.stringify({ cards }), { status: 200, headers: { "content-type": "application/json" } });
+    };
+    try {
+      await go("#/new");
+      $("#toggle-notes").click();
+      setValue($("#notes-text"), "The heart has two atria on top and two ventricles below.");
+      $("#notes-make").click();
+      await until(() => $("#notes-add"), "suggested cards");
+      $("#notes-add").click();
+      check($$("#card-list textarea[data-side='term']").map((t) => t.value).join() === "Atria,Ventricles", "suggestions added to the deck");
+      setValue($("#deck-name"), "Heart");
+      $("form").requestSubmit();
+      await until(() => $$(".deck-tile").length === 3, "library with the notes deck");
+    } finally {
+      window.fetch = realFetch;
+    }
+  });
+
   await step("paste a list into a new deck", async () => {
     await go("#/new");
     $("#toggle-import").click();
@@ -87,7 +114,7 @@ export async function flows({ stubAnswers = true } = {}) {
     check($$(".card-row").length === 3, "blank rows replaced by 3 imported cards");
     setValue($("#deck-name"), "Pasted deck");
     $("form").requestSubmit();
-    await until(() => $$(".deck-tile").length === 3, "library with three decks");
+    await until(() => $$(".deck-tile").length === 4, "library with four decks");
   });
 
   const sampleId = () => JSON.parse(localStorage.getItem("preppop:v1")).decks[0].id;

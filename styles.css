@@ -551,3 +551,14 @@ main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .steps-result { margin-top: 20px; }
 .correct-order { margin: 0; padding-left: 28px; display: grid; gap: 10px; }
 .correct-order li::marker { font-family: var(--font-display); font-weight: 800; color: var(--ink-3); }
+
+/* Cards from notes */
+.loader.small { margin: 8px 0 4px; }
+.loader.small span { width: 12px; height: 16px; }
+.notes-found { font-weight: 600; color: var(--ink) !important; }
+.suggestions { list-style: none; margin: 0 0 4px; padding: 0; display: grid; gap: 8px; max-height: 420px; overflow-y: auto; }
+.suggestion { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); cursor: pointer; }
+.suggestion input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--pop); flex: none; }
+.suggestion > span { display: grid; gap: 2px; overflow-wrap: anywhere; }
+.suggestion > span span { color: var(--ink-2); font-size: .92rem; }
+.import-bar .btn .spark { margin-right: 2px; }

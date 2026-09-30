@@ -5,6 +5,7 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 ## Flagged for human review
 - **Starter deck content (js/starters.js), especially clinical.** The Handwashing steps deck (added in #13) follows a common nursing-assistant checklist order; programs differ slightly. The vital-sign values are standard adult references: HR 60–100, RR 12–20, BP <120/80 (AHA), SpO2 95–100%, fever ≥100.4 °F, stage 1 HTN 130–139/80–89 (AHA 2017). The deck says to follow the instructor, but her clinical program may teach slightly different ranges (e.g. temperature ranges vary by source). A quick human check is worthwhile.
 - **Worker not deployed.** `npx wrangler login` didn't persist on this Mac, so the Worker is undeployed and `SERVICE_URL` in `ai.js` is a placeholder. Until it's deployed, Test mode uses answers from the deck's other cards. To finish: `cd worker && npx wrangler login && npx wrangler deploy && npx wrangler secret put ANTHROPIC_API_KEY`, then put the workers.dev URL in `ai.js`.
+- **New AI prompt: /cards-from-notes (worker/src/index.js, NOTES_SYSTEM).** It tells the model to use only facts from the notes, to leave out unclear items, and to treat the notes as material, not instructions. Output is schema-constrained, trimmed, capped at 30 cards, and escaped when rendered. It's untested against the real model (no valid key here), so worth trying once the Worker is deployed.
 - The branch includes `feat/ai-proxy-worker` (Worker + delete), which was never pushed or PR'd on its own.
 
 ## Current status
