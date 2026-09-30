@@ -22,7 +22,7 @@ A study companion for a high school student: Biology, clinical skills, Spanish, 
 - **Match.** A quick timed game. It doesn't touch the schedule.
 
 **Making cards**
-- **Starter decks** for her subjects (`js/starters.js`): medical terminology, vital signs, handwashing steps, cell parts, Spanish greetings, U.S. government, a U.S. timeline, literary terms, geometry formulas.
+- **16 starter decks** for her subjects (`js/starters.js`): medical terminology, vital signs, body directions, handwashing and radial pulse steps, cell parts, DNA basics, Spanish greetings, verbs, and numbers, U.S. government, a U.S. timeline, literary terms, parts of speech, angles and triangles, and geometry formulas.
 - **Paste a list** (including Quizlet exports; `js/import.js`) and **✦ Cards from notes** (AI).
 - **Pictures** on either side of a card, shrunk on-device into IndexedDB (`js/images.js`). **Hints / memory tricks**, **subjects**, reordering, and **search** across all cards.
 

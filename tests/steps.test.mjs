@@ -23,3 +23,8 @@ test("scoreOrder marks each position", () => {
   assert.equal(out.correct, 2);
   assert.equal(out.total, 4);
 });
+
+test("identical steps are interchangeable", () => {
+  const out = scoreOrder(["wash hands", "check id", "wash hands"], ["wash hands", "check id", "wash hands"]);
+  assert.equal(out.correct, 3);
+});

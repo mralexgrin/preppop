@@ -15,6 +15,9 @@ User-facing release notes. Newest first.
 - Text contrast in light mode now meets WCAG AA: dark text on orange buttons, darker orange for small text like "9 due", and darker greens, pinks, and gray labels.
 - The Review badge no longer shows "0" when nothing is due.
 ### Added
+- **More starter decks** (16 in all): Spanish common verbs, Spanish numbers 1–20, Body directions and positions, Taking a radial pulse (steps), DNA and genetics basics, Parts of speech, and Kinds of angles and triangles.
+### Fixed
+- Steps practice treats two identical steps as interchangeable, so swapping them isn't marked wrong.
 - **✦ Explain this card:** under a flashcard in Flashcards or Review, and after a wrong answer in Write, tap **Explain this card** for a short plain-language explanation from Claude, with an example, a memory trick, and a gentle note if the card itself looks wrong. Explanations are saved on your device, so asking again is instant. Needs the answer service to be deployed.
 - **Daily reminder:** Settings → **Daily reminder** → pick a time → **Add to my calendar** adds a daily "Study with PrepPop" event with an alert to your phone's calendar. No notifications permission or account needed.
 - **Share my progress:** a button on the Progress page shares a short summary (streak, this week, cards known per subject, what's due) through Messages or anything else, or copies it.

@@ -10,8 +10,9 @@ export function pickWindow(cards, size = WINDOW, rand = Math.random) {
   return { start, cards: cards.slice(start, start + size) };
 }
 
-// Which of the placed cards are in the right position.
-export function scoreOrder(placedIds, correctIds) {
-  const marks = placedIds.map((id, i) => id === correctIds[i]);
-  return { marks, correct: marks.filter(Boolean).length, total: correctIds.length };
+// Which of the placed steps are in the right position. Compared by what the
+// student sees (the step text), so two identical steps are interchangeable.
+export function scoreOrder(placed, correct) {
+  const marks = placed.map((step, i) => step === correct[i]);
+  return { marks, correct: marks.filter(Boolean).length, total: correct.length };
 }

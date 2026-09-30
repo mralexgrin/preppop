@@ -104,7 +104,8 @@ export function renderSteps(deck) {
   };
 
   const check = () => {
-    s.result = scoreOrder(s.placed, s.cards.map((c) => c.id));
+    const text = (id) => byId(id).term.trim().toLowerCase();
+    s.result = scoreOrder(s.placed.map(text), s.cards.map((c) => text(c.id)));
     s.placed.forEach((id, i) => recordAnswer(byId(id), s.result.marks[i], undefined, deck));
     persist();
     draw();
