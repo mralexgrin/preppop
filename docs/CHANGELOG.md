@@ -10,6 +10,7 @@ User-facing release notes. Newest first.
 ### Fixed
 - The Review badge no longer shows "0" when nothing is due.
 ### Added
+- **Starter decks:** ready-made decks for common classes, added in one tap from the empty screen or **Starter decks** on the deck list. Medical terminology (prefixes/suffixes), Vital signs (adult ranges), Cell parts, Spanish greetings, U.S. government basics, Literary terms, and Geometry formulas. Each becomes your own deck to edit.
 - **Hear it:** the speaker button on a flashcard (and in Review) reads the side that's showing, using your device's built-in voices. Spanish decks read Spanish words in Spanish and English definitions in English. In Write mode, **Hear it** reads the right answer after you check.
 - **Test options:** before a test, choose how many questions (10, 20, or all), which types (**Multiple choice**, **Written**, **True or false**, mixed evenly), and whether each question shows the term, the definition, or a mix. PrepPop remembers your choices. Written questions use the same fair grading as Write mode. True or false shows either the real answer or a believable wrong one. Every answer feeds your review schedule, and the results screen links to **Review missed cards**.
 - **Install on your phone and study offline:** PrepPop can go on your home screen like an app (Settings → *Put PrepPop on your home screen* has the steps for iPhone and Android). It opens full screen, loads instantly, and works with no connection. Updates arrive the next time you open it. AI answers in Test mode still need internet.
@@ -21,6 +22,7 @@ User-facing release notes. Newest first.
 - **Swipe on flashcards:** on a phone, swipe right if you know it, left if you're still learning. Tap still flips.
 - Deck tiles show how many cards are due.
 - **Subjects:** every deck belongs to a subject (Biology, Clinical skills, Spanish, History, English, Geometry, or Other), and the deck list is grouped by subject with a color for each. When you name a new deck, PrepPop guesses the subject ("Spanish verbs" picks Spanish); tap a subject to choose it yourself. Existing decks start in Other.
+- The Solar System sample deck is replaced by starter decks for your actual subjects.
 - **Paste a list:** in the deck editor, tap **Paste a list** and paste a vocab list, one card per line. PrepPop finds the separator on its own (tab, " - ", ":", "=", or ","), strips numbering like "1.", and shows how many cards it found before you add them. Quizlet exports paste in directly. Tick **Definition comes first** if your list is the other way round.
 - Delete decks from the deck list, and delete a card while studying it.
 - Answer service (Cloudflare Worker) so visitors don't need their own API key for AI answers. Needs deploying first; see `README.md`.

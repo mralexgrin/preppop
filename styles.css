@@ -479,3 +479,9 @@ main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .speak-btn svg, .hear svg { width: 22px; height: 22px; }
 .hear { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding-left: 0; text-decoration: none; color: var(--ink-2); }
 .hear:hover { color: var(--pop); }
+
+/* Starter decks */
+.starter-preview { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: .9rem; color: var(--ink-2); }
+.starter-preview li { overflow-wrap: anywhere; }
+.starter-preview strong { color: var(--ink); margin-right: 4px; }
+.starter-tile .meta { line-height: 1.4; }

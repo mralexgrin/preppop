@@ -1,6 +1,6 @@
-import { state, persist, blankCard, getDeck, dailyGoal } from "../store.js";
+import { state, persist, getDeck, dailyGoal } from "../store.js";
 import { dueCards, isDue, isNew, streak, dayKey, addDays } from "../srs.js";
-import { esc, plural, uid } from "../util.js";
+import { esc, plural } from "../util.js";
 import { app, toast, setTitle, view } from "../ui.js";
 import { SUBJECTS } from "../subjects.js";
 
@@ -10,15 +10,14 @@ export function renderLibrary() {
     app.innerHTML = `
       <section class="empty">
         <div class="empty-art" aria-hidden="true"><span></span><span></span><span>Aa</span></div>
-        <h1>Make your first deck</h1>
-        <p>Write a term on the front and a definition on the back. Then flip through the cards to study, or take a multiple-choice test.</p>
+        <h1>Let's set up your decks</h1>
+        <p>Start with a ready-made deck for your classes (medical terms, vital signs, cell parts, Spanish, and more) or make your own. Paste a vocab list and PrepPop makes the cards.</p>
         <div class="actions">
-          <a class="btn btn-primary btn-lg" href="#/new">Create a deck</a>
-          <button class="btn btn-soft btn-lg" type="button" id="sample">Try a sample deck</button>
+          <a class="btn btn-primary btn-lg" href="#/starters" id="starters">Browse starter decks</a>
+          <a class="btn btn-soft btn-lg" href="#/new">Make my own deck</a>
         </div>
         <p class="restore-hint">New phone? <a href="#/settings">Restore a backup</a> or open a deck a friend shared.</p>
       </section>`;
-    app.querySelector("#sample").addEventListener("click", addSampleDeck);
     return;
   }
 
@@ -29,7 +28,10 @@ export function renderLibrary() {
         <h1>Your decks</h1>
         <p class="lede">${plural(state.decks.length, "deck")} · ${plural(cardTotal, "card")}</p>
       </div>
-      <a class="btn btn-primary" href="#/new">+ New deck</a>
+      <div class="head-actions">
+        <a class="btn btn-ghost" href="#/starters">Starter decks</a>
+        <a class="btn btn-primary" href="#/new">+ New deck</a>
+      </div>
     </header>
     ${todayPanel()}
     ${backupNudge(cardTotal)}
@@ -143,19 +145,3 @@ function deckTile(deck) {
     </li>`;
 }
 
-function addSampleDeck() {
-  const cards = [
-    ["Mercury", "Smallest planet and the closest to the Sun"],
-    ["Venus", "Hottest planet, wrapped in thick carbon dioxide clouds"],
-    ["Mars", "The red planet, home to Olympus Mons"],
-    ["Jupiter", "Largest planet, known for its Great Red Spot storm"],
-    ["Saturn", "Gas giant with the most prominent ring system"],
-    ["Neptune", "Farthest planet from the Sun, with the fastest winds"],
-    ["Asteroid belt", "Ring of rocky bodies orbiting between Mars and Jupiter"],
-    ["Light-year", "Distance light travels in one year, about 9.46 trillion km"],
-  ].map(([term, definition]) => ({ ...blankCard(), term, definition }));
-  state.decks.push({ id: uid(), name: "Solar System basics", subject: "other", createdAt: Date.now(), cards });
-  persist();
-  renderLibrary();
-  toast("Sample deck added");
-}

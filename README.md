@@ -12,6 +12,7 @@ Make your own flashcards, study them, and test yourself.
 - **Test mode.** Choose 10, 20, or all questions, and mix multiple choice, written, and true or false. Show the term, the definition, or a mix. Claude writes 3 believable wrong answers per question (they also serve as the false statements). Every answer reschedules the card. Keyboard: `1`–`4` or `T`/`F` to answer, `Enter` for the next question.
 
 - **Today and spaced review.** The deck list opens with a Today panel: cards due across every deck, a daily goal, and a streak. Every answer (in Flashcards, Review, or a Test) reschedules the card. Known cards come back after 1, 3, 7, 14, 30, 60, then 120 days; missed cards come back the same day. The schedule lives in `js/srs.js`.
+- **Starter decks.** Ready-made decks (medical terminology, vital signs, cell parts, Spanish greetings, U.S. government, literary terms, geometry formulas) in `js/starters.js`, added from `#/starters`.
 - **Subjects.** Decks are grouped by subject (Biology, Clinical skills, Spanish, History, English, Geometry, Other).
 
 ## AI answer choices

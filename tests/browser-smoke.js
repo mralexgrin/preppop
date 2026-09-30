@@ -54,11 +54,14 @@ export async function flows({ stubAnswers = true } = {}) {
     };
   }
 
-  await step("empty state offers a sample deck", async () => {
+  await step("empty state leads to starter decks", async () => {
     await go("#/");
-    check($("#sample"), "sample button missing (storage not empty? call reset() first)");
-    $("#sample").click();
-    await until(() => $$(".deck-tile").length === 1, "sample deck tile");
+    check($("#starters"), "starter decks button missing (storage not empty? call reset() first)");
+    await go("#/starters");
+    $("[data-add='cell-parts']").click();
+    await until(() => $("[data-add='cell-parts']") === null, "starter added");
+    await go("#/");
+    await until(() => $$(".deck-tile").length === 1, "starter deck tile");
   });
 
   await step("create a deck in the editor", async () => {
