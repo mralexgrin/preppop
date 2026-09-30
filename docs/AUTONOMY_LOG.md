@@ -7,12 +7,17 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - The branch includes `feat/ai-proxy-worker` (Worker + delete), which was never pushed or PR'd on its own.
 
 ## Current status
-- Last completed: #6 Backup/restore/sharing
-- Next: #7 PWA (icons already generated in icons/)
-- Branch: autonomous/product-improvements (based on feat/ai-proxy-worker)
-- Open PR: none
+- Last completed: #9 Test options (daac252)
+- Next: #10 pronunciation, #11 progress page, #12 starter decks, #13 steps mode
+- Branch: autonomous/product-improvements
+- Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-09-30: Items 6-9 + PR
+- Shipped: #6 backup/restore/sharing (98b6742, security reviewed), #7 PWA + offline (cd2a096), #8 phone tab bar (0cf363b), #9 test options + zero-badge fix (daac252).
+- Opened PR #1 to main. No CI on the repo; local gates are `npm test` (61) and the browser smoke test (11 flows).
+- Test-harness lessons: navigating to the URL you're already on doesn't fire hashchange, and each re-render detaches old elements. Smoke steps now start from #/ and re-query after every change.
+
 ### 2026-09-30: #6 Backup, restore, deck sharing (security reviewed)
 - What: Settings → Download backup / Restore or import a file (Add or Replace), Share deck in the editor (cards only, no progress), a backup reminder on the library, and a daily goal picker.
 - Why: all data lives in one browser (audit #6). This is also the no-server answer to "share decks with classmates".
