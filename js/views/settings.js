@@ -22,7 +22,7 @@ export function renderSettings() {
   const goal = dailyGoal();
 
   app.innerHTML = `
-    <header class="page-head"><div><h1>Settings</h1></div></header>
+    <header class="page-head"><div><h1>Settings</h1><p class="lede"><a href="#/help">How PrepPop works</a></p></div></header>
 
     <section class="panel" aria-labelledby="install-heading">
       <h2 id="install-heading">${isInstalled() ? "PrepPop is on your home screen" : "Put PrepPop on your home screen"}</h2>

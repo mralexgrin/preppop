@@ -16,7 +16,7 @@ export function renderLibrary() {
           <a class="btn btn-primary btn-lg" href="#/starters" id="starters">Browse starter decks</a>
           <a class="btn btn-soft btn-lg" href="#/new">Make my own deck</a>
         </div>
-        <p class="restore-hint">New phone? <a href="#/settings">Restore a backup</a> or open a deck a friend shared.</p>
+        <p class="restore-hint">New phone? <a href="#/settings">Restore a backup</a> or open a deck a friend shared. <a href="#/help">How PrepPop works</a></p>
       </section>`;
     return;
   }
@@ -33,6 +33,7 @@ export function renderLibrary() {
         <a class="btn btn-primary" href="#/new">+ New deck</a>
       </div>
     </header>
+    ${introTip()}
     ${todayPanel()}
     ${backupNudge(cardTotal)}
     ${SUBJECTS.map((subject) => {
@@ -50,6 +51,12 @@ export function renderLibrary() {
 }
 
 function onLibraryClick(e) {
+  if (e.target.closest("#intro-done")) {
+    state.settings.introDone = true;
+    persist();
+    renderLibrary();
+    return;
+  }
   const deck = getDeck(e.target.closest("[data-delete-deck]")?.dataset.deleteDeck);
   if (!deck || !confirm(`Delete "${deck.name}" and all of its cards? This can't be undone.`)) return;
   deleteDeck(deck);
@@ -111,6 +118,24 @@ function todayPanel() {
         <span class="goal-label">${done >= goal ? "Daily goal done" : `${done} / ${goal} today`}</span>
       </div>
       ${action ? `<div class="today-action">${action}</div>` : ""}
+    </section>`;
+}
+
+// First-run tip, until she dismisses it.
+function introTip() {
+  if (state.settings.introDone) return "";
+  return `
+    <section class="intro-tip" aria-labelledby="intro-heading">
+      <h2 id="intro-heading">How PrepPop works in 30 seconds</h2>
+      <ol class="steps">
+        <li>Open a deck in <strong>Flashcards</strong> and mark each card <strong>I know it</strong> or <strong>Still learning</strong>.</li>
+        <li>Come back each day and tap <strong>Start review</strong>. PrepPop brings cards back right before you'd forget them.</li>
+        <li>Test coming up? Set the test date in the deck editor and <strong>Cram</strong>.</li>
+      </ol>
+      <div class="row">
+        <button class="btn btn-primary" type="button" id="intro-done">Got it</button>
+        <a class="btn btn-ghost" href="#/help">More help</a>
+      </div>
     </section>`;
 }
 

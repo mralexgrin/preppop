@@ -31,6 +31,7 @@ const SHELL = [
   "js/ui.js",
   "js/util.js",
   "js/views/editor.js",
+  "js/views/help.js",
   "js/views/library.js",
   "js/views/progress.js",
   "js/views/review.js",

@@ -603,3 +603,12 @@ main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .hint-box { text-align: center; margin-top: 12px; }
 .hint-box .text-btn { text-decoration: none; color: var(--ink-2); }
 .hint-text { margin: 6px auto 0; max-width: 44ch; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--sun); color: #3a2a00; font-weight: 600; overflow-wrap: anywhere; }
+
+/* Help and first-run tip */
+.help-section h2 { font-size: 1.15rem; }
+.help-list { margin: 0; padding-left: 20px; display: grid; gap: 8px; color: var(--ink-2); }
+.help-list strong { color: var(--ink); }
+.help-section p { color: var(--ink-2); }
+.help-section p strong, .help-section .steps strong { color: var(--ink); }
+.intro-tip { border: 1.5px solid var(--sun); background: var(--surface); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 16px; display: grid; gap: 12px; }
+.intro-tip h2 { font-size: 1.15rem; }
