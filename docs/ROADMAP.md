@@ -23,6 +23,7 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 ## Next up
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
+| 5b | Mode tabs on deck screens (Flashcards · Write · Test) | Re-audit: switching modes is one "Switch to X" button | M | S | [STRONG] |
 | 6 | Backup: export/import all data as a file | Finding 6 | H | S | [STRONG] |
 | 7 | Installable PWA + offline | Finding 7 | H | S | [STRONG] |
 | 8 | Mobile polish: bottom tab bar (swipe and tile layout done) | Finding 8 | M | S | [STRONG] |
