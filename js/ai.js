@@ -12,7 +12,6 @@ const ERRORS = {
   misconfigured: "the answer service isn't set up correctly",
 };
 
-export const normalize = (s) => String(s).trim().toLowerCase().replace(/\s+/g, " ");
 
 // items: [{ key, shows: "term" | "definition", prompt, answer }]
 // Returns { [key]: string[] } with up to 3 wrong answers per item.

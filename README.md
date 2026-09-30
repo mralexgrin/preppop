@@ -51,8 +51,20 @@ Then open http://localhost:4190.
 
 ## Files
 
-- `index.html`: page shell
-- `styles.css`: design tokens (light and dark) and components
-- `app.js`: hash router, storage, and the Library, Editor, Flashcards, Test, and Settings views
-- `ai.js`: calls the answer service
+- `index.html`, `styles.css`: page shell, design tokens (light and dark), and components
+- `js/app.js`: hash router
+- `js/store.js`: saved state in localStorage and migration of older saved data
+- `js/util.js`, `js/ui.js`: shared helpers
+- `js/views/`: one module per screen (library, editor, study, test, settings)
+- `js/ai.js`: calls the answer service
 - `worker/src/index.js`: the Cloudflare Worker (validation, rate limit, Claude request, response cleanup)
+- `docs/`: product context, roadmap, changelog, and the autonomous work log
+
+## Tests
+
+```bash
+npm test            # app logic (node --test)
+cd worker && npm test
+```
+
+`tests/browser-smoke.js` clicks through the core flows in the local preview. Its header comment has instructions.
