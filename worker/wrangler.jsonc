@@ -24,7 +24,7 @@
   // paste the database_id it prints here, then:
   //   npx wrangler d1 migrations apply preppop-sync --remote
   "d1_databases": [
-    { "binding": "DB", "database_name": "preppop-sync", "database_id": "REPLACE_WITH_ID_FROM_wrangler_d1_create", "migrations_dir": "migrations" }
+    { "binding": "DB", "database_name": "preppop-sync", "database_id": "09537e45-4ca9-4cd8-8462-f533dbca08ff", "migrations_dir": "migrations" }
   ],
   "observability": { "enabled": true }
   // ANTHROPIC_API_KEY is a secret: npx wrangler secret put ANTHROPIC_API_KEY

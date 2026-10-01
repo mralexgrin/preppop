@@ -4,7 +4,7 @@
 
 export const MODEL_LABEL = "Claude Opus 5.5";
 
-export const SERVICE_URL = "https://preppop-ai.REPLACE_ME.workers.dev";
+export const SERVICE_URL = "https://preppop-ai.preppop-ai.workers.dev";
 const BATCH_SIZE = 30;
 export const MAX_NOTES = 12000;
 
