@@ -1,0 +1,161 @@
+// Backup files (everything) and deck files (one deck to share), plus reading
+// them back. Files come from outside the app, so everything is validated and
+// cleaned before it touches saved state.
+
+import { uid } from "./util.js";
+import { migrate } from "./store.js";
+import { isSubject } from "./subjects.js";
+import { DATA_URL, MAX_IMAGE_BYTES } from "./images.js";
+
+const FORMAT = "preppop";
+const MAX_TEXT = 2000;
+const MAX_CARDS = 5000;
+const MAX_DECKS = 500;
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+export function makeBackup(state, now = new Date()) {
+  return {
+    format: FORMAT,
+    kind: "backup",
+    version: 1,
+    createdAt: now.toISOString(),
+    decks: state.decks,
+    activity: state.activity,
+    settings: state.settings,
+  };
+}
+
+// A deck to hand to a classmate: just the cards, no personal progress.
+export function makeDeckFile(deck, now = new Date()) {
+  return {
+    format: FORMAT,
+    kind: "deck",
+    version: 1,
+    createdAt: now.toISOString(),
+    deck: {
+      name: deck.name,
+      subject: deck.subject,
+      ordered: Boolean(deck.ordered),
+      cards: deck.cards.map(({ term, definition, hint, image }) => ({ term, definition, ...(hint ? { hint } : {}), ...(image ? { image } : {}) })),
+    },
+  };
+}
+
+const text = (v) => (typeof v === "string" ? v.slice(0, MAX_TEXT) : "");
+
+function cleanDeck(deck, { freshIds }) {
+  const cards = (Array.isArray(deck?.cards) ? deck.cards : [])
+    .slice(0, MAX_CARDS)
+    .map((c) => {
+      const card = { id: freshIds || typeof c?.id !== "string" ? uid() : c.id, term: text(c?.term).trim(), definition: text(c?.definition).trim() };
+      if (typeof c?.hint === "string" && c.hint.trim()) card.hint = c.hint.trim().slice(0, 300);
+      if (c?.image && typeof c.image === "object") card.image = { id: c.image.id, side: c.image.side, alt: c.image.alt };
+      if (!freshIds) {
+        if (["new", "learning", "known"].includes(c?.status)) card.status = c.status;
+        if (c?.stats && typeof c.stats === "object") card.stats = { seen: c.stats.seen, missed: c.stats.missed };
+        if (c?.srs && typeof c.srs.due === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.srs.due) && Number.isInteger(c.srs.box)) {
+          card.srs = { box: Math.max(0, Math.min(7, c.srs.box)), due: c.srs.due, ...(DAY.test(c.srs.last) ? { last: c.srs.last } : {}) };
+        }
+      }
+      card.status ??= "new";
+      return card;
+    })
+    .filter((c) => c.term && c.definition);
+  return {
+    id: freshIds || typeof deck?.id !== "string" ? uid() : deck.id,
+    name: text(deck?.name).trim().slice(0, 120) || "Imported deck",
+    subject: deck?.subject,
+    ordered: deck?.ordered === true,
+    ...(typeof deck?.examDate === "string" ? { examDate: deck.examDate } : {}),
+    createdAt: Number.isFinite(deck?.createdAt) ? deck.createdAt : Date.now(),
+    ...(!freshIds && Number.isFinite(deck?.updatedAt) ? { updatedAt: deck.updatedAt } : {}),
+    ...(!freshIds && deck?.deletedCards ? { deletedCards: deck.deletedCards } : {}),
+    cards,
+  };
+}
+
+// Returns { kind, decks, activity?, settings?, createdAt } or throws with a
+// message that can be shown to the student.
+export function readFile(raw) {
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    throw new Error("That file isn't a PrepPop backup or deck.");
+  }
+  if (data?.format !== FORMAT) throw new Error("That file isn't a PrepPop backup or deck.");
+
+  if (data.kind === "deck") {
+    const deck = cleanDeck(data.deck, { freshIds: true });
+    if (!deck.cards.length) throw new Error("That deck file has no cards in it.");
+    const decks = migrate({ decks: [deck] }).decks;
+    return { kind: "deck", decks, images: cleanImages(data.images, decks), createdAt: data.createdAt };
+  }
+  if (data.kind === "backup") {
+    const decks = (Array.isArray(data.decks) ? data.decks : []).filter((d) => d && typeof d === "object" && !Array.isArray(d)).slice(0, MAX_DECKS).map((d) => cleanDeck(d, { freshIds: false }));
+    const cleaned = migrate({ decks, activity: cleanActivity(data.activity), settings: cleanSettings(data.settings) });
+    return { kind: "backup", decks: cleaned.decks, activity: cleaned.activity, settings: cleaned.settings, images: cleanImages(data.images, cleaned.decks), createdAt: data.createdAt };
+  }
+  throw new Error("That file isn't a PrepPop backup or deck.");
+}
+
+function cleanActivity(activity) {
+  const out = {};
+  if (!activity || typeof activity !== "object") return out;
+  for (const [day, v] of Object.entries(activity)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
+    const answered = Math.max(0, Math.floor(Number(v?.answered) || 0));
+    const correct = Math.min(answered, Math.max(0, Math.floor(Number(v?.correct) || 0)));
+    if (answered) out[day] = { answered, correct };
+  }
+  return out;
+}
+
+function cleanSettings(settings) {
+  const out = {};
+  if (Number.isInteger(settings?.dailyGoal) && settings.dailyGoal > 0 && settings.dailyGoal <= 500) out.dailyGoal = settings.dailyGoal;
+  if (isSubject(settings?.lastSubject)) out.lastSubject = settings.lastSubject;
+  return out;
+}
+
+// Adds decks that aren't already here (matched by id). Existing decks win.
+export function mergeDecks(existing, incoming) {
+  const ids = new Set(existing.map((d) => d.id));
+  const added = incoming.filter((d) => !ids.has(d.id));
+  return { decks: [...existing, ...added], added: added.length, skipped: incoming.length - added.length };
+}
+
+// Adds practice history from a backup to what's already here, day by day,
+// keeping the larger count so restoring twice doesn't double anything.
+export function mergeActivity(existing, incoming) {
+  const out = { ...existing };
+  for (const [day, v] of Object.entries(incoming)) {
+    const mine = out[day];
+    out[day] = !mine || v.answered > mine.answered ? v : mine;
+  }
+  return out;
+}
+
+// Data downloaded from the sync service gets the same cleaning as a backup
+// file: anyone holding the sync key could have written it.
+export function cleanSyncData(remote) {
+  const decks = (Array.isArray(remote?.decks) ? remote.decks : []).filter((d) => d && typeof d === "object" && !Array.isArray(d)).slice(0, MAX_DECKS).map((d) => cleanDeck(d, { freshIds: false }));
+  const out = migrate({ decks, activity: cleanActivity(remote?.activity), deletedDecks: remote?.deletedDecks });
+  return { decks: out.decks, activity: out.activity, deletedDecks: out.deletedDecks };
+}
+
+// Pictures in a file: { imageId: "data:image/...;base64,..." }. Only real
+// image data URLs of a sane size, for pictures a card in the file uses.
+export function cleanImages(images, decks) {
+  const used = new Set(decks.flatMap((d) => d.cards.map((c) => c.image?.id).filter(Boolean)));
+  const out = {};
+  if (!images || typeof images !== "object") return out;
+  for (const [id, url] of Object.entries(images)) {
+    if (!used.has(id) || typeof url !== "string" || !DATA_URL.test(url)) continue;
+    if (url.length * 0.75 > MAX_IMAGE_BYTES) continue;
+    out[id] = url;
+  }
+  return out;
+}
+
+export const imageIds = (decks) => decks.flatMap((d) => d.cards.map((c) => c.image?.id).filter(Boolean));

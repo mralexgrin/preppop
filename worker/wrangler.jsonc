@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "preppop-ai",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    // Only this site can call the Worker from a browser. For local testing,
+    // .dev.vars overrides it (e.g. to add http://localhost:4190).
+    "ALLOWED_ORIGINS": "https://mralexgrin.github.io"
+  },
+  // 10 requests per visitor IP per minute. A 200-card deck is 7 requests.
+  "ratelimits": [
+    { "name": "LIMITER", "namespace_id": "4190", "simple": { "limit": 10, "period": 60 } },
+    // Sync: 60 requests per IP per minute (each sync is a read plus a write).
+    { "name": "SYNC_LIMITER", "namespace_id": "4191", "simple": { "limit": 60, "period": 60 } },
+    // Creating a new sync vault: 3 per IP per minute.
+    { "name": "CREATE_LIMITER", "namespace_id": "4192", "simple": { "limit": 3, "period": 60 } }
+  ],
+  // Nightly cleanup of sync data unused for a year.
+  "triggers": { "crons": ["17 4 * * *"] },
+  // Encrypted sync storage. Create it once with:
+  //   npx wrangler d1 create preppop-sync
+  // paste the database_id it prints here, then:
+  //   npx wrangler d1 migrations apply preppop-sync --remote
+  "d1_databases": [
+    { "binding": "DB", "database_name": "preppop-sync", "database_id": "09537e45-4ca9-4cd8-8462-f533dbca08ff", "migrations_dir": "migrations" }
+  ],
+  "observability": { "enabled": true }
+  // ANTHROPIC_API_KEY is a secret: npx wrangler secret put ANTHROPIC_API_KEY
+}
