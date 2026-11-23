@@ -18,3 +18,9 @@ test("every file in the offline cache exists", () => {
   const gone = shell.filter((f) => f !== "./" && !existsSync(new URL(`../${f}`, import.meta.url)));
   assert.deepEqual(gone, []);
 });
+
+test("the app's own files are checked with the server, not the browser's 10-minute cache", () => {
+  const src = readFileSync(new URL("../sw.js", import.meta.url), "utf8");
+  assert.match(src, /new Request\(path, \{ cache: "reload" \}\)/, "install skips the HTTP cache");
+  assert.match(src, /cache: "no-cache"/, "background refresh revalidates");
+});
