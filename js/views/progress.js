@@ -159,7 +159,10 @@ function confidencePanel(sureness, blind) {
           (c) => `
         <li data-subject="${c.subject.id}">
           <p class="mastery-head"><span><span class="subject-dot" aria-hidden="true"></span>${c.subject.name}</span></p>
-          <p class="calib-line">Sure: <strong>${pct(c.surePct)}</strong> right <span class="calib-n">(${plural(c.sure, "answer")})</span> · Guessing: <strong>${pct(c.guessPct)}</strong> right <span class="calib-n">(${plural(c.guess, "answer")})</span></p>
+          <p class="calib-line">${[
+            c.sure ? `When sure: <strong>${pct(c.surePct)}</strong> right <span class="calib-n">(${plural(c.sure, "answer")})</span>` : "",
+            c.guess ? `When guessing: <strong>${pct(c.guessPct)}</strong> right <span class="calib-n">(${plural(c.guess, "answer")})</span>` : "",
+          ].filter(Boolean).join(" · ")}</p>
           ${isOverconfident(c) ? `<p class="calib-warn">You're often sure and wrong here. Slow down and check before you lock in.</p>` : ""}
         </li>`,
         )
