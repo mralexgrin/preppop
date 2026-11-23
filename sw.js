@@ -2,6 +2,9 @@
 // is served from the cache and refreshed in the background (stale-while-
 // revalidate), so the app opens instantly and offline, and picks up new
 // versions on the next launch. Calls to the answer service are never cached.
+// GitHub Pages lets browsers reuse a file for 10 minutes, so the app's own
+// files are always checked with the server; otherwise a fresh install or a
+// background refresh could store an outdated copy right after a release.
 
 const CACHE = "preppop-v1";
 const SHELL = [
@@ -57,7 +60,12 @@ const SHELL = [
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((cache) => cache.addAll(SHELL.map((path) => new Request(path, { cache: "reload" }))))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -81,7 +89,9 @@ self.addEventListener("fetch", (event) => {
       // Page loads all use the one cached index.html (routes live in the hash).
       const key = request.mode === "navigate" ? new URL("index.html", self.registration.scope).href : request;
       const cached = await cache.match(key, { ignoreSearch: request.mode === "navigate" });
-      const refresh = fetch(request)
+      // Same-origin files are revalidated with the server (a cheap 304 when unchanged).
+      const fresh = !sameOrigin ? request : request.mode === "navigate" ? new Request(request.url, { cache: "no-cache" }) : new Request(request, { cache: "no-cache" });
+      const refresh = fetch(fresh)
         .then((response) => {
           if (response.ok || response.type === "opaque") cache.put(key, response.clone());
           return response;

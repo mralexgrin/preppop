@@ -2,6 +2,10 @@
 
 User-facing release notes. Newest first.
 
+## Unreleased (branch `fix/sw-fresh-copies`)
+### Fixed
+- After an update, the app now picks up the new version on the next open instead of sometimes showing the old one for up to 10 minutes.
+
 ## Unreleased (branch `feat/clinical-shift`, pilot)
 ### Added
 - **✦ Clinical Shift** (pilot): practice rooming a made-up patient, played by AI. Introduce yourself, check who they are, take vital signs, ask about symptoms, then report to the doctor and get feedback, including how you could chart the visit. Three patients to start. Find it under your Clinical decks.
