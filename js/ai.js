@@ -53,20 +53,21 @@ export async function teachBack({ term, definition, subject, explanation, questi
   return { verdict: x.verdict, summary: text(x.summary), correct: list(x.correct), missing: list(x.missing), wrong: list(x.wrong), followUp: text(x.followUp) };
 }
 
-// Clinical Shift: the patient's next line ({ say, reading, aside }), or the
-// debrief at the end. transcript: [{ from: "student" | "patient", text }].
+// Clinical Shift: the patient's next line ({ say, readings, crisis, sig }),
+// or the debrief at the end. transcript: [{ from: "student" | "patient", text,
+// readings?, sig? }]; patient lines carry the service's signature back.
 export async function shiftTurn({ scenario, transcript }, { signal } = {}) {
   const x = await request("/shift", { scenario, action: "turn", transcript }, { signal });
-  if (typeof x?.say !== "string" || !x.say) throw new Error("the AI service had a problem");
-  const text = (v) => (typeof v === "string" ? v : "");
-  return { say: x.say, reading: text(x.reading), aside: text(x.aside) };
+  if (typeof x?.say !== "string" || !x.say || typeof x.sig !== "string") throw new Error("the AI service had a problem");
+  const readings = Array.isArray(x.readings) ? x.readings.filter((r) => typeof r === "string") : [];
+  return { say: x.say, readings, crisis: x.crisis === true, sig: x.sig };
 }
 
-export async function shiftDebrief({ scenario, transcript }, { signal } = {}) {
-  const x = await request("/shift", { scenario, action: "debrief", transcript }, { signal });
+export async function shiftDebrief({ scenario, transcript, report }, { signal } = {}) {
+  const x = await request("/shift", { scenario, action: "debrief", transcript, report }, { signal });
   if (typeof x?.summary !== "string" || !x.summary) throw new Error("the AI service had a problem");
   const list = (v) => (Array.isArray(v) ? v.filter((t) => typeof t === "string" && t.trim()) : []);
-  return { summary: x.summary, didWell: list(x.didWell), missed: list(x.missed), terms: list(x.terms), toReport: list(x.toReport), note: typeof x.note === "string" ? x.note : "" };
+  return { summary: x.summary, didWell: list(x.didWell), missed: list(x.missed), terms: list(x.terms), toReport: list(x.toReport), note: typeof x.note === "string" ? x.note : "", crisis: x.crisis === true };
 }
 
 // Requests give up after TIMEOUT_MS so a hung connection can't leave a spinner forever.

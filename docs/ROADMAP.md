@@ -23,8 +23,7 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 ## Next up
 Approved order from the 2026-11-23 proposal ("make it competitive and unique"): check she can *use* what she learned, not just recognize it.
 
-| # | Item | Why (user problem) | Impact | Effort | Tier |
-|---|------|--------------------|--------|--------|------|
+(All five approved items are built; see Done. Next ideas are below.)
 
 ## Ideas (unranked)
 - Clinical Shift: more scenarios once the pilot's prompts are reviewed (a Spanish-speaking patient would join her Spanish and clinical work)

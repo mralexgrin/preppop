@@ -24,7 +24,7 @@ A study companion for a high school student: Biology, clinical skills, Spanish, 
 - **Test.** 10, 20, or all questions; any mix of multiple choice, written, and true or false. Claude writes the wrong answers, plus the card she usually mixes it up with (`js/testbuilder.js`). Optional confidence check.
 - **Steps.** For decks marked "in order" (procedures, timelines): tap the steps into order (`js/steps.js`).
 - **Match.** A quick timed game. It doesn't touch the schedule.
-- **✦ Clinical Shift** (`#/shift`, linked under her Clinical decks). She rooms a made-up patient as a student clinical assistant: introduces herself, checks name and date of birth, takes vital signs (the patient gives exact readings when she measures), asks about symptoms, then reports to the doctor and gets a debrief: what she did well, what to do next time, findings for the doctor, terms she used, and an example chart note. Three fixed scenarios (fever and cough, short of breath, stomach pain); up to 14 messages; nothing is saved.
+- **✦ Clinical Shift** (`#/shift`, linked under her Clinical decks). She rooms a made-up patient as a student clinical assistant: introduces herself, checks name and date of birth, takes vital signs (the patient gives exact readings when she measures), asks about symptoms, then reports to the doctor and gets a debrief: what she did well, what to do next time, findings for the doctor, terms she used, and an example chart note. Three fixed scenarios (fever and cough, short of breath, stomach pain); up to 14 messages. Nothing is saved on the device or by PrepPop. The Worker signs each patient line, so the route only continues conversations it wrote. Readings come from the scenario data, and a crisis flag shows fixed help text.
 - **Words** (Word Builder, on the *Medical terminology* starter deck). Decode medical words she's never seen by picking their meaning (wrong choices share a part), or build a word from its meaning by tapping parts in order. 39 words from the deck's parts, each with its Spanish medical term (`js/wordparts.js`). Each answer practices the part cards; the part she misread counts as missed.
 
 **Making cards**
@@ -45,7 +45,7 @@ Test mode's wrong answers come from Claude Opus 5.5. Visitors don't need a key. 
 The Worker does five fixed AI jobs: wrong answers (`/wrong-answers`), cards from notes (`/cards-from-notes`), explaining a card (`/explain`), feedback on her own explanation (`/teach-back`), and playing a made-up patient for Clinical Shift plus the debrief (`/shift`; the scenarios live in the Worker). The prompt, model, and limits are fixed on the server, so it can't be used as a general Claude proxy:
 
 - Only browser requests from `mralexgrin.github.io` are allowed (`ALLOWED_ORIGINS` in `worker/wrangler.jsonc`). For local testing, override it in `worker/.dev.vars`, e.g. `ALLOWED_ORIGINS=http://localhost:4190`.
-- 10 requests per visitor IP per minute, with at most 30 cards per request and 600 characters per field (1,500 for her own explanations).
+- 10 requests per visitor IP per minute, with at most 30 cards per request and 600 characters per field (1,500 for her own explanations; Clinical Shift: 14 signed turns, 400 characters per line, 800 for the report).
 
 Also set a monthly spend limit on the key in the Anthropic Console.
 

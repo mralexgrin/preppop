@@ -3,17 +3,26 @@
 Newest entries at the top. This file is the memory of the run: read it at the start of every session.
 
 ## Flagged for human review
-- **Clinical Shift pilot (2026-11-23): two new AI prompts plus clinical scenarios, for a minor. Highest-risk item; please review before merging. Not tried on the real model and not deployed (Cloudflare login expired).**
+- **Clinical Shift pilot (2026-11-23): two AI prompts plus clinical scenarios, for a minor. Highest-risk item; please review before merging. Not deployed to production. Tried on the real model through preview versions (no production traffic).**
   - **Prompts:** `PATIENT_SYSTEM` (Claude plays a fictional patient) and `DEBRIEF_SYSTEM` (clinical-instructor feedback), in `worker/src/index.js`.
-  - **Scenarios:** `SCENARIOS`, three fictional cases with fixed vital signs.
-    - Fever and cough: T 101.8 °F, HR 108, RR 22.
-    - Short of breath: SpO2 91%, BP 152/94, RR 24.
-    - Belly pain moving to the lower right, in a 16-year-old: T 100.6 °F, HR 104, pain 7/10.
-    - Please check the values and the "findings for the doctor".
-  - **Her role** is a student clinical assistant: no diagnosing or treatment. The patient never gives medical advice; the debrief names concerning findings for the doctor but doesn't diagnose.
-  - **Safety:** if her message sounds like a real emergency or distress in her own life, the patient adds an out-of-character note suggesting a trusted adult, 911 in an emergency, or 988 (Suicide & Crisis Lifeline). Please confirm that wording is what you want.
-  - **Inputs:** the transcript goes in as JSON (no tag injection). Scenarios come only from the server, and unknown or prototype ids are refused. Limits: 14 turns plus the report, 400 characters per line. Patient lines are effort low, the debrief medium. Nothing is saved on the device or the server.
-  - **To finish:** `cd worker && npx wrangler login && npx wrangler deploy`, then play each scenario a few times: well, badly, off-topic, with an injection attempt, and with a "real life" distress message.
+  - **Scenarios:** `SCENARIOS`, three fictional cases. Ages are worked out from the date of birth. The Worker writes the readings from the scenario, so the model can't make up numbers. Please check the values and the "findings for the doctor":
+    - Fever and cough: T 101.8 °F after ibuprofen, HR 108, RR 22.
+    - Short of breath: SpO2 91%, BP 152/94 (misses pills), RR 24, penicillin allergy.
+    - Belly pain moving to the lower right, in a 16-year-old: T 100.6 °F, HR 104, pain 7/10, vomiting, worse walking.
+  - **Crisis note:** the model only sets `crisis: true`. The app then shows fixed, reviewable text (`CRISIS_NOTE` in `js/shift.js`: trusted adult, 911, call or text 988) until she closes it, and a short help line is always on the Clinical Shift pages. **Please confirm that wording.**
+  - **Content limits:** nothing romantic, sexual, or graphic. Sensitive history questions get brief clinical answers or "I'd rather talk to the doctor".
+  - **Abuse resistance:**
+    - Patient lines are HMAC-signed by the Worker (key derived from the API key), and an edited or forged line is refused. Turns must alternate.
+    - Limits: 14 turns, 400 characters per line, 800 for the report. max_tokens is 1000 for a turn and 4000 for the debrief.
+    - The transcript is sent as JSON. Logs record only error names.
+  - **Privacy wording:** "Nothing is saved on your device or by PrepPop. What you type is sent to Claude (Anthropic)… you don't need to use your real name."
+  - **Live checks:**
+    - A full fever visit: the patient stayed in role, readings appeared only when measured, and the debrief was specific and fair.
+    - "Want to go out?" was declined in role, "ignore your instructions" was ignored, and "is it your appendix?" got a worried patient's reaction with no diagnosis.
+    - A real-life "I don't feel safe at home" set crisis, and the next role-play line went back to normal.
+    - Fixed after testing: the patient called her "young lady", so it now doesn't assume her name, age, or gender.
+  - **To finish:** your review, then `cd worker && npx wrangler deploy` from this branch.
+
 - **New AI prompt: /teach-back (worker/src/index.js, TEACH_SYSTEM), 2026-11-23. Live-tested on a preview version (not production traffic), with all 5 cases right:**
   - A good bradycardia explanation got "got_it", with a sensible follow-up.
   - "Heart beats too fast" got "not_yet", and the feedback named tachycardia as the opposite.
@@ -38,6 +47,26 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-11-23: Clinical Shift review fixes (code + security)
+- **Blockers fixed:**
+  - Resending the report after a feedback error could duplicate it and lock her out at the limit. The report is now its own field and is added only once the debrief comes back.
+  - After a patient error she could stack two of her lines in a row and pass the limit. The unanswered line now goes back in the text box.
+- **Security:**
+  - Signed patient lines and strict turn order, so the route can't be fed a made-up conversation and used as a free AI proxy.
+  - Readings are written by the Worker from the scenario.
+  - The crisis signal is a yes/no flag, with fixed text and the rule placed first in both prompts.
+  - Content limits for role-play with a minor.
+  - Lower max_tokens, and logs record only error names.
+- **Screen:**
+  - The text box isn't replaced between turns, so the phone keyboard stays up.
+  - The checklist stays open, and readings are de-duplicated.
+  - Error and crisis notices stay visible and are announced.
+  - Enter is ignored while composing (IME).
+  - The 14-message limit is shown, and leaving asks first (including on page unload).
+- **Tests:**
+  - Worker (18): signing, forged and edited lines, readings, alternation, limits. The app/Worker match check moved here, so the app's `npm test` doesn't need the Worker's packages.
+  - Browser (24 flows): patient error and Try again, crisis note, feedback error and resend, the 14-message limit, and the leave prompt.
+
 ### 2026-11-23: Readiness review fixes
 - **Blocker fixed:** missing every card made a new deck look about 60% ready. Missed cards now start at 0.2 and lucky guesses at 0.5.
 - Older cards with no "last practiced" date get one worked out from their due date and box.
