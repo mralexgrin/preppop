@@ -106,7 +106,7 @@ const editForm = (p) => `
       <span class="field-label">School level</span>
       <select class="input" id="edit-level">${LEVELS.map((l) => `<option value="${l.id}" ${l.id === p.level ? "selected" : ""}>${l.name} (${l.grades.toLowerCase()})</option>`).join("")}</select>
     </label>
-    <p class="hint">Changing the level changes which starter decks are suggested. Existing decks stay.</p>
+    <p class="hint">The level sets which starter decks are suggested and how simply the AI writes. Existing decks stay.</p>
     <div class="row"><button class="btn btn-primary" type="submit">Save</button><button class="btn btn-ghost" type="button" id="edit-cancel">Cancel</button></div>
   </form>`;
 
