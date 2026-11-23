@@ -21,6 +21,12 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-11-23: #24 Test readiness forecast
+- `js/readiness.js` estimates recall on the test date as 0.9^(t / interval), which matches the Leitner schedule: about 90% at the due date. Learning cards start at 0.6 and fade daily; unpracticed cards count as 0.
+- A day-by-day simulation reviews the weakest due cards, and finds the smallest of 5/10/15/20/30/40/60 cards a day that reaches 90%. Minutes assume 12 seconds a card.
+- Decision: it assumes she gets most reviews right, so it's optimistic. Every place it appears calls it an estimate, and Help explains it.
+- Shown in the Today exam banner and a new Progress panel, **Tests coming up** (next 30 days), with Cram and Practice test buttons.
+
 ### 2026-11-23: #23 Teach It Back
 - Write mode gets a third option, **✦ Explain it**, instead of a new tab: the deck tabs are already full on phones, and explaining is recall, the same job as Write.
 - New Worker route `/teach-back` (effort medium, since grading needs judgment) with an optional `question` field, so the same route grades her answer to the follow-up.

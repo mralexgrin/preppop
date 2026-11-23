@@ -1,12 +1,14 @@
-// Progress: streaks, a practice calendar, this week's numbers, mastery by
-// subject, what's coming up, and the cards she misses most.
+// Progress: streaks, a practice calendar, this week's numbers, tests coming
+// up and how ready she is, mastery by subject, what's coming up, and the cards
+// she misses most.
 
 import { state, dailyGoal } from "../store.js";
 import { esc, plural } from "../util.js";
-import { app, setTitle, toast } from "../ui.js";
-import { dayKey, streak } from "../srs.js";
+import { app, setTitle, toast, examLabel } from "../ui.js";
+import { dayKey, streak, addDays } from "../srs.js";
 import { longestStreak, weekSummary, calendar, subjectMastery, weakCards, upcoming, progressSummary, calibration, isOverconfident, blindSpots } from "../progress.js";
 import { mixupPairs } from "../mixups.js";
+import { forecast, readinessText, pct } from "../readiness.js";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
@@ -101,6 +103,7 @@ export function renderProgress() {
         : ""
     }
 
+    ${testsPanel(today)}
     ${confidencePanel(sureness, blind)}
     ${mixupPanel(pairs)}
 
@@ -191,5 +194,30 @@ function mixupPanel(pairs) {
         .map(({ deck, a, b }) => `<li data-subject="${deck.subject}"><span class="subject-dot" aria-hidden="true"></span><strong>${esc(a.term)}</strong> <span class="mixup-vs">vs</span> <strong>${esc(b.term)}</strong></li>`)
         .join("")}</ul>
       <div class="row"><a class="btn btn-primary" href="#/mixups">Practice telling them apart</a></div>
+    </section>`;
+}
+
+// Tests in the next 30 days: how ready she is and what daily practice gets her there.
+function testsPanel(today) {
+  const tests = state.decks
+    .filter((d) => d.examDate && d.examDate >= today && d.examDate <= addDays(today, 30) && d.cards.length)
+    .sort((a, b) => a.examDate.localeCompare(b.examDate));
+  if (!tests.length) return "";
+  return `
+    <section class="panel wide" aria-labelledby="tests-heading">
+      <h2 id="tests-heading">Tests coming up</h2>
+      <ul class="tests">${tests
+        .map((deck) => {
+          const f = forecast(deck, today);
+          return `
+        <li data-subject="${deck.subject}">
+          <div class="mastery-head"><span><span class="subject-dot" aria-hidden="true"></span>${esc(deck.name)}</span><span>${examLabel(deck.examDate, today)}</span></div>
+          <div class="meter" role="img" aria-label="About ${pct(f.now)}% ready"><span class="m-know" style="width:${pct(f.now)}%"></span></div>
+          <p class="readiness-line">${readinessText(f)}</p>
+          <div class="row"><a class="btn btn-soft" href="#/deck/${deck.id}/study/cram">Cram</a><a class="btn btn-ghost" href="#/deck/${deck.id}/test">Practice test</a></div>
+        </li>`;
+        })
+        .join("")}</ul>
+      <p class="hint">An estimate from your practice so far, assuming you get most reviews right. It's a guide, not a grade.</p>
     </section>`;
 }

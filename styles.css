@@ -762,3 +762,10 @@ h1[tabindex="-1"]:focus { outline: none; }
 .teach-follow { margin-top: 18px; display: grid; gap: 10px; }
 .teach-question { font-weight: 700; font-size: 1.05rem; }
 .teach-follow-form { display: grid; gap: 10px; }
+
+/* Test readiness */
+.readiness-line { color: var(--ink-2); font-size: .95rem; margin-top: 4px; }
+.readiness-line a { font-weight: 600; white-space: nowrap; }
+.tests { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.tests .row { margin-top: 8px; gap: 8px; }
+.exam-banner > div { flex: 1; min-width: 180px; }

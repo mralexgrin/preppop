@@ -25,7 +25,6 @@ Approved order from the 2026-11-23 proposal ("make it competitive and unique"): 
 
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
-| 24 | Test readiness forecast | "Am I ready for Friday?" turned into a number and a daily plan | Med | M | STRONG |
 | 25 | Clinical Shift scenarios | Practice the actual job: history, vitals, terms, a short note, then a debrief | High | L | TOP for the prompt (medical safety, human review) |
 
 ## Ideas (unranked)
@@ -38,6 +37,7 @@ Approved order from the 2026-11-23 proposal ("make it competitive and unique"): 
 - Light/dark toggle
 
 ## Done
+- #24 Test readiness forecast (2026-11-23, branch feat/readiness)
 - #23 Teach It Back (2026-11-23, branch feat/teach-back; prompt not yet live-tested)
 - #22 Word Builder (2026-11-23, branch feat/word-builder, PR #3)
 - #21 Mix-up detector + confidence check (2026-11-23, branch feat/mixups-confidence, PR #2)

@@ -2,6 +2,10 @@
 
 User-facing release notes. Newest first.
 
+## Unreleased (branch `feat/readiness`)
+### Added
+- **How ready am I?** With a test date set, Today and Progress → **Tests coming up** say about how ready you are and how many cards a day (and minutes) until the test should get you to about 90%. It's an estimate from your practice, and Help explains how it works.
+
 ## Unreleased (branch `feat/teach-back`)
 ### Added
 - **✦ Explain it** (Teach It Back), in Write mode. See a term, explain it in your own words (type, or use your keyboard's mic), and get feedback: what you got right, what's missing, what's not quite right, and the card itself. Then answer one follow-up question if you want. Only "Got it" counts as known.
