@@ -7,6 +7,9 @@ import { normalizeSyncKey } from "./sync.js";
 import { MAX_COUNT as MAX_MIXUPS } from "./mixups.js";
 
 export const STORE_KEY = "preppop:v1";
+// The active profile's key (see js/profiles.js); the first profile uses STORE_KEY.
+let storeKey = STORE_KEY;
+export const setStoreKey = (key) => (storeKey = key);
 
 export const state = { decks: [], distractors: {}, settings: {}, activity: {}, deletedDecks: {}, sync: null, explanations: {} };
 
@@ -147,7 +150,7 @@ export function migrate(saved, today = dayKey()) {
 
 export function load(storage = globalThis.localStorage) {
   try {
-    const raw = storage.getItem(STORE_KEY);
+    const raw = storage.getItem(storeKey);
     if (!raw) return;
     const parsed = JSON.parse(raw);
     Object.assign(state, migrate(parsed));
@@ -160,7 +163,7 @@ export function load(storage = globalThis.localStorage) {
 
 export function persist(storage = globalThis.localStorage, { quiet = false } = {}) {
   try {
-    storage.setItem(STORE_KEY, JSON.stringify(state));
+    storage.setItem(storeKey, JSON.stringify(state));
     if (!quiet) hooks.onChange?.();
     return true;
   } catch {

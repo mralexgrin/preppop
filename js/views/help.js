@@ -4,6 +4,11 @@ import { app, setTitle } from "../ui.js";
 
 const SECTIONS = [
   {
+    title: "Learners on this device",
+    body: `
+      <p>Everyone who uses PrepPop on this device can have their own learner: a first name or nickname, an avatar, and a school level (elementary, middle, or high school). Each learner has their own decks, progress, settings, and sync. Tap your avatar at the top to switch learners or <a href="#/profiles">add one</a>. There's no email or password, and names stay on this device.</p>`,
+  },
+  {
     title: "The idea in one minute",
     body: `
       <p>You remember things best when you review them right before you'd forget. PrepPop does that timing for you.</p>

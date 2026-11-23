@@ -3,6 +3,12 @@
 Newest entries at the top. This file is the memory of the run: read it at the start of every session.
 
 ## Flagged for human review
+- **Learner profiles (2026-11-23): this is a personal-data change.**
+  - **What's stored:** each learner's first name or nickname, an emoji avatar, and a school level, in localStorage (`preppop:profiles`), on the device only. They aren't synced, backed up, or sent to the AI service. Each learner's data is under its own key; the first uses `preppop:v1`, so existing data carries over untouched.
+  - **No email or password,** chosen by the owner, which keeps elementary users (under 13) clear of parental-consent rules.
+  - **Removing a learner** deletes their data on this device after a confirm, and says that a synced copy stays in the cloud unless sync is turned off first.
+  - **Pictures:** the picture cleanup now counts every learner's decks, since pictures are shared on the device.
+  - **Please review:** the new kid and middle-school starter content in `js/starters.js` (14 decks).
 - **Clinical Shift pilot (2026-11-23): two AI prompts plus clinical scenarios, for a minor. Highest-risk item; please review before merging. Not deployed to production. Tried on the real model through preview versions (no production traffic).**
   - **Prompts:** `PATIENT_SYSTEM` (Claude plays a fictional patient) and `DEBRIEF_SYSTEM` (clinical-instructor feedback), in `worker/src/index.js`.
   - **Scenarios:** `SCENARIOS`, three fictional cases. Ages are worked out from the date of birth. The Worker writes the readings from the scenario, so the model can't make up numbers. Please check the values and the "findings for the doctor":
@@ -48,6 +54,22 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-11-23: Learners and onboarding
+- The owner chose profiles with no email, switching on a shared device, and three learner types: elementary, middle, and high school.
+- **Onboarding:** 3 steps (who's learning, grade, subjects), then starter decks are added. It reloads into the new learner.
+- **Who's learning? screen:** switch, edit (name, avatar, level), remove, add, with up to 8 learners.
+- **Levels shape the app:** the subjects offered, the starter decks (with a level filter and "All levels" on the Starter decks screen), the daily goal (10/15/20), the confidence check (off for elementary), and text at 106% for elementary.
+- **New subjects:** Math, Science, and Social studies. There are 14 new starter decks, and every starter is tagged with its levels.
+- **Decisions:**
+  - Switching reloads the page, so no stale state, sync timers, or views carry over.
+  - Onboarding hides the menus until there's a learner.
+  - The browser test reset now seeds one high-school learner (onboarding is checked by hand plus unit tests).
+- **Also:**
+  - Progress bars scale with a transform instead of animating their width.
+  - Deck tiles have no 4px accent border.
+  - Fixed the Today button overflowing on phones with long deck names.
+- **Not done yet (next PR):** the AI writing at the learner's reading level. The prompts still say "high school student".
+
 ### 2026-11-23: Clinical Shift review fixes (code + security)
 - **Blockers fixed:**
   - Resending the report after a feedback error could duplicate it and lock her out at the limit. The report is now its own field and is added only once the debrief comes back.

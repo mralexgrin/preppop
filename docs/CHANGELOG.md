@@ -2,7 +2,16 @@
 
 User-facing release notes. Newest first.
 
-## Unreleased (branch `fix/sw-fresh-copies`)
+## Unreleased (branch `feat/profiles`)
+### Added
+- **Learners and onboarding.** A first visit asks who's learning (a first name or nickname and an avatar), their grade (elementary, middle, or high school), and their subjects, then adds matching starter decks. Everyone on a shared device can have their own learner with their own decks and progress; tap your avatar at the top to switch or add one. No email or password.
+- **New subjects and starter decks** for younger learners: Math, Science, and Social studies. New decks: times tables, shapes, planets, matter and the water cycle, parts of a plant, continents and oceans, kinds of words, Spanish colors, ratios and percents, pre-algebra, rocks and Earth's layers, ecosystems, the American Revolution, and figurative language.
+### Improved
+- Progress bars fill smoothly without shifting the page, and deck tiles lose the thick colored top edge.
+### Fixed
+- On phones, a long deck name in the Today panel's Learn button no longer pushes the page wider than the screen.
+
+## Merged (branch `fix/sw-fresh-copies`)
 ### Fixed
 - After an update, the app now picks up the new version on the next open instead of sometimes showing the old one for up to 10 minutes.
 

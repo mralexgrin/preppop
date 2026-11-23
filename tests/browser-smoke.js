@@ -29,10 +29,16 @@ function check(cond, message) {
 }
 
 // Two-phase so the app starts from clean storage: call reset(), then run() again after reload.
-export async function reset() {
+// It starts with one high school learner (no decks), so onboarding is skipped;
+// pass { onboarding: true } to start from a brand-new device instead.
+export async function reset({ onboarding = false } = {}) {
   // Block writes first so an in-flight sync can't save old data back after the clear.
+  const setItem = Storage.prototype.setItem;
   Storage.prototype.setItem = () => {};
   localStorage.clear();
+  if (!onboarding) {
+    setItem.call(localStorage, "preppop:profiles", JSON.stringify({ active: "main", list: [{ id: "main", name: "Tester", avatar: "🦊", level: "high", createdAt: 1 }] }));
+  }
   location.hash = "#/";
   location.reload();
 }

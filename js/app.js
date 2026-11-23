@@ -1,6 +1,6 @@
-import { load, getDeck, hooks, state } from "./store.js";
+import { load, getDeck, hooks, state, setStoreKey } from "./store.js";
 import { dueCards, dayKey } from "./srs.js";
-import { isTyping } from "./util.js";
+import { isTyping, esc } from "./util.js";
 import { toast, view, install, focusHeading } from "./ui.js";
 import { renderLibrary } from "./views/library.js";
 import { renderEditor } from "./views/editor.js";
@@ -19,11 +19,42 @@ import { renderWords } from "./views/words.js";
 import { renderShift, renderShiftList } from "./views/shift.js";
 import { syncNow, pushChanges, syncStatus } from "./cloud.js";
 import { hasWordBuilder } from "./wordparts.js";
+import { session, loadRegistry, saveRegistry, profileKey, allDecks, currentProfile, displayName } from "./profiles.js";
+import { renderWelcome } from "./views/welcome.js";
+import { renderProfiles } from "./views/profiles.js";
 
 hooks.onPersistError = () => toast("Couldn't save. Browser storage is full or blocked.");
-load();
+// Learners on this device (js/profiles.js). No registry yet means first run: onboarding.
+session.registry = loadRegistry();
+if (session.registry) {
+  saveRegistry(session.registry); // turns data from before profiles into the first profile
+  setStoreKey(profileKey(session.registry.active));
+  load();
+}
+try {
+  localStorage.removeItem("preppop:discard"); // see removing the active learner in views/profiles.js
+} catch {
+  // Storage blocked.
+}
+showProfile();
+window.addEventListener("profilechange", showProfile);
 // Remove stored pictures no card uses anymore (e.g. from an editor that wasn't saved).
-if ("indexedDB" in window) setTimeout(() => import("./images.js").then((m) => m.collectGarbage(state.decks)).catch(() => {}), 3000);
+// Pictures are shared by every learner on the device, so every learner's decks count.
+if ("indexedDB" in window && session.registry) {
+  setTimeout(() => import("./images.js").then((m) => m.collectGarbage([...state.decks, ...allDecks(session.registry)])).catch(() => {}), 3000);
+}
+
+// The header shows who's learning; tapping it switches learner.
+function showProfile() {
+  const p = currentProfile();
+  document.documentElement.dataset.level = p?.level ?? "high";
+  for (const btn of document.querySelectorAll("[data-profile]")) {
+    btn.hidden = !p;
+    if (!p) continue;
+    btn.innerHTML = `<span class="profile-avatar" aria-hidden="true">${p.avatar}</span><span class="profile-name">${esc(displayName(p))}</span>`;
+    btn.setAttribute("aria-label", `Learning now: ${displayName(p)}. Switch learner`);
+  }
+}
 
 let currentHash = location.hash || "#/";
 
@@ -50,6 +81,11 @@ function route() {
   window.scrollTo(0, 0);
 
   const [page, id, mode, option] = currentHash.replace(/^#\/?/, "").split("/");
+  // First run: onboarding before anything else (no menus until there's a learner).
+  const onboarding = !session.registry || page === "welcome";
+  document.body.classList.toggle("onboarding", !session.registry);
+  if (onboarding) return renderWelcome({ adding: Boolean(session.registry) && id === "add" });
+  if (page === "profiles") return renderProfiles();
   const section = ["settings", "review", "new", "progress"].includes(page) ? page : page === "mixups" ? "progress" : "decks";
   document.querySelectorAll("[data-nav]").forEach((a) => {
     a.dataset.nav === section ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current");
