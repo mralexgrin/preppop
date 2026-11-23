@@ -19,8 +19,8 @@ A study companion for a high school student: Biology, clinical skills, Spanish, 
 
 **Practice modes** (tabs on every deck)
 - **Flashcards.** Flip, then mark **I know it** or **Still learning**. Swipe on a phone, arrow keys on a computer. Read aloud (Spanish in a Spanish voice), hints, and **✦ Explain this card**.
-- **Write → ✦ Explain it** (Teach It Back). See the term and explain it in your own words (typing or keyboard dictation). Claude says what you got right, what's missing, and what's off, shows the card, and asks one follow-up question you can answer. Only "Got it" counts as known. Rounds of 5.
 - **Write.** Type the answer. Fair grading: case and punctuation ignored, "a / b" alternatives, "(to) eat" optional words, missing accents flagged but counted, small typos marked "almost", and **I was right** to overrule (`js/answer.js`). Spanish accent keys.
+- **✦ Explain** (in Write; Teach It Back). See the term and explain it in your own words (typing or keyboard dictation). Claude says what you got right, what's missing, and what's off, shows the card, and asks one follow-up question you can answer. Only "Got it" counts as known. Rounds of 5.
 - **Test.** 10, 20, or all questions; any mix of multiple choice, written, and true or false. Claude writes the wrong answers, plus the card she usually mixes it up with (`js/testbuilder.js`). Optional confidence check.
 - **Steps.** For decks marked "in order" (procedures, timelines): tap the steps into order (`js/steps.js`).
 - **Match.** A quick timed game. It doesn't touch the schedule.
@@ -44,7 +44,7 @@ Test mode's wrong answers come from Claude Opus 5.5. Visitors don't need a key. 
 The Worker does four fixed AI jobs: wrong answers (`/wrong-answers`), cards from notes (`/cards-from-notes`), explaining a card (`/explain`), and feedback on her own explanation (`/teach-back`). The prompt, model, and limits are fixed on the server, so it can't be used as a general Claude proxy:
 
 - Only browser requests from `mralexgrin.github.io` are allowed (`ALLOWED_ORIGINS` in `worker/wrangler.jsonc`). For local testing, override it in `worker/.dev.vars`, e.g. `ALLOWED_ORIGINS=http://localhost:4190`.
-- 10 requests per visitor IP per minute, with at most 30 cards per request and 600 characters per field.
+- 10 requests per visitor IP per minute, with at most 30 cards per request and 600 characters per field (1,500 for her own explanations).
 
 Also set a monthly spend limit on the key in the Anthropic Console.
 
