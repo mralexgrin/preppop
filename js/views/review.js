@@ -74,7 +74,7 @@ export function renderReview() {
     const label = retrying ? `Retry ${r.i - r.total + 1} / ${r.queue.length - r.total}` : `${r.i + 1} / ${r.total}`;
     app.innerHTML = `${header}
       <div class="progress">
-        <div class="progress-track"><span style="width:${Math.min(1, r.i / r.total) * 100}%"></span></div>
+        <div class="progress-track"><span style="--p:${Math.min(1, r.i / r.total) * 100}"></span></div>
         <span class="progress-label">${label}</span>
       </div>
       ${flipCardHTML({

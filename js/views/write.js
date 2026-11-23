@@ -109,7 +109,7 @@ export function renderWrite(deck) {
 
     app.innerHTML = `${header}${toolbar()}
       <div class="progress">
-        <div class="progress-track"><span style="width:${((w.i + (r ? 1 : 0)) / w.queue.length) * 100}%"></span></div>
+        <div class="progress-track"><span style="--p:${((w.i + (r ? 1 : 0)) / w.queue.length) * 100}"></span></div>
         <span class="progress-label">${w.i + 1} / ${w.queue.length}</span>
       </div>
       <section class="q-card ${showSide === "definition" ? "def" : ""}" aria-labelledby="w-prompt">
@@ -388,7 +388,7 @@ export function renderWrite(deck) {
 
     app.innerHTML = `${header}${toolbar()}
       <div class="progress">
-        <div class="progress-track"><span style="width:${((w.i + (done ? 1 : 0)) / w.queue.length) * 100}%"></span></div>
+        <div class="progress-track"><span style="--p:${((w.i + (done ? 1 : 0)) / w.queue.length) * 100}"></span></div>
         <span class="progress-label">${w.i + 1} / ${w.queue.length}</span>
       </div>
       <section class="q-card" aria-labelledby="w-prompt">

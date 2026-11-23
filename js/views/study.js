@@ -81,7 +81,7 @@ export function renderStudy(deck, { cram = false } = {}) {
     const card = deck.cards.find((c) => c.id === s.order[s.i]);
     app.innerHTML = `${header}${toolbar}
       <div class="progress">
-        <div class="progress-track"><span style="width:${(s.i / s.order.length) * 100}%"></span></div>
+        <div class="progress-track"><span style="--p:${(s.i / s.order.length) * 100}"></span></div>
         <span class="progress-label">${s.i + 1} / ${s.order.length}</span>
       </div>
       ${flipCardHTML({ card, deck, front: s.front, flipped: s.flipped, topRight: statusChip(card.status), canUndo: Boolean(lastUndo) })}
