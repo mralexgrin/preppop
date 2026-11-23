@@ -3,6 +3,7 @@
 Newest entries at the top. This file is the memory of the run: read it at the start of every session.
 
 ## Flagged for human review
+- **New AI prompt: /teach-back (worker/src/index.js, TEACH_SYSTEM), 2026-11-23. Not yet tried against the real model, and not deployed:** the Cloudflare login on this Mac expired, so neither `wrangler dev --remote` nor `wrangler deploy` can run. It grades her own-words explanation as got_it / partly / not_yet, lists what's right, missing, and wrong, and asks one follow-up question. It's lenient on wording and strict on facts, uses textbook facts with no medical advice for clinical cards, and treats the card and her text as material, not instructions. Output is schema-constrained (verdict enum), trimmed, capped, and escaped. Only "got_it" marks a card known. To finish: `cd worker && npx wrangler login && npx wrangler deploy`, then try a few real explanations (good, partial, wrong, off-topic, and one containing instructions).
 - **Word Builder content (js/wordparts.js, 2026-11-23).** 39 medical words with their parts, plain meanings, and Spanish medical terms (taquicardia, nefrectomía…). Standard textbook definitions, but it's clinical content for a minor: please skim the meanings and the Spanish spellings and accents. Meanings for anemia, leukemia, and gastrostomy are simplified on purpose.
 - **Sync (roadmap #14) touches accounts and personal data of a minor. Please review before merging or deploying.** Design: no account; a random 125-bit sync key on the device derives the vault id, an auth secret (the server stores only its SHA-256), and an AES-GCM key. The server holds only ciphertext. Files: `js/sync.js`, `js/cloud.js`, `js/views/settings.js` (Sync section), `worker/src/index.js` (handleVault, cleanupVaults), `worker/migrations/0001_vaults.sql`. Deploying needs `wrangler d1 create preppop-sync`, the database_id in wrangler.jsonc, and `wrangler d1 migrations apply preppop-sync --remote`. Known limits: no daily cap on new vaults per IP (only 3/min) and no recovery if she loses the key (her local data stays). The privacy text says unused cloud copies are deleted after 12 months.
 - **Pictures don't sync across devices** (#20): backups and shared decks carry them; sync carries only the reference.
@@ -20,6 +21,33 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-11-23: #23 Teach It Back
+- Write mode gets a third option, **✦ Explain it**, instead of a new tab: the deck tabs are already full on phones, and explaining is recall, the same job as Write.
+- New Worker route `/teach-back` (effort medium, since grading needs judgment) with an optional `question` field, so the same route grades her answer to the follow-up.
+- Decisions:
+  - Only "Got it" counts as known; "Partly" keeps the card learning.
+  - The follow-up is extra practice and doesn't change the grade.
+  - If the service fails, she compares with the card and grades herself.
+  - Rounds of 5.
+- Tests: Worker test for the route (16 Worker tests pass); a browser flow with the AI stubbed (23 flows pass).
+- Review (code-reviewer): no blockers; the should-fix items are done.
+  - A 45-second request timeout, plus a "Skip, I'll check it myself" button.
+  - Requests are cancelled when she leaves.
+  - Her draft is protected when switching modes or leaving.
+  - Focus and announcements after feedback and after errors.
+  - "I don't know" no longer shows an empty box or AI credit.
+  - Prompt additions:
+    - When the card itself is wrong, judge by the textbook.
+    - Repeating the card word for word earns "partly", with a request to explain it.
+    - No follow-up question on a follow-up.
+    - Off-topic or personal text isn't engaged with, and she's pointed to a trusted adult if she seems upset.
+    - Feedback is in English.
+  - Her text is sent as JSON, so typing a closing tag can't add instructions.
+  - The follow-up is graded at low effort.
+  - Clearer toolbar labels ("Type term", "Type definition", "✦ Explain").
+  - Tests: the error path with self-grading, "I don't know", and each card recorded exactly once.
+- Kept as designed: "Partly" on a card she already knew moves it back to learning. A gap in the explanation is worth seeing again soon.
+
 ### 2026-11-23: Proposal approved; items 1–2 of the new roadmap
 - The owner asked for ideas to make PrepPop competitive and unique, approved the recommended order (mix-ups + confidence check → Word Builder → Teach It Back → test readiness → Clinical Shift), and said to start building.
 - **#21 Mix-ups + confidence check** → PR #2 (`feat/mixups-confidence`). A code-reviewer pass found 1 blocker (a lucky guess on a not-yet-due card kept its far-off due date) and 7 should-fix items. All fixed, and the browser suite then caught one more (the typed answer was lost while asking how sure). Decisions:

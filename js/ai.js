@@ -1,6 +1,7 @@
 // AI features go through the PrepPop answer service, a Cloudflare Worker (see
 // worker/) that holds the Anthropic key and calls Claude: wrong answers for
-// Test mode, flashcards made from class notes, and card explanations.
+// Test mode, flashcards made from class notes, card explanations, and
+// feedback on her own explanations (Teach It Back).
 
 export const MODEL_LABEL = "Claude Opus 5.5";
 
@@ -37,17 +38,37 @@ export async function explainCard({ term, definition, subject }) {
   return { explanation: x.explanation, example: text(x.example), memoryTrick: text(x.memoryTrick), cardIssue: text(x.cardIssue) };
 }
 
-async function request(path, body) {
+export const MAX_EXPLANATION = 1500;
+export const VERDICTS = ["got_it", "partly", "not_yet"];
+
+// Feedback on her own explanation of a card, or on her answer to a follow-up
+// question (question). Returns { verdict, summary, correct, missing, wrong, followUp }.
+// signal (optional): an AbortSignal to cancel it.
+export async function teachBack({ term, definition, subject, explanation, question = "" }, { signal } = {}) {
+  const x = await request("/teach-back", { term, definition, subject, explanation: explanation.slice(0, MAX_EXPLANATION), ...(question ? { question } : {}) }, { signal });
+  if (!VERDICTS.includes(x?.verdict)) throw new Error("the AI service had a problem");
+  const text = (v) => (typeof v === "string" ? v : "");
+  const list = (v) => (Array.isArray(v) ? v.filter((s) => typeof s === "string" && s.trim()) : []);
+  return { verdict: x.verdict, summary: text(x.summary), correct: list(x.correct), missing: list(x.missing), wrong: list(x.wrong), followUp: text(x.followUp) };
+}
+
+// Requests give up after TIMEOUT_MS so a hung connection can't leave a spinner forever.
+export const TIMEOUT_MS = 45000;
+
+async function request(path, body, { signal } = {}) {
   if (globalThis.navigator?.onLine === false) throw new Error("you're offline");
+  const timeout = AbortSignal.timeout(TIMEOUT_MS);
   let res;
   try {
     res = await fetch(`${SERVICE_URL}${path}`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
+      signal: signal && AbortSignal.any ? AbortSignal.any([signal, timeout]) : signal ?? timeout,
     });
-  } catch {
-    throw new Error("couldn't reach the AI service");
+  } catch (err) {
+    if (signal?.aborted) throw err;
+    throw new Error(timeout.aborted ? "the AI service took too long" : "couldn't reach the AI service");
   }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(ERRORS[data.error] ?? "the AI service had a problem");
