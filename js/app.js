@@ -16,6 +16,7 @@ import { renderHelp } from "./views/help.js";
 import { renderMatch } from "./views/match.js";
 import { renderMixups } from "./views/mixups.js";
 import { renderWords } from "./views/words.js";
+import { renderShift, renderShiftList } from "./views/shift.js";
 import { syncNow, pushChanges, syncStatus } from "./cloud.js";
 import { hasWordBuilder } from "./wordparts.js";
 
@@ -69,6 +70,7 @@ function route() {
   if (page === "progress") return renderProgress();
   if (page === "help") return renderHelp();
   if (page === "mixups") return renderMixups();
+  if (page === "shift") return id ? renderShift(id) : renderShiftList();
   const deck = page === "deck" && getDeck(id);
   if (deck && mode === "edit") return renderEditor(deck);
   if (deck && mode === "study") return renderStudy(deck, { cram: option === "cram" });

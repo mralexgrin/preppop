@@ -49,6 +49,21 @@ export async function flows({ stubAnswers = true } = {}) {
     window.__realFetch = realFetch;
     window.fetch = async (input, init) => {
       const url = typeof input === "string" ? input : input.url;
+      if (url.includes("/shift")) {
+        // "stethoscope" and a report with "retry" fail once, like a dropped connection.
+        const { action, transcript, report } = JSON.parse(init.body);
+        const last = transcript.at(-1).text;
+        const failOnce = (key) => (window.__failed ??= new Set()).has(key) ? false : (window.__failed.add(key), true);
+        if ((action === "turn" && /stethoscope/i.test(last) && failOnce(last)) || (action === "debrief" && /retry/i.test(report) && failOnce(report))) {
+          return new Response(JSON.stringify({ error: "upstream" }), { status: 502, headers: { "content-type": "application/json" } });
+        }
+        const temp = /temperature/i.test(last);
+        const body =
+          action === "debrief"
+            ? { summary: "Nice first visit.", didWell: ["You checked her name and date of birth"], missed: ["Wash your hands first"], terms: ["Tachycardia: fast heart rate"], toReport: ["Fever 101.8 °F"], note: "Pt: Maria Lopez\nT 101.8 °F", crisis: false }
+            : { say: temp ? "Sure. [She opens her mouth for the thermometer]" : "Hi. I'm Maria Lopez.", readings: temp ? ["Temperature 101.8 °F (38.8 °C), oral"] : [], crisis: /not okay at home/i.test(last), sig: "0".repeat(64) };
+        return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+      }
       if (url.includes("/teach-back")) {
         // "slow" in the explanation earns Got it; a follow-up answer always gets Got it.
         // "Apnea" fails like a service outage.
@@ -452,6 +467,69 @@ export async function flows({ stubAnswers = true } = {}) {
     $("#dont-know").click();
     await wait(20);
     check($(".teach-card") && !$(".teach-yours") && !$(".source-tag"), "I don't know shows just the card");
+  });
+
+  await step("clinical shift: talk to the patient, recover from errors, report, get a debrief (AI stubbed)", async () => {
+    await go("#/shift");
+    check($$(".shift-list .deck-tile").length === 3, "three patients to choose from");
+    await go("#/shift/fever");
+    check($(".shift-empty") && $("#to-report").disabled, "starts in the room; can't report yet");
+    const settled = () => !$("#send")?.disabled && $$(".shift-log .shift-line.patient").length === $$(".shift-log .shift-line.you").length;
+    const say = async (text) => {
+      setValue($("#say"), text);
+      $("#say").dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      await wait(20);
+      await until(settled, "patient reply");
+    };
+    await say("Hi, I'm the student assistant. What's your full name and date of birth?");
+    const box = $("#say");
+    await say("I'm going to take your temperature now.");
+    check($("#say") === box, "the text box isn't replaced between turns (the phone keyboard stays up)");
+    check($(".shift-reading").textContent === "Temperature 101.8 °F (38.8 °C), oral" && $(".shift-readings li"), "the reading shows in the visit and in Your readings");
+
+    // The patient fails to answer: her line goes back in the box, and Try again resends it.
+    await say("I listen with my stethoscope.");
+    check($("#retry") && $("#say").value === "I listen with my stethoscope.", "unanswered line is back in the box");
+    check($$(".shift-log .shift-line.you").length === 2, "no unanswered line left in the visit");
+    $("#retry").click();
+    await wait(20);
+    await until(settled, "retry answered");
+    check(!$("#retry") && $$(".shift-log .shift-line.you").length === 3, "after Try again: one line, one answer");
+
+    // A fixed crisis note, not written by the model, stays until she closes it.
+    await say("honestly I'm not okay at home");
+    check($(".shift-crisis") && /988/.test($(".shift-crisis").textContent), "the fixed crisis note shows");
+    await say("Okay, back to the visit. Any allergies?");
+    check($(".shift-crisis"), "it stays after the next message");
+    $("#crisis-ok").click();
+    await wait(10);
+    check(!$(".shift-crisis"), "she can close it");
+
+    // The feedback fails once; sending the report again works and doesn't double it.
+    $("#to-report").click();
+    await until(() => $("#report"), "report form");
+    setValue($("#report"), "Maria Lopez, fever 101.8 for three days. Please retry.");
+    $("#report-form").requestSubmit();
+    await until(() => $("#retry"), "feedback error");
+    check(!$$(".shift-log li").some((l) => /fever 101.8 for three/.test(l.textContent)), "the report isn't added to the visit");
+    $("#report-form").requestSubmit();
+    await until(() => $("#debrief-h"), "debrief");
+    check($(".shift-debrief-part.missing li") && $(".shift-note"), "debrief lists next steps and a chart note");
+    check(document.activeElement === $("#debrief-h"), "focus moves to the debrief");
+    check($$(".shift-checklist .shift-log li").filter((l) => /To the doctor/.test(l.textContent)).length === 1, "the report shows once in the visit");
+    $("#again").click();
+    await wait(20);
+    check($(".shift-empty"), "practice again starts fresh");
+
+    // After 14 messages the visit ends and she has to report.
+    for (let i = 0; i < 14; i++) await say(`Question ${i + 1}`);
+    check($("#report") && $(".shift-limit") && !$("#back-to-patient"), "the 14-message limit leads to the report");
+    window.__leftOk = null;
+    const realConfirm = window.confirm;
+    window.confirm = () => ((window.__leftOk = true), true);
+    await go("#/");
+    window.confirm = realConfirm;
+    check(window.__leftOk === true, "leaving mid-visit asks first");
   });
 
   await step("word builder: decode and build medical words, practicing the part cards", async () => {

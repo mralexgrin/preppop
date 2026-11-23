@@ -2,6 +2,10 @@
 
 User-facing release notes. Newest first.
 
+## Unreleased (branch `feat/clinical-shift`, pilot)
+### Added
+- **✦ Clinical Shift** (pilot): practice rooming a made-up patient, played by AI. Introduce yourself, check who they are, take vital signs, ask about symptoms, then report to the doctor and get feedback, including how you could chart the visit. Three patients to start. Find it under your Clinical decks.
+
 ## Unreleased (branch `feat/readiness`)
 ### Added
 - **How ready am I?** With a test date set, Today and Progress → **Tests coming up** say about how ready you are and how many cards a day (and minutes) until the test should get you to about 90%. It's an estimate from your practice, and Help explains how it works.

@@ -56,6 +56,7 @@ export function renderLibrary() {
         <section class="subject-group" data-subject="${subject.id}" aria-labelledby="group-${subject.id}">
           <h2 class="group-head" id="group-${subject.id}"><span class="subject-dot" aria-hidden="true"></span>${subject.name}<span class="group-count">${plural(decks.length, "deck")}</span></h2>
           <ul class="deck-grid">${decks.map(deckTile).join("")}</ul>
+          ${subject.id === "clinical" ? shiftPromo : ""}
         </section>`;
     }).join("")}
     </div>`;
@@ -114,6 +115,14 @@ function onLibraryClick(e) {
 }
 
 const FLAME = `<svg class="flame" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 3.5-1.2 5.3-2.6 7C8 10.8 7 12.4 7 14.5A5 5 0 0 0 12 20a5 5 0 0 0 5-5.3c0-2.2-1.2-3.6-2.1-4.6-.3 1.4-1 2.3-2 2.8.6-3.5-.2-7.4-.9-10.9Z" fill="currentColor"/></svg>`;
+
+// Clinical Shift lives with her clinical decks.
+const shiftPromo = `
+  <a class="shift-promo" href="#/shift">
+    <span class="spark" aria-hidden="true">✦</span>
+    <span><strong>Clinical Shift</strong><span class="shift-promo-sub">Practice rooming a made-up patient: vitals, questions, and a report to the doctor.</span></span>
+    <span aria-hidden="true">→</span>
+  </a>`;
 
 // The nearest test in the next two weeks, with a Cram button.
 function examBanner(today) {
