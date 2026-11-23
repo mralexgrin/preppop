@@ -262,7 +262,7 @@ export function renderTest(deck) {
     app.innerHTML = `${header(`<span class="progress-label">Score ${t.score}</span>`)}
       ${t.notice ? `<div class="notice warn" role="alert">${esc(t.notice)}</div>` : ""}
       <div class="progress">
-        <div class="progress-track"><span style="width:${((t.i + (answered ? 1 : 0)) / t.questions.length) * 100}%"></span></div>
+        <div class="progress-track"><span style="--p:${((t.i + (answered ? 1 : 0)) / t.questions.length) * 100}"></span></div>
         <span class="progress-label">${t.i + 1} / ${t.questions.length}</span>
       </div>
       <section class="q-card ${q.shows === "definition" ? "def" : ""}" aria-labelledby="q-prompt" id="q-card" tabindex="-1">

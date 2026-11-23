@@ -195,7 +195,8 @@ textarea.input { min-height: 52px; line-height: 1.45; }
 /* Progress */
 .progress { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
 .progress-track { flex: 1; height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
-.progress-track span { display: block; height: 100%; background: var(--pop); border-radius: 999px; transition: width .3s ease; }
+/* Filled by scaling (--p: 0-100), so moving it never changes layout. */
+.progress-track span { display: block; height: 100%; width: 100%; background: var(--pop); transform-origin: left center; transform: scaleX(calc(var(--p, 0) / 100)); transition: transform .3s ease; }
 .progress-label { font-variant-numeric: tabular-nums; color: var(--ink-2); font-weight: 600; font-size: .92rem; min-width: 4.5ch; text-align: right; }
 
 /* Flip card */
@@ -345,7 +346,9 @@ textarea.input { min-height: 52px; line-height: 1.45; }
 .subject-group { margin-bottom: 32px; }
 .group-head { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; margin-bottom: 14px; }
 .group-count { font-family: var(--font-body); font-weight: 500; font-size: .88rem; color: var(--ink-3); }
-.deck-tile { border-top: 4px solid var(--subj, var(--line)); }
+/* The subject is shown by the group heading; a tile picks up its subject color on hover or focus. */
+.deck-tile { transition: border-color .15s; }
+.deck-tile:hover, .deck-tile:focus-within { border-color: var(--subj, var(--ink-3)); }
 .deck-tile h3 { font-size: 1.2rem; overflow-wrap: anywhere; }
 .tile-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
 .tile-tools { display: flex; gap: 2px; margin: -6px -8px 0 0; flex: none; }

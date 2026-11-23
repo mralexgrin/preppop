@@ -76,7 +76,7 @@ export function renderMixups() {
     const last = m.i === m.questions.length - 1;
     app.innerHTML = `${header}
       <div class="progress">
-        <div class="progress-track"><span style="width:${((m.i + (answered ? 1 : 0)) / m.questions.length) * 100}%"></span></div>
+        <div class="progress-track"><span style="--p:${((m.i + (answered ? 1 : 0)) / m.questions.length) * 100}"></span></div>
         <span class="progress-label">${m.i + 1} / ${m.questions.length}</span>
       </div>
       <section class="q-card def" aria-labelledby="q-prompt" id="q-card" tabindex="-1">

@@ -117,7 +117,7 @@ export function renderWords(deck) {
 
     app.innerHTML = `${header()}
       <div class="progress">
-        <div class="progress-track"><span style="width:${((w.i + (answered ? 1 : 0)) / w.questions.length) * 100}%"></span></div>
+        <div class="progress-track"><span style="--p:${((w.i + (answered ? 1 : 0)) / w.questions.length) * 100}"></span></div>
         <span class="progress-label">${w.i + 1} / ${w.questions.length}</span>
       </div>
       <section class="q-card ${q.kind === "build" ? "def" : ""}" aria-labelledby="q-prompt" id="q-card" tabindex="-1">
