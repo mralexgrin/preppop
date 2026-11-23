@@ -408,7 +408,7 @@ export async function flows({ stubAnswers = true } = {}) {
       const prompt = $("#q-prompt").textContent;
       if ($(".q-type").textContent === "Decode") {
         const w = WORDS.find((x) => x.word === prompt);
-        [...$$("[data-pick]")].find((b) => b.textContent.includes(w.meaning)).click();
+        [...$$("[data-pick]")].find((b) => b.querySelector(".opt-text").textContent === w.meaning).click();
       } else {
         const w = WORDS.find((x) => x.meaning === prompt);
         for (const part of w.parts) {
