@@ -51,7 +51,9 @@ export async function flows({ stubAnswers = true } = {}) {
       const url = typeof input === "string" ? input : input.url;
       if (url.includes("/teach-back")) {
         // "slow" in the explanation earns Got it; a follow-up answer always gets Got it.
-        const { explanation, question } = JSON.parse(init.body);
+        // "Apnea" fails like a service outage.
+        const { term, explanation, question } = JSON.parse(init.body);
+        if (term === "Apnea") return new Response(JSON.stringify({ error: "upstream" }), { status: 502, headers: { "content-type": "application/json" } });
         const good = Boolean(question) || /slow/i.test(explanation);
         const body = good
           ? { verdict: "got_it", summary: "Nice, you've got it.", correct: ["It means a slow heart rate"], missing: [], wrong: [], followUp: question ? "" : "Why might an athlete have it?" }
@@ -407,11 +409,24 @@ export async function flows({ stubAnswers = true } = {}) {
     await until(() => $(".teach-form"), "explain form");
     check($(".progress-label").textContent.trim().endsWith("/ 3"), "explain rounds are short");
     const answers = [];
+    const before = Object.fromEntries(deck().cards.map((c) => [c.term, c.stats?.seen ?? 0]));
     while (!$(".result .big")) {
       const term = $("#w-prompt").textContent;
       const good = term === "Bradycardia";
       setValue($("#answer"), good ? "When the heart beats slow" : "Something about the heart");
       $(".teach-form").requestSubmit();
+      if (term === "Apnea") {
+        // The service is down: she compares with the card and grades herself.
+        await until(() => $("[data-self]"), "self-grade buttons");
+        check($(".teach-card") && !$(".source-tag"), "shows the card, and no AI credit line");
+        check(document.activeElement === $('[data-self="right"]'), "focus moves to the choice");
+        $('[data-self="wrong"]').click();
+        await wait(20);
+        answers.push({ term, good: false });
+        $("#next").click();
+        await wait(30);
+        continue;
+      }
       await until(() => $(".teach-feedback"), "feedback");
       check($(".teach-card") && $(".teach-question"), "shows the card and a follow-up question");
       if (good) {
@@ -429,6 +444,14 @@ export async function flows({ stubAnswers = true } = {}) {
     const known = deck().cards.filter((c) => answers.some((a) => a.term === c.term && a.good)).every((c) => c.srs.last && c.status === "known");
     const missed = deck().cards.filter((c) => answers.some((a) => a.term === c.term && !a.good)).every((c) => c.status === "learning");
     check(known && missed, "Got it counts as known, the rest as still learning");
+    check(deck().cards.every((c) => (c.stats?.seen ?? 0) === before[c.term] + 1), "each card recorded exactly once");
+
+    // "I don't know" shows the card, with no empty "You wrote" box or AI credit.
+    $("#again").click();
+    await until(() => $(".teach-form"), "explain form again");
+    $("#dont-know").click();
+    await wait(20);
+    check($(".teach-card") && !$(".teach-yours") && !$(".source-tag"), "I don't know shows just the card");
   });
 
   await step("word builder: decode and build medical words, practicing the part cards", async () => {
