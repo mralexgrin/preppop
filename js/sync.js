@@ -107,7 +107,9 @@ function mergeDeck(a, b) {
     ...newer.cards.map((card) => (olderCards.has(card.id) ? mergeCard(card, card, olderCards.get(card.id)) : card)),
     ...older.cards.filter((card) => !newerIds.has(card.id)),
   ].filter((card) => !deletedCards[card.id]);
-  return { ...newer, cards, deletedCards };
+  // Which starter it came from, from either copy (an older device may have lost it).
+  const starter = newer.starter ?? older.starter;
+  return { ...newer, ...(starter ? { starter } : {}), cards, deletedCards };
 }
 
 export function mergeState(local, remote) {

@@ -1,22 +1,28 @@
 // Word Builder (tab on the "Medical terminology" starter deck): decode words
 // she's never seen from their parts, and build words from a meaning. Each
-// answer practices the deck's cards for the parts involved: a part she got
-// right counts as right, the part she mixed up counts as missed.
+// answer practices the deck's cards for the parts involved (see partGrades)
+// and counts once toward today's practice.
 
-import { persist, recordAnswer, shortcutsOn } from "../store.js";
+import { persist, recordAnswer, countPractice, shortcutsOn } from "../store.js";
 import { esc, plural, isTyping } from "../util.js";
-import { app, setTitle, view, deckHeader, announce, keepFocus } from "../ui.js";
-import { WORDS, makeRound, partCards, meaningOf, checkBuild } from "../wordparts.js";
+import { app, setTitle, view, deckHeader, announce } from "../ui.js";
+import { makeRound, partCards, meaningOf, checkBuild, partGrades, usableWords } from "../wordparts.js";
 
 const ROUND = 10;
+const MIN_WORDS = 4;
 
 export function renderWords(deck) {
   setTitle(`${deck.name} · Word Builder`);
   const w = { phase: "intro", questions: [], i: 0, picked: [], answer: null, score: 0, missedParts: new Map() };
   const header = () => deckHeader(deck, "words", w.phase === "question" ? `<span class="progress-label">Score ${w.score}</span>` : "");
 
-  // How often each word's parts have been practiced, so new words come first.
-  const seenCount = (word) => partCards(deck, word).reduce((n, c) => n + (c.stats?.seen ?? 0), 0);
+  // How much each word's parts have been practiced (the average, so 3-part
+  // words and common parts aren't pushed to the back), so new words come first.
+  const seenCount = (word) => {
+    const cards = partCards(deck, word);
+    return cards.length ? cards.reduce((n, c) => n + (c.stats?.seen ?? 0), 0) / cards.length : 0;
+  };
+  const pool = () => usableWords(deck);
   const parts = (word) =>
     `<ul class="word-parts">${word.parts
       .map((p) => `<li><strong>${esc(p)}</strong><span>${esc(meaningOf(deck, p) || "")}</span></li>`)
@@ -25,18 +31,27 @@ export function renderWords(deck) {
   const draw = () => (w.phase === "intro" ? drawIntro() : w.phase === "question" ? drawQuestion() : drawDone());
 
   const drawIntro = () => {
+    if (pool().length < MIN_WORDS) {
+      app.innerHTML = `${header()}
+        <section class="result">
+          <p class="sub">Word Builder needs this deck's word-part cards (like <strong>tachy-</strong> and <strong>cardi/o</strong>), and some have been deleted or renamed.</p>
+          <p>Add the starter deck again from Starter decks to get them back.</p>
+          <div class="actions"><a class="btn btn-primary" href="#/starters">Starter decks</a></div>
+        </section>`;
+      return;
+    }
     app.innerHTML = `${header()}
       <section class="panel wide words-intro">
         <h2>Work out words you've never seen</h2>
         <p>Most medical words are built from a few parts. Know <strong>tachy-</strong> (fast), <strong>brady-</strong> (slow), <strong>cardi/o</strong> (heart), and <strong>-pnea</strong> (breathing), and you can read tachycardia, bradypnea, and more.</p>
         <p>Each round mixes two kinds of questions: <strong>decode</strong> a word by picking what it means, and <strong>build</strong> a word by tapping its parts in order. You'll also see the Spanish word, which is usually almost the same.</p>
-        <div class="row"><button class="btn btn-primary btn-lg" type="button" id="start">Start · ${plural(Math.min(ROUND, WORDS.length), "word")}</button></div>
+        <div class="row"><button class="btn btn-primary btn-lg" type="button" id="start">Start · ${plural(Math.min(ROUND, pool().length), "word")}</button></div>
       </section>`;
     app.querySelector("#start").addEventListener("click", start);
   };
 
   const start = () => {
-    w.questions = makeRound(WORDS, ROUND, seenCount);
+    w.questions = makeRound(pool(), ROUND, seenCount);
     w.i = 0;
     w.score = 0;
     w.missedParts = new Map();
@@ -72,18 +87,19 @@ export function renderWords(deck) {
       const slots = q.word.parts.map((_, i) => {
         const p = w.picked[i];
         const cls = !answered ? "" : p === q.word.parts[i] ? "is-correct" : "is-wrong";
+        const where = !answered ? ", tap to remove" : cls === "is-correct" ? ", right" : ", wrong";
         return p
-          ? `<button type="button" class="word-slot filled ${cls}" data-unpick="${i}" ${answered ? "disabled" : ""} aria-label="${esc(p)}${answered ? "" : ", tap to remove"}">${esc(p)}</button>`
+          ? `<button type="button" class="word-slot filled ${cls}" data-unpick="${i}" ${answered ? "disabled" : ""} aria-label="Part ${i + 1} of ${q.word.parts.length}: ${esc(p)}${where}">${esc(p)}${answered ? `<span aria-hidden="true">${cls === "is-correct" ? " ✓" : " ✗"}</span>` : ""}</button>`
           : `<span class="word-slot" aria-hidden="true"></span>`;
       });
       body = `
         <p class="q-instruction" id="q-instruction">Build the word: tap its ${q.word.parts.length} parts in order</p>
-        <div class="word-slots" aria-label="Your word so far: ${esc(w.picked.join(" + ") || "empty")}">${slots.join('<span class="word-plus" aria-hidden="true">+</span>')}</div>
+        <div class="word-slots" role="group" aria-label="Your word so far: ${esc(w.picked.join(" + ") || "empty")}">${slots.join('<span class="word-plus" aria-hidden="true">+</span>')}</div>
         <div class="word-tray" role="group" aria-labelledby="q-instruction">
           ${q.tray
             .map((p, i) => {
               const used = w.picked.includes(p);
-              return `<button type="button" class="word-tile" data-tile="${i}" aria-pressed="${used}" ${answered || used || w.picked.length >= q.word.parts.length ? "disabled" : ""}><span class="opt-key" aria-hidden="true">${i + 1}</span>${esc(p)}</button>`;
+              return `<button type="button" class="word-tile" data-tile="${i}" ${answered || used || w.picked.length >= q.word.parts.length ? "disabled" : ""}><span class="opt-key" aria-hidden="true">${i + 1}</span>${esc(p)}${used ? '<span class="visually-hidden"> (used)</span>' : ""}</button>`;
             })
             .join("")}
         </div>
@@ -137,30 +153,28 @@ export function renderWords(deck) {
   };
 
   const unplace = (i) => {
-    if (w.answer || i < 0) return;
+    const q = w.questions[w.i];
+    if (w.answer || i < 0 || i >= w.picked.length) return;
+    const removed = w.picked[i];
     w.picked = w.picked.filter((_, j) => j !== i);
-    keepFocus(drawQuestion);
-  };
-
-  // Which of the word's parts she got right. Decode: the parts the chosen
-  // meaning's word shares with this one (picking "slow breathing" for
-  // tachypnea gets -pnea right and tachy- wrong). Build: position by position.
-  const grades = (q, value) => {
-    if (q.kind === "build") return q.word.parts.map((p, i) => value[i] === p);
-    const chosen = WORDS.find((x) => x.meaning === value);
-    return q.word.parts.map((p) => value === q.word.meaning || Boolean(chosen?.parts.includes(p)));
+    drawQuestion();
+    // Back to the tile she just freed up (the slot or Undo may be gone now).
+    app.querySelector(`[data-tile="${q.tray.indexOf(removed)}"]`)?.focus();
+    announce(`${removed} removed. ${w.picked.length} of ${q.word.parts.length} parts.`);
   };
 
   const answer = (value, right) => {
     const q = w.questions[w.i];
     w.answer = { value, right };
     if (right) w.score++;
-    const marks = grades(q, value);
+    const marks = partGrades(q.word, q.kind, value);
     for (const [i, part] of q.word.parts.entries()) {
+      if (marks[i] === null) continue;
       const card = partCards(deck, { parts: [part] })[0];
-      if (card) recordAnswer(card, marks[i], undefined, deck);
+      if (card) recordAnswer(card, marks[i], undefined, deck, { count: false });
       if (!marks[i]) w.missedParts.set(part, (w.missedParts.get(part) ?? 0) + 1);
     }
+    countPractice(right);
     persist();
     drawQuestion();
     announce(`${right ? "Correct!" : "Not quite."} ${q.word.word}: ${q.word.meaning}.`);
@@ -189,6 +203,7 @@ export function renderWords(deck) {
     w.phase = "done";
     draw();
     window.scrollTo(0, 0);
+    app.querySelector(".result .big")?.focus();
   };
 
   const drawDone = () => {
@@ -196,7 +211,7 @@ export function renderWords(deck) {
     const missed = [...w.missedParts.entries()].sort((a, b) => b[1] - a[1]);
     app.innerHTML = `${header()}
       <section class="result">
-        <h2 class="big">${w.score}/${total}</h2>
+        <h2 class="big" tabindex="-1">${w.score}/${total}</h2>
         <p class="sub">${w.score === total ? "Every word right. You can read medical words now." : "Words you worked out from their parts."}</p>
         <div class="actions">
           <button class="btn btn-primary" type="button" id="again">New round</button>

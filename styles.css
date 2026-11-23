@@ -222,7 +222,7 @@ textarea.input { min-height: 52px; line-height: 1.45; }
 .mark-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
 .mark-row .btn { min-height: 56px; font-size: 1rem; }
 .kbd-hint { text-align: center; color: var(--ink-3); font-size: .85rem; margin-top: 14px; }
-@media (hover: none) { .kbd-hint, .mark-row kbd, .option .opt-key { display: none; } }
+@media (hover: none) { .kbd-hint, .mark-row kbd, .option .opt-key, .word-tile .opt-key { display: none; } }
 
 /* Result screens */
 .result { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 40px 28px; text-align: center; box-shadow: var(--shadow-lg); }

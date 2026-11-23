@@ -65,3 +65,50 @@ test("the starter marker (which shows the Words tab) survives backups and sync",
   assert.equal("starter" in migrate({ decks: [{ ...decks[0], starter: "<x>" }] }).decks[0], false);
   assert.equal(hasWordBuilder({ starter: "vital-signs" }), false);
 });
+
+test("partGrades: decode credits shared parts, build ignores order, unrelated picks leave cards alone", async () => {
+  const { partGrades } = await import("../js/wordparts.js");
+  assert.deepEqual(partGrades(word("tachycardia"), "decode", "fast heart rate"), [true, true]);
+  assert.deepEqual(partGrades(word("tachycardia"), "decode", "fast breathing"), [true, false]); // tachypnea: tachy- right, cardi/o missed
+  assert.deepEqual(partGrades(word("tachycardia"), "decode", "study of bones"), [null, null]); // shares nothing
+  assert.deepEqual(partGrades(word("pericarditis"), "build", ["cardi/o", "peri-", "-itis"]), [true, true, true]); // wrong order, right parts
+  assert.deepEqual(partGrades(word("pericarditis"), "build", ["endo-", "cardi/o", "-itis"]), [false, true, true]);
+});
+
+test("usable words skip ones whose part cards she deleted; meanings fall back to the starter", async () => {
+  const { usableWords } = await import("../js/wordparts.js");
+  const trimmed = { ...deck, cards: deck.cards.filter((c) => c.term !== "tachy-") };
+  const usable = usableWords(trimmed);
+  assert.ok(!usable.some((w) => w.parts.includes("tachy-")));
+  assert.ok(usable.some((w) => w.word === "bradycardia"));
+  assert.equal(meaningOf(trimmed, "tachy-"), "fast");
+  const round = makeRound(usable, 10);
+  assert.ok(round.every((q) => !q.word.parts.includes("tachy-")));
+});
+
+test("a word is never offered a wrong choice that is also true for it", () => {
+  for (let i = 0; i < 30; i++) {
+    assert.ok(!decodeQuestion(word("gastroscopy")).options.includes(word("endoscopy").meaning));
+    assert.ok(!decodeQuestion(word("endoscopy")).options.includes(word("gastroscopy").meaning));
+  }
+});
+
+test("sync keeps the starter marker even if the newer copy lost it", async () => {
+  const { mergeState } = await import("../js/sync.js");
+  const copy = (starter, updatedAt) => ({ id: "d", name: "Med", updatedAt, ...(starter ? { starter } : {}), cards: [] });
+  assert.equal(mergeState({ decks: [copy(null, 5)] }, { decks: [copy("med-terms", 1)] }).decks[0].starter, "med-terms");
+  assert.equal(mergeState({ decks: [copy("med-terms", 1)] }, { decks: [copy(null, 5)] }).decks[0].starter, "med-terms");
+});
+
+test("recordAnswer can skip today's count; countPractice adds one", async () => {
+  const { recordAnswer, countPractice, state } = await import("../js/store.js");
+  state.activity = {};
+  const card = { id: "a", term: "A", definition: "1", status: "new" };
+  const undo = recordAnswer(card, true, "2026-11-23", null, { count: false });
+  assert.deepEqual(state.activity, {});
+  assert.equal(card.stats.seen, 1);
+  countPractice(true, "2026-11-23");
+  assert.deepEqual(state.activity["2026-11-23"], { answered: 1, correct: 1 });
+  undo();
+  assert.deepEqual(state.activity["2026-11-23"], { answered: 1, correct: 1 }); // undo leaves the separate count alone
+});
