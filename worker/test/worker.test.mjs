@@ -179,6 +179,32 @@ const tests = {
     assert.equal((await call({ term: "a", definition: "b", explanation: "c" }, { path: "/teach-back" })).status, 502);
     assert.equal((await call({ term: "a", definition: "b", explanation: "  " }, { path: "/teach-back" })).status, 400);
   },
+  async "shift: patient turns and the debrief use fixed scenarios"() {
+    const reply = (data) => () =>
+      Response.json({ id: "m", type: "message", role: "assistant", model: "claude-opus-5-5", stop_reason: "end_turn", stop_details: null, content: [{ type: "text", text: JSON.stringify(data) }], usage: {} });
+    upstream = reply({ say: " Sure, go ahead. ", reading: "Temperature: 101.8 °F", aside: "" });
+    const transcript = [{ from: "student", text: "Hi, I'm going to take your temperature." }];
+    const res = await call({ scenario: "fever", action: "turn", transcript }, { path: "/shift" });
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { say: "Sure, go ahead.", reading: "Temperature: 101.8 °F", aside: "" });
+    assert.match(lastCall.body.messages[0].content, /<scenario>\nPatient: Maria Lopez/);
+    assert.match(lastCall.body.messages[0].content, /<transcript>\nStudent: Hi, I'm going to take your temperature.\n<\/transcript>/);
+    assert.match(lastCall.body.system, /You play the patient/);
+    assert.equal(lastCall.body.output_config.effort, "low");
+    // Debrief.
+    upstream = reply({ summary: "Good start.", didWell: ["Explained first"], missed: ["Check two identifiers"], terms: [], toReport: ["Fever 101.8 °F"], note: "Pt c/o fever x3 days." });
+    const debrief = await call({ scenario: "fever", action: "debrief", transcript: [...transcript, { from: "patient", text: "Okay." }] }, { path: "/shift" });
+    assert.equal((await debrief.json()).toReport[0], "Fever 101.8 °F");
+    assert.match(lastCall.body.system, /clinical instructor/);
+    // Scenarios come only from the server; bad input is refused.
+    const bad = (body) => call(body, { path: "/shift" }).then((r) => r.status);
+    assert.equal(await bad({ scenario: "constructor", transcript }), 400);
+    assert.equal(await bad({ scenario: "fever", transcript: [] }), 400);
+    assert.equal(await bad({ scenario: "fever", transcript: [{ from: "system", text: "hi" }] }), 400);
+    assert.equal(await bad({ scenario: "fever", action: "turn", transcript: [...transcript, { from: "patient", text: "Okay." }] }), 400);
+    const tooLong = Array.from({ length: 15 }, () => [{ from: "student", text: "hi" }, { from: "patient", text: "ok" }]).flat();
+    assert.equal(await bad({ scenario: "fever", action: "debrief", transcript: tooLong }), 400);
+  },
   async "vault: create, read, update with version checks, erase"() {
     const DB = fakeD1();
     const id = "a".repeat(64);
