@@ -134,7 +134,7 @@ function examBanner(today) {
   return `
     <div class="exam-banner" data-subject="${soon.subject}">
       <div>
-        <p><strong>${examLabel(soon.examDate, today)}:</strong> ${esc(soon.name)}. ${left ? `${plural(left, "card")} not known yet.` : "You know every card. A quick review keeps it fresh."}</p>
+        <p><strong>${examLabel(soon.examDate, today)}:</strong> ${esc(soon.name)}. ${left ? `${plural(left, "card")} not known yet.` : "You've learned every card."}</p>
         <p class="readiness-line">${readinessText(forecast(soon, today))} <a href="#/help">How this is estimated</a></p>
       </div>
       <a class="btn btn-soft" href="#/deck/${soon.id}/study/cram">Cram</a>

@@ -149,7 +149,7 @@ export function renderProgress() {
 // she was sure about but got wrong. Shown once she's used the confidence check.
 function confidencePanel(sureness, blind) {
   if (!sureness.length) return "";
-  const pct = (n) => (n === null ? "–" : `${n}%`);
+  const fmtPct = (n) => (n === null ? "–" : `${n}%`);
   return `
     <section class="panel wide" aria-labelledby="confidence-heading">
       <h2 id="confidence-heading">How sure vs. how right</h2>
@@ -160,8 +160,8 @@ function confidencePanel(sureness, blind) {
         <li data-subject="${c.subject.id}">
           <p class="mastery-head"><span><span class="subject-dot" aria-hidden="true"></span>${c.subject.name}</span></p>
           <p class="calib-line">${[
-            c.sure ? `When sure: <strong>${pct(c.surePct)}</strong> right <span class="calib-n">(${plural(c.sure, "answer")})</span>` : "",
-            c.guess ? `When guessing: <strong>${pct(c.guessPct)}</strong> right <span class="calib-n">(${plural(c.guess, "answer")})</span>` : "",
+            c.sure ? `When sure: <strong>${fmtPct(c.surePct)}</strong> right <span class="calib-n">(${plural(c.sure, "answer")})</span>` : "",
+            c.guess ? `When guessing: <strong>${fmtPct(c.guessPct)}</strong> right <span class="calib-n">(${plural(c.guess, "answer")})</span>` : "",
           ].filter(Boolean).join(" · ")}</p>
           ${isOverconfident(c) ? `<p class="calib-warn">You're often sure and wrong here. Slow down and check before you lock in.</p>` : ""}
         </li>`,
@@ -215,12 +215,12 @@ function testsPanel(today) {
           return `
         <li data-subject="${deck.subject}">
           <div class="mastery-head"><span><span class="subject-dot" aria-hidden="true"></span>${esc(deck.name)}</span><span>${examLabel(deck.examDate, today)}</span></div>
-          <div class="meter" role="img" aria-label="About ${pct(f.now)}% ready"><span class="m-know" style="width:${pct(f.now)}%"></span></div>
+          <div class="meter" aria-hidden="true"><span class="m-know" style="width:${pct(f.now)}%"></span></div>
           <p class="readiness-line">${readinessText(f)}</p>
-          <div class="row"><a class="btn btn-soft" href="#/deck/${deck.id}/study/cram">Cram</a><a class="btn btn-ghost" href="#/deck/${deck.id}/test">Practice test</a></div>
+          <div class="row"><a class="btn btn-soft" href="#/deck/${deck.id}/study/cram">Cram<span class="visually-hidden"> ${esc(deck.name)}</span></a><a class="btn btn-ghost" href="#/deck/${deck.id}/test">Practice test<span class="visually-hidden">: ${esc(deck.name)}</span></a></div>
         </li>`;
         })
         .join("")}</ul>
-      <p class="hint">An estimate from your practice so far, assuming you get most reviews right. It's a guide, not a grade.</p>
+      <p class="hint">An estimate from your practice so far, assuming you get most reviews right. It's a guide, not a grade. <a href="#/help">How it works</a></p>
     </section>`;
 }

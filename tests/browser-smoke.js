@@ -605,11 +605,11 @@ export async function flows({ stubAnswers = true } = {}) {
     $("form").requestSubmit();
     await until(() => $(".exam-banner"), "test banner on Today");
     check($(".exam-badge").textContent === "Test in 2 days", "countdown badge on the deck");
-    check(/You're about \d+% ready/.test($(".exam-banner .readiness-line").textContent), "Today banner shows readiness");
+    check(/You're about \d+% ready/.test($(".exam-banner .readiness-line")?.textContent ?? ""), "Today banner shows readiness");
     $(".exam-banner a.btn").click();
     await until(() => location.hash.endsWith("/study/cram"), "cram opens flashcards");
     await go("#/progress");
-    check($("#tests-heading") && /ready/.test($(".tests .readiness-line").textContent), "Progress lists the test with readiness");
+    check($("#tests-heading") && /ready/.test($(".tests .readiness-line")?.textContent ?? ""), "Progress lists the test with readiness");
   });
 
   await step("progress page shows practice and weak cards", async () => {
