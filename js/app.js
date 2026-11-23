@@ -19,9 +19,10 @@ import { renderWords } from "./views/words.js";
 import { renderShift, renderShiftList } from "./views/shift.js";
 import { syncNow, pushChanges, syncStatus } from "./cloud.js";
 import { hasWordBuilder } from "./wordparts.js";
-import { session, loadRegistry, saveRegistry, profileKey, allDecks, currentProfile, displayName } from "./profiles.js";
+import { session, loadRegistry, saveRegistry, profileKey, allDecks, currentProfile, displayName, REGISTRY_KEY } from "./profiles.js";
 import { renderWelcome } from "./views/welcome.js";
 import { renderProfiles } from "./views/profiles.js";
+import { shiftAllowed } from "./aiaccess.js";
 
 hooks.onPersistError = () => toast("Couldn't save. Browser storage is full or blocked.");
 // Learners on this device (js/profiles.js). No registry yet means first run: onboarding.
@@ -38,6 +39,12 @@ try {
 }
 showProfile();
 window.addEventListener("profilechange", showProfile);
+// Another tab changed the learners or this learner's data: reload rather than
+// save over it with this tab's older copy.
+window.addEventListener("storage", (e) => {
+  if (!session.registry || e.key === null) return;
+  if (e.key === REGISTRY_KEY || e.key === profileKey(session.registry.active)) location.reload();
+});
 // Remove stored pictures no card uses anymore (e.g. from an editor that wasn't saved).
 // Pictures are shared by every learner on the device, so every learner's decks count.
 if ("indexedDB" in window && session.registry) {
@@ -51,7 +58,7 @@ function showProfile() {
   for (const btn of document.querySelectorAll("[data-profile]")) {
     btn.hidden = !p;
     if (!p) continue;
-    btn.innerHTML = `<span class="profile-avatar" aria-hidden="true">${p.avatar}</span><span class="profile-name">${esc(displayName(p))}</span>`;
+    btn.innerHTML = `<span class="profile-avatar" aria-hidden="true">${esc(p.avatar)}</span><span class="profile-name">${esc(displayName(p))}</span>`;
     btn.setAttribute("aria-label", `Learning now: ${displayName(p)}. Switch learner`);
   }
 }
@@ -106,7 +113,7 @@ function route() {
   if (page === "progress") return renderProgress();
   if (page === "help") return renderHelp();
   if (page === "mixups") return renderMixups();
-  if (page === "shift") return id ? renderShift(id) : renderShiftList();
+  if (page === "shift" && shiftAllowed()) return id ? renderShift(id) : renderShiftList();
   const deck = page === "deck" && getDeck(id);
   if (deck && mode === "edit") return renderEditor(deck);
   if (deck && mode === "study") return renderStudy(deck, { cram: option === "cram" });

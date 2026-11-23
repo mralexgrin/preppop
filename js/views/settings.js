@@ -2,6 +2,8 @@ import { state, persist, dailyGoal, shortcutsOn } from "../store.js";
 import { esc, plural } from "../util.js";
 import { app, toast, setTitle, saveFile, install, isInstalled, isIOS, keepFocus } from "../ui.js";
 import { MODEL_LABEL } from "../ai.js";
+import { aiNeedsGrownup } from "../aiaccess.js";
+import { currentProfile, displayName } from "../profiles.js";
 import { makeBackup, readFile, mergeDecks, mergeActivity, imageIds } from "../backup.js";
 import { exportImages, importImages } from "../images.js";
 import { dayKey, addDays } from "../srs.js";
@@ -73,10 +75,23 @@ export function renderSettings() {
     </section>
 
     <section class="panel" aria-labelledby="ai-heading">
-      <h2 id="ai-heading">AI answers</h2>
+      <h2 id="ai-heading">AI features</h2>
+      ${
+        aiNeedsGrownup()
+          ? `<p><strong>For a grown-up:</strong> AI features (wrong answers in Test, Explain this card, Explain it in Write, and Cards from notes) send what's typed on the cards, and in those features, to ${MODEL_LABEL} by Anthropic to write a response. They're off for elementary and middle school learners unless you turn them on. Without them, Test uses the learner's other cards for wrong answers.</p>
+             <label class="check order-check"><input type="checkbox" id="ai-on" ${state.settings.aiOn ? "checked" : ""}> <span>Let this learner use AI features (a parent or guardian should decide)</span></label>`
+          : `<p>AI features send what's typed on the cards, and in those features, to ${MODEL_LABEL} by Anthropic. Don't type your full name or other personal details there.</p>`
+      }
       <p>In Test mode, ${MODEL_LABEL} writes the wrong answers. They're saved so repeat tests are instant. ${plural(cached, "question")} saved.</p>
       <div class="row"><button class="btn btn-ghost" type="button" id="clear-cache" ${cached ? "" : "disabled"}>Clear saved AI answers</button></div>
     </section>`;
+
+  app.querySelector("#ai-on")?.addEventListener("change", (e) => {
+    if (e.target.checked) state.settings.aiOn = true;
+    else delete state.settings.aiOn;
+    persist();
+    toast(e.target.checked ? "AI features on for this learner" : "AI features off for this learner");
+  });
 
   bindSync();
 
@@ -334,7 +349,10 @@ function bindSync(revealKey = false) {
     redraw();
     panel.querySelector("#sync-now")?.focus();
   });
-  panel.querySelector("#sync-show")?.addEventListener("click", () => redraw(true));
+  // Anyone with the key can open this learner's cloud copy from their own device.
+  panel.querySelector("#sync-show")?.addEventListener("click", () => {
+    if (confirm(`This is ${displayName(currentProfile())}'s sync key. Anyone who has it can see and change their synced decks from another device. Show it?`)) redraw(true);
+  });
   panel.querySelector("#sync-copy")?.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(state.sync.key);

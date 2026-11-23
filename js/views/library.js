@@ -2,6 +2,7 @@ import { state, persist, getDeck, dailyGoal, deleteDeck } from "../store.js";
 import { dueCards, isDue, isNew, streak, dayKey, addDays } from "../srs.js";
 import { mixupPairs } from "../mixups.js";
 import { currentProfile } from "../profiles.js";
+import { shiftAllowed } from "../aiaccess.js";
 import { forecast, readinessText } from "../readiness.js";
 import { esc, plural } from "../util.js";
 import { app, toast, setTitle, view, examLabel, announce, focusHeading } from "../ui.js";
@@ -58,7 +59,7 @@ export function renderLibrary() {
         <section class="subject-group" data-subject="${subject.id}" aria-labelledby="group-${subject.id}">
           <h2 class="group-head" id="group-${subject.id}"><span class="subject-dot" aria-hidden="true"></span>${subject.name}<span class="group-count">${plural(decks.length, "deck")}</span></h2>
           <ul class="deck-grid">${decks.map(deckTile).join("")}</ul>
-          ${subject.id === "clinical" ? shiftPromo : ""}
+          ${subject.id === "clinical" && shiftAllowed() ? shiftPromo : ""}
         </section>`;
     }).join("")}
     </div>`;

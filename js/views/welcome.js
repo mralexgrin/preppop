@@ -2,12 +2,12 @@
 // school level, and which subjects; finishes with matching starter decks.
 // Also used to add another learner from the Who's learning? screen.
 
-import { state, persist, blankCard, setStoreKey, migrate } from "../store.js";
+import { blankCard, migrate } from "../store.js";
 import { esc, plural, uid } from "../util.js";
 import { app, setTitle, announce } from "../ui.js";
 import { SUBJECTS } from "../subjects.js";
 import { LEVELS, levelOf, startersFor } from "../starters.js";
-import { session, AVATARS, MAX_NAME, addProfile, saveRegistry, profileKey } from "../profiles.js";
+import { session, AVATARS, MAX_NAME, addProfile, saveRegistry, profileKey, refreshRegistry } from "../profiles.js";
 
 export function renderWelcome({ adding = false } = {}) {
   setTitle(adding ? "Add a learner" : "Welcome");
@@ -111,21 +111,33 @@ export function renderWelcome({ adding = false } = {}) {
     app.querySelector("#finish").addEventListener("click", finish);
   };
 
+  let finishing = false;
   const finish = () => {
-    const added = addProfile(session.registry, { name: w.name, avatar: w.avatar, level: w.level });
-    if (!added) return announce("This device already has the most learners it can hold.");
-    session.registry = added.registry;
-    // The new profile starts empty, with its starter decks and level defaults.
-    setStoreKey(profileKey(added.profile.id));
-    Object.assign(state, migrate({}));
+    if (finishing) return;
+    finishing = true;
+    const added = addProfile(refreshRegistry(), { name: w.name, avatar: w.avatar, level: w.level });
+    if (!added) {
+      finishing = false;
+      return announce("This device already has the most learners it can hold.");
+    }
+    // The new learner's data is built on its own and saved under its own key,
+    // so the learner who was using the app (and any sync still running for
+    // them) is never touched.
+    const fresh = migrate({});
     const level = levelOf(w.level);
-    state.settings.dailyGoal = level.dailyGoal;
-    if (w.level === "elementary") state.settings.test = { confidence: false };
+    fresh.settings.dailyGoal = level.dailyGoal;
+    if (w.level === "elementary") fresh.settings.test = { confidence: false };
     const now = Date.now();
     for (const s of startersFor(w.level, w.subjects)) {
-      state.decks.push({ id: uid(), name: s.name, subject: s.subject, ordered: s.ordered, starter: s.id, createdAt: now, updatedAt: now, cards: s.cards.map((c) => ({ ...blankCard(), ...c })) });
+      fresh.decks.push({ id: uid(), name: s.name, subject: s.subject, ordered: s.ordered, starter: s.id, createdAt: now, updatedAt: now, cards: s.cards.map((c) => ({ ...blankCard(), ...c })) });
     }
-    persist();
+    try {
+      localStorage.setItem(profileKey(added.profile.id), JSON.stringify(fresh));
+    } catch {
+      finishing = false;
+      return announce("Couldn't save. Browser storage is full or blocked.");
+    }
+    session.registry = added.registry;
     saveRegistry(session.registry);
     // Reload so every screen starts with this learner's data.
     location.hash = "#/";

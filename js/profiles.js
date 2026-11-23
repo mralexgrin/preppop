@@ -19,7 +19,9 @@ export const AVATARS = ["🦊", "🐼", "🐸", "🦉", "🐙", "🦁", "🐢", 
 
 export const profileKey = (id) => (id === FIRST_ID ? LEGACY_KEY : `${LEGACY_KEY}:${id}`);
 
-const cleanName = (name) => (typeof name === "string" ? name.replace(/\s+/g, " ").trim().slice(0, MAX_NAME) : "");
+// No control or invisible formatting characters; cut by character, not code unit, so emoji stay whole.
+const cleanName = (name) =>
+  typeof name === "string" ? Array.from(name.replace(/[\p{Cc}\p{Cf}]/gu, "").replace(/\s+/g, " ").trim()).slice(0, MAX_NAME).join("").trim() : "";
 
 function cleanProfile(p) {
   if (!p || typeof p !== "object" || !SAFE_ID.test(p.id)) return null;
@@ -54,12 +56,33 @@ export function loadRegistry(storage = globalThis.localStorage) {
     .map(cleanProfile)
     .filter((p) => p && !seen.has(p.id) && seen.add(p.id))
     .slice(0, MAX_PROFILES);
-  if (!list.length) {
-    if (read(storage, LEGACY_KEY) === null) return null;
-    list.push({ id: FIRST_ID, name: "", avatar: AVATARS[0], level: "high", createdAt: 0 });
+  // Learner data the list doesn't know about (data from before profiles, a
+  // damaged list, or another tab's change) is kept as an unnamed learner,
+  // never thrown away.
+  for (const id of savedIds(storage)) {
+    if (!seen.has(id) && list.length < MAX_PROFILES) {
+      seen.add(id);
+      list.push({ id, name: "", avatar: AVATARS[0], level: "high", createdAt: 0 });
+    }
   }
+  if (!list.length) return null;
   const active = list.some((p) => p.id === saved?.active) ? saved.active : list[0].id;
   return { active, list };
+}
+
+// Ids of learners with saved data on this device.
+function savedIds(storage) {
+  const ids = [];
+  if (read(storage, LEGACY_KEY) !== null) ids.push(FIRST_ID);
+  try {
+    for (let i = 0; i < (storage.length ?? 0); i++) {
+      const m = /^preppop:v1:([A-Za-z0-9_-]{1,64})$/.exec(storage.key(i) ?? "");
+      if (m && m[1] !== FIRST_ID) ids.push(m[1]);
+    }
+  } catch {
+    // Storage blocked.
+  }
+  return ids;
 }
 
 export function saveRegistry(registry, storage = globalThis.localStorage) {
@@ -123,6 +146,13 @@ export const displayName = (p) => p?.name || "Learner";
 
 // This page load's registry (set at startup by js/app.js).
 export const session = { registry: null };
+// Before changing the list, start from what's saved (another tab may have changed it).
+export function refreshRegistry(storage = globalThis.localStorage) {
+  const saved = loadRegistry(storage);
+  if (saved && session.registry) saved.active = session.registry.active;
+  if (saved) session.registry = saved;
+  return session.registry;
+}
 export const currentProfile = () => activeProfile(session.registry);
 export const currentLevel = () => currentProfile()?.level ?? "high";
 

@@ -6,7 +6,7 @@ const SECTIONS = [
   {
     title: "Learners on this device",
     body: `
-      <p>Everyone who uses PrepPop on this device can have their own learner: a first name or nickname, an avatar, and a school level (elementary, middle, or high school). Each learner has their own decks, progress, settings, and sync. Tap your avatar at the top to switch learners or <a href="#/profiles">add one</a>. There's no email or password, and names stay on this device.</p>`,
+      <p>Everyone who uses PrepPop on this device can have their own learner: a first name or nickname, an avatar, and a school level (elementary, middle, or high school). Each learner has their own decks, progress, settings, and sync. Tap your avatar at the top to switch learners or <a href="#/profiles">add one</a>. There's no email or password, and names stay on this device. For elementary and middle school learners, the ✦ AI features are off unless a grown-up turns them on in Settings.</p>`,
   },
   {
     title: "The idea in one minute",
@@ -42,7 +42,7 @@ const SECTIONS = [
         <li><strong>Test:</strong> choose how many questions and mix multiple choice, written, and true or false, like a real quiz. With the <strong>confidence check</strong> on, you pick an answer (or type one and tap Check) and then tap <strong>I'm sure</strong> or <strong>Guessing</strong> (S or G on a keyboard). A lucky guess comes back tomorrow instead of counting as known.</li>
         <li><strong>Steps:</strong> tap the steps of a procedure or events of a timeline in the right order.</li>
         <li><strong>Words</strong> (on the <em>Medical terminology</em> starter deck): work out medical words from their parts. <strong>Decode</strong> a word like <em>bradypnea</em> by picking what it means, or <strong>build</strong> one by tapping its parts in order. You'll see the Spanish word too.</li>
-        <li><a href="#/shift"><strong>✦ Clinical Shift</strong></a> (also under your Clinical decks): practice rooming a made-up patient the way you will alongside a doctor. Introduce yourself, check their name and date of birth, take vital signs, ask about their symptoms, then report to the doctor and get feedback on what you did well and what to do next time. The patient is played by AI. Nothing is saved on your device or by PrepPop, but what you type is sent to the AI, so you don't need to use your real name.</li>
+        <li><a href="#/shift"><strong>✦ Clinical Shift</strong></a> (high school; also under your Clinical decks): practice rooming a made-up patient the way you will alongside a doctor. Introduce yourself, check their name and date of birth, take vital signs, ask about their symptoms, then report to the doctor and get feedback on what you did well and what to do next time. The patient is played by AI. Nothing is saved on your device or by PrepPop, but what you type is sent to the AI, so you don't need to use your real name.</li>
         <li><strong>Match:</strong> a quick game. Tap a term, then its definition, as fast as you can. It's a warm-up, so it doesn't change your review schedule.</li>
       </ul>`,
   },

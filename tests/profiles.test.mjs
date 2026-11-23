@@ -78,3 +78,20 @@ test("updating and removing learners; the last one can't be removed", () => {
   saveRegistry(registry, storage);
   assert.equal(loadRegistry(storage).list.length, 1);
 });
+
+test("names lose invisible and control characters, and emoji aren't cut in half", () => {
+  const { profile } = addProfile(null, { name: "Ma‮ya​\u0007", level: "high" });
+  assert.equal(profile.name, "Maya");
+  const { profile: long } = addProfile(null, { name: "😀".repeat(40), level: "high" });
+  assert.equal(Array.from(long.name).length, 30);
+  assert.ok(long.name.endsWith("😀"));
+});
+
+test("learner data the list lost track of is kept as an unnamed learner, never dropped", () => {
+  const data = { "preppop:v1": "{}", "preppop:v1:pabc": "{}", [REGISTRY_KEY]: "{broken json" };
+  const storage = memoryStorage(data);
+  storage.key = (i) => Object.keys(storage.data)[i] ?? null;
+  Object.defineProperty(storage, "length", { get: () => Object.keys(storage.data).length });
+  const reg = loadRegistry(storage);
+  assert.deepEqual(reg.list.map((p) => p.id).sort(), ["main", "pabc"]);
+});

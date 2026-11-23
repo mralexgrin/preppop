@@ -3,12 +3,20 @@
 Newest entries at the top. This file is the memory of the run: read it at the start of every session.
 
 ## Flagged for human review
-- **Learner profiles (2026-11-23): this is a personal-data change.**
-  - **What's stored:** each learner's first name or nickname, an emoji avatar, and a school level, in localStorage (`preppop:profiles`), on the device only. They aren't synced, backed up, or sent to the AI service. Each learner's data is under its own key; the first uses `preppop:v1`, so existing data carries over untouched.
-  - **No email or password,** chosen by the owner, which keeps elementary users (under 13) clear of parental-consent rules.
-  - **Removing a learner** deletes their data on this device after a confirm, and says that a synced copy stays in the cloud unless sync is turned off first.
-  - **Pictures:** the picture cleanup now counts every learner's decks, since pictures are shared on the device.
+- **Learner profiles (2026-11-23): a personal-data change, and a legal question for the owner (children's privacy, COPPA).**
+  - **What's stored:** each learner's first name or nickname, an emoji avatar, and a school level, in localStorage (`preppop:profiles`), on the device only. They aren't synced, backed up, or sent to the AI service. Each learner's data is under its own key; the first uses `preppop:v1`, so existing data carries over.
+  - **The open question:** having no email doesn't by itself settle COPPA. The law covers personal information collected online from children under 13. That includes free text a child types, and persistent identifiers like IP addresses (the Worker reads the IP for rate limiting). Elementary and middle school learners can be under 13. **Please decide, or get advice, on whether a parental notice or consent is needed, and check Anthropic's current requirements for products used by minors.**
+  - **What the app does meanwhile:**
+    - For elementary and middle school learners, all AI features are off by default: Test wrong answers (her other cards are used instead), Explain this card, Explain it in Write, and Cards from notes. Settings → AI features has a switch labeled for a parent or guardian, with a plain explanation of what's sent where.
+    - Clinical Shift is high school only (route and entry card).
+    - Hints say not to type personal details, and the Shift patient never asks for or uses her name.
+    - The AI prompts still say "high school student". Writing at each learner's reading level is the next PR.
+  - **Removing a learner:** deletes their data on this device after a confirm. If they use sync, it offers to erase their cloud copy too (their sync key is only in their data here). Pictures only they used are cleaned up right away.
+  - **Shared device:** showing a learner's sync key now asks first, since anyone with it can open their cloud copy.
+  - **Also:** names lose invisible and control characters. Learner data the list loses track of (another tab, or a damaged list) is kept as an unnamed learner, never dropped. Tabs reload when another tab changes the learners or this learner's data.
+  - **Deferred, logged in ROADMAP:** give imported pictures fresh ids (pictures are shared on the device), and host fonts locally so Google Fonts doesn't see visitors' IP addresses.
   - **Please review:** the new kid and middle-school starter content in `js/starters.js` (14 decks).
+
 - **Clinical Shift pilot (2026-11-23): two AI prompts plus clinical scenarios, for a minor. Highest-risk item; please review before merging. Not deployed to production. Tried on the real model through preview versions (no production traffic).**
   - **Prompts:** `PATIENT_SYSTEM` (Claude plays a fictional patient) and `DEBRIEF_SYSTEM` (clinical-instructor feedback), in `worker/src/index.js`.
   - **Scenarios:** `SCENARIOS`, three fictional cases. Ages are worked out from the date of birth. The Worker writes the readings from the scenario, so the model can't make up numbers. Please check the values and the "findings for the doctor":

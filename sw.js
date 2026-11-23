@@ -16,6 +16,7 @@ const SHELL = [
   "icons/icon-512.png",
   "icons/apple-touch-icon.png",
   "js/ai.js",
+  "js/aiaccess.js",
   "js/answer.js",
   "js/app.js",
   "js/backup.js",

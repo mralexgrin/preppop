@@ -5,11 +5,13 @@ import { state, setStoreKey } from "../store.js";
 import { esc } from "../util.js";
 import { app, setTitle, toast, announce } from "../ui.js";
 import { LEVELS, levelOf } from "../starters.js";
-import { session, AVATARS, MAX_NAME, MAX_PROFILES, saveRegistry, updateProfile, removeProfile, switchTo, displayName } from "../profiles.js";
+import { session, AVATARS, MAX_NAME, MAX_PROFILES, saveRegistry, updateProfile, removeProfile, switchTo, displayName, profileKey, allDecks, refreshRegistry } from "../profiles.js";
+import { eraseCloudCopy } from "../cloud.js";
+import { normalizeSyncKey } from "../sync.js";
 
 export function renderProfiles({ editing = null } = {}) {
   setTitle("Who's learning?");
-  const reg = session.registry;
+  const reg = refreshRegistry();
   if (!reg) return;
 
   app.innerHTML = `
@@ -27,7 +29,7 @@ export function renderProfiles({ editing = null } = {}) {
         return `
         <li class="profile-card ${active ? "is-active" : ""}">
           <button type="button" class="profile-main" data-switch="${p.id}" ${active ? 'aria-current="true"' : ""}>
-            <span class="profile-avatar" aria-hidden="true">${p.avatar}</span>
+            <span class="profile-avatar" aria-hidden="true">${esc(p.avatar)}</span>
             <span class="profile-text"><strong>${esc(displayName(p))}</strong><span>${levelOf(p.level).name}${active ? " · learning now" : ""}</span></span>
           </button>
           <div class="profile-tools">
@@ -93,20 +95,35 @@ const editForm = (p) => `
     <div class="row"><button class="btn btn-primary" type="submit">Save</button><button class="btn btn-ghost" type="button" id="edit-cancel">Cancel</button></div>
   </form>`;
 
-function remove(id) {
-  const reg = session.registry;
+// A learner's saved sync key, read from their own saved data.
+function syncKeyOf(id) {
+  try {
+    const key = JSON.parse(localStorage.getItem(profileKey(id)) ?? "{}").sync?.key;
+    return normalizeSyncKey(key);
+  } catch {
+    return null;
+  }
+}
+
+async function remove(id) {
+  const reg = refreshRegistry();
   const p = reg.list.find((x) => x.id === id);
-  const syncing = id === reg.active && state.sync;
-  const ok = confirm(
-    `Remove ${displayName(p)} from this device? Their decks and progress on this device will be deleted.${syncing ? " Their synced copy stays in the cloud until it's unused for 12 months; turn off sync in Settings first to erase it." : " If they use sync, their other devices keep their copy."}`,
-  );
-  if (!ok) return;
+  const name = displayName(p);
+  const key = id === reg.active ? state.sync?.key : syncKeyOf(id);
+  if (!confirm(`Remove ${name} from this device? Their decks and progress on this device will be deleted.`)) return;
+  // Their sync key is only kept in their data on this device: offer to erase the cloud copy now.
+  if (key && confirm(`${name} uses sync. Also erase their copy in the cloud? Choose Cancel to keep it for their other devices (it's deleted after 12 months unused).`)) {
+    const problem = await eraseCloudCopy(key);
+    if (problem && !confirm(`${problem} Remove ${name} from this device anyway?`)) return;
+  }
   const wasActive = id === reg.active;
   // Anything saved before the reload goes nowhere instead of recreating the removed learner.
   if (wasActive) setStoreKey("preppop:discard");
   removeProfile(reg, id);
   saveRegistry(reg);
   if (wasActive) return switchTo(reg.active);
+  // Pictures only they used are cleaned up now, not on the next visit.
+  import("../images.js").then((m) => m.collectGarbage(allDecks(reg))).catch(() => {});
   renderProfiles();
-  announce(`${displayName(p)} removed.`);
+  announce(`${name} removed.`);
 }
