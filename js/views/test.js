@@ -11,6 +11,7 @@ import { TYPES, buildQuestions, wrongAnswersFor, makeTrueFalse } from "../testbu
 import { checkAnswer, countsAsCorrect, needsAccentKeys, ACCENT_KEYS } from "../answer.js";
 import { shuffle } from "../util.js";
 import { imageSlot, hydrateImages } from "../images.js";
+import { findMixup, noteMixup, easePair, partnerOf, mixupMessage } from "../mixups.js";
 
 const SHOWS = { term: "Show term", definition: "Show definition", mix: "Mix" };
 const COUNTS = [10, 20, 0]; // 0 = every card
@@ -24,6 +25,8 @@ export function renderTest(deck) {
     mode: SHOWS[saved.mode] ? saved.mode : "term",
     count: COUNTS.includes(saved.count) ? saved.count : 20,
     types: Array.isArray(saved.types) && saved.types.every((x) => TYPES[x]) && saved.types.length ? saved.types : ["choice"],
+    // Confidence check: she locks in each answer as "sure" or "guessing".
+    confidence: saved.confidence !== false,
     questions: [],
     i: 0,
     score: 0,
@@ -85,6 +88,9 @@ export function renderTest(deck) {
               .join("")}
           </div>
         </div>
+        <div class="setup-row">
+          <label class="check order-check"><input type="checkbox" id="confidence" ${t.confidence ? "checked" : ""}> <span><strong>Confidence check.</strong> Before you see the answer, say if you're sure or guessing. Lucky guesses come back tomorrow, and Progress shows where you're sure but wrong.</span></label>
+        </div>
       </div>
       ${aiTypes ? `<div class="notice ai"><span class="spark" aria-hidden="true">✦</span><span>${MODEL_LABEL} writes believable wrong answers for multiple choice and true or false.</span></div>` : ""}
       <div class="row">
@@ -116,13 +122,14 @@ export function renderTest(deck) {
         app.querySelector(`.chip-check input[value="${box.value}"]`)?.focus();
       }),
     );
+    app.querySelector("#confidence").addEventListener("change", (e) => (t.confidence = e.target.checked));
     app.querySelector("#start").addEventListener("click", start);
   };
 
   const cacheKey = (q) => `${q.shows}:${hash(q.prompt)}:${hash(q.answer)}`;
 
   const start = async () => {
-    state.settings.test = { mode: t.mode, count: t.count, types: t.types };
+    state.settings.test = { mode: t.mode, count: t.count, types: t.types, confidence: t.confidence };
     persist();
     t.notice = "";
     t.i = 0;
@@ -130,6 +137,10 @@ export function renderTest(deck) {
     t.questions = buildQuestions(deck.cards, { count: questionCount(), mode: t.mode, types: t.types }).map((q) => ({
       ...q,
       picked: null, // choice/truefalse: the option chosen; written: typed text
+      pending: null, // confidence check: chosen but not locked in yet
+      confidence: null, // "sure" or "guess"
+      mixup: null, // the card whose answer she gave instead
+      partner: null, // the card she's mixed this one up with before, if it's an option
       result: null, // written: checkAnswer() result
       overruled: false,
       done: false,
@@ -155,10 +166,13 @@ export function renderTest(deck) {
     for (const q of t.questions) {
       if (!TYPES[q.type].needsWrong) continue;
       const fromAi = state.distractors[cacheKey(q)] ?? [];
-      const wrong = wrongAnswersFor(q, fromAi, deck.cards);
+      const partner = partnerOf(deck, q.card);
+      const partnerAnswer = partner?.[other(q.shows)];
+      const wrong = wrongAnswersFor(q, fromAi, deck.cards, partnerAnswer);
       q.ai = fromAi.length > 0;
       if (q.type === "choice") q.options = shuffle([q.answer, ...wrong]);
       else Object.assign(q, makeTrueFalse(q, wrong));
+      if (partner && (q.type === "choice" ? q.options.includes(partnerAnswer) : q.statement === partnerAnswer)) q.partner = partner;
       // A choice question needs at least one wrong answer; fall back to written.
       if (q.type === "choice" && q.options.length < 2) q.type = "written";
     }
@@ -177,6 +191,8 @@ export function renderTest(deck) {
     const answered = q.type === "written" ? q.result !== null : q.picked !== null;
     const last = t.i === t.questions.length - 1;
     const right = answered && isCorrect(q);
+    const ask = t.confidence && !answered; // waiting for "sure" or "guessing"
+    const selected = (value) => ask && q.pending === value;
 
     let body = "";
     if (q.type === "choice") {
@@ -185,43 +201,63 @@ export function renderTest(deck) {
         <div class="options" role="group" aria-labelledby="q-instruction">
           ${q.options
             .map((opt, i) => {
-              const cls = !answered ? "" : opt === q.answer ? "is-correct" : opt === q.picked ? "is-wrong" : "dim";
-              return `<button type="button" class="option ${cls}" data-pick="${i}" ${answered ? "disabled" : ""}>
+              const cls = !answered ? (selected(opt) ? "is-selected" : "") : opt === q.answer ? "is-correct" : opt === q.picked ? "is-wrong" : "dim";
+              return `<button type="button" class="option ${cls}" data-pick="${i}" ${answered ? "disabled" : ""} ${ask ? `aria-pressed="${selected(opt)}"` : ""}>
                 <span class="opt-key" aria-hidden="true">${i + 1}</span><span class="opt-text"${langAttr(deck, other(q.shows), opt)}>${esc(opt)}</span>${mark(cls)}</button>`;
             })
             .join("")}
         </div>`;
     } else if (q.type === "truefalse") {
-      const cls = (value) => (!answered ? "" : value === q.isTrue ? "is-correct" : value === q.picked ? "is-wrong" : "dim");
+      const cls = (value) => (!answered ? (selected(value) ? "is-selected" : "") : value === q.isTrue ? "is-correct" : value === q.picked ? "is-wrong" : "dim");
+      const tfButton = (value, key, label) =>
+        `<button type="button" class="option ${cls(value)}" data-tf="${value}" ${answered ? "disabled" : ""} ${ask ? `aria-pressed="${selected(value)}"` : ""}><span class="opt-key" aria-hidden="true">${key}</span><span class="opt-text">${label}</span>${mark(cls(value))}</button>`;
       body = `
         <p class="q-instruction" id="q-instruction">True or false: this is the matching ${other(q.shows)}</p>
         <p class="tf-statement">${esc(q.statement)}</p>
         <div class="options tf" role="group" aria-labelledby="q-instruction">
-          <button type="button" class="option ${cls(true)}" data-tf="true" ${answered ? "disabled" : ""}><span class="opt-key" aria-hidden="true">T</span><span class="opt-text">True</span>${mark(cls(true))}</button>
-          <button type="button" class="option ${cls(false)}" data-tf="false" ${answered ? "disabled" : ""}><span class="opt-key" aria-hidden="true">F</span><span class="opt-text">False</span>${mark(cls(false))}</button>
+          ${tfButton(true, "T", "True")}${tfButton(false, "F", "False")}
         </div>`;
     } else {
       const accents = needsAccentKeys(q.answer, deck.subject);
+      // With the confidence check on, Check (or Enter) asks how sure she is first.
+      const buttons = `<button class="btn btn-primary" type="submit">Check <kbd>Enter</kbd></button>`;
       body = `
         <form class="write-form" novalidate>
           <label class="field">
             <span class="field-label">Type the ${other(q.shows)}</span>
-            <input class="input write-input" id="answer" aria-describedby="q-prompt" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${esc(q.picked ?? "")}" ${answered ? "readonly" : ""}>
+            <input class="input write-input" id="answer" aria-describedby="q-prompt" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${esc(q.picked ?? q.pending ?? "")}" ${answered ? "readonly" : ""}>
           </label>
           ${accents && !answered ? `<div class="accent-keys" role="group" aria-label="Insert accented letter">${ACCENT_KEYS.map((k) => `<button type="button" class="accent-key" data-char="${k}">${k}</button>`).join("")}</div>` : ""}
-          ${answered ? "" : `<div class="row"><button class="btn btn-primary" type="submit">Check <kbd>Enter</kbd></button><button class="btn btn-ghost" type="button" id="dont-know">I don't know</button></div>`}
+          ${answered || (ask && q.pending !== null) ? "" : `<div class="row">${buttons}<button class="btn btn-ghost" type="button" id="dont-know">I don't know</button></div>`}
         </form>`;
     }
 
+    // Lock in the picked or typed answer as sure or guessing.
+    const lockRow =
+      ask && (q.type !== "written" || q.pending !== null)
+        ? `<div class="lock-row" role="group" aria-labelledby="lock-label">
+            <p class="lock-label" id="lock-label">${q.pending === null ? "Pick an answer, then say how sure you are" : "How sure are you?"}</p>
+            <div class="row">
+              <button class="btn btn-primary" type="button" data-lock="sure" ${q.pending === null ? "disabled" : ""}>I'm sure <kbd>S</kbd></button>
+              <button class="btn btn-soft" type="button" data-lock="guess" ${q.pending === null ? "disabled" : ""}>Guessing <kbd>G</kbd></button>
+            </div>
+          </div>`
+        : "";
+
+    const mixupNote = answered && !right && q.mixup ? ` ${mixupMessage(q.mixup, other(q.shows))}` : "";
+    const confidenceNote =
+      answered && q.confidence === "sure" && !right ? " You were sure, so this one's a blind spot." : answered && q.confidence === "guess" && right ? " Lucky guess: it comes back tomorrow." : "";
     const feedback = !answered
       ? ""
-      : right
-        ? q.type === "written" && q.result.verdict === "accent"
-          ? `Correct! Watch the accents: <strong>${esc(q.answer)}</strong>`
-          : "Correct!"
-        : q.type === "truefalse"
-          ? `Not quite. It's ${q.isTrue ? "true" : `false. The answer is <strong>${esc(q.answer)}</strong>`}.`
-          : `Not quite. The answer is <strong>${esc(q.answer)}</strong>.`;
+      : (right
+          ? q.type === "written" && q.result.verdict === "accent"
+            ? `Correct! Watch the accents: <strong>${esc(q.answer)}</strong>`
+            : "Correct!"
+          : q.type === "truefalse"
+            ? `Not quite. It's ${q.isTrue ? "true" : `false. The answer is <strong>${esc(q.answer)}</strong>`}.`
+            : `Not quite. The answer is <strong>${esc(q.answer)}</strong>.`) +
+        mixupNote +
+        confidenceNote;
 
     app.innerHTML = `${header(`<span class="progress-label">Score ${t.score}</span>`)}
       ${t.notice ? `<div class="notice warn" role="alert">${esc(t.notice)}</div>` : ""}
@@ -236,6 +272,7 @@ export function renderTest(deck) {
         <p class="q-prompt" id="q-prompt"${langAttr(deck, q.shows, q.prompt)}>${esc(q.prompt)}</p>
       </section>
       ${body}
+      ${lockRow}
       <div class="q-foot">
         <p class="feedback ${answered ? (right ? "good" : "bad") : ""}">${feedback}</p>
         ${
@@ -257,9 +294,15 @@ export function renderTest(deck) {
       const input = app.querySelector("#answer");
       form.addEventListener("submit", (e) => {
         e.preventDefault();
-        if (!answered) writeAnswer(input.value);
+        if (answered) return;
+        if (t.confidence && input.value.trim()) {
+          q.pending = input.value;
+          drawQuestion();
+          app.querySelector('.lock-row [data-lock="sure"]')?.focus();
+          announce(confidencePrompt());
+        } else writeAnswer(input.value, null);
       });
-      app.querySelector("#dont-know")?.addEventListener("click", () => writeAnswer(""));
+      app.querySelector("#dont-know")?.addEventListener("click", () => writeAnswer("", null));
       app.querySelectorAll(".accent-key").forEach((b) =>
         b.addEventListener("click", () => {
           const { selectionStart: s, selectionEnd: e, value } = input;
@@ -268,8 +311,9 @@ export function renderTest(deck) {
           input.setSelectionRange(s + 1, s + 1);
         }),
       );
-      if (!answered) input.focus();
+      if (!answered && q.pending === null) input.focus();
     }
+    app.querySelectorAll(".lock-row [data-lock]").forEach((b) => b.addEventListener("click", () => lock(b.dataset.lock)));
     app.querySelector("#overrule")?.addEventListener("click", () => {
       q.overruled = true;
       t.score++;
@@ -280,22 +324,50 @@ export function renderTest(deck) {
     next?.focus();
   };
 
+  // With the confidence check on, picking only selects; "sure" or "guessing" locks it in.
   const pick = (value) => {
     const q = t.questions[t.i];
     if (q.picked !== null) return;
+    if (t.confidence) {
+      q.pending = value;
+      keepFocus(drawQuestion);
+      announce(`Selected ${value === true ? "True" : value === false ? "False" : value}. ${confidencePrompt()}`);
+      return;
+    }
+    answer(q, value, null);
+  };
+
+  const confidencePrompt = () => (shortcutsOn() ? "How sure are you? Press S if you're sure, G if you're guessing." : "How sure are you? Choose I'm sure or Guessing.");
+
+  const lock = (confidence) => {
+    const q = t.questions[t.i];
+    if (q.picked !== null || q.pending === null) return;
+    // Written: she can still fix a typo in the box before locking in.
+    if (q.type === "written") return writeAnswer(app.querySelector("#answer")?.value ?? q.pending, confidence);
+    answer(q, q.pending, confidence);
+  };
+
+  // The wrong answer she gave, if it belongs to another card in this deck.
+  const mixupFor = (q) => {
+    const side = other(q.shows);
+    if (q.type === "choice") return findMixup(deck, q.card, side, q.picked);
+    if (q.type === "truefalse") return q.picked === true && !q.isTrue ? findMixup(deck, q.card, side, q.statement) : null;
+    return findMixup(deck, q.card, side, q.picked, { typed: true });
+  };
+
+  const answer = (q, value, confidence) => {
     q.picked = value;
+    q.confidence = confidence;
     if (isCorrect(q)) t.score++;
+    else q.mixup = mixupFor(q);
     drawQuestion();
     announceResult(q);
   };
 
-  const writeAnswer = (typed) => {
+  const writeAnswer = (typed, confidence) => {
     const q = t.questions[t.i];
-    q.picked = typed;
     q.result = checkAnswer(typed, q.answer);
-    if (isCorrect(q)) t.score++;
-    drawQuestion();
-    announceResult(q);
+    answer(q, typed, typed.trim() ? confidence : null);
   };
 
   const announceResult = (q) => {
@@ -309,7 +381,10 @@ export function renderTest(deck) {
     const answered = q.type === "written" ? q.result !== null : q.picked !== null;
     if (!answered || q.done) return;
     q.done = true;
-    recordAnswer(q.card, isCorrect(q), undefined, deck);
+    const correct = isCorrect(q);
+    if (!correct && q.mixup) noteMixup(q.card, q.mixup);
+    if (correct && q.partner) easePair(q.card, q.partner);
+    recordAnswer(q.card, correct, undefined, deck, { confidence: q.confidence });
     persist();
     t.i++;
     if (t.i < t.questions.length) {
@@ -333,10 +408,17 @@ export function renderTest(deck) {
     const pct = Math.round((t.score / total) * 100);
     const missed = t.questions.filter((q) => !isCorrect(q));
     const verdict = pct === 100 ? "Perfect score." : pct >= 80 ? "Great work." : pct >= 50 ? "Getting there." : "Keep practicing.";
+    const blind = missed.filter((q) => q.confidence === "sure").length;
+    const lucky = t.questions.filter((q) => q.confidence === "guess" && isCorrect(q)).length;
+    const confidenceLine = [
+      blind ? `${plural(blind, "answer")} you were sure about ${blind === 1 ? "was" : "were"} wrong. Those are blind spots, so they're marked below.` : "",
+      lucky ? `${lucky === 1 ? "1 lucky guess" : `${lucky} lucky guesses`} will come back tomorrow.` : "",
+    ].filter(Boolean).join(" ");
     app.innerHTML = `${header()}
       <section class="result">
         <h2 class="big">${t.score}/${total}</h2>
         <p class="sub">${pct}% correct. ${verdict}</p>
+        ${confidenceLine ? `<p class="confidence-line">${confidenceLine}</p>` : ""}
         <div class="actions">
           <button class="btn btn-primary" type="button" id="retake">New test</button>
           ${missed.length ? `<a class="btn btn-soft" href="#/review">Review missed cards</a>` : ""}
@@ -352,9 +434,11 @@ export function renderTest(deck) {
                 .map(
                   (q) => `
                 <li>
+                  ${q.confidence === "sure" ? `<p class="tag-blind">You were sure</p>` : ""}
                   <p class="m-prompt">${esc(q.prompt)}</p>
                   <p class="m-answer">✓ ${esc(q.answer)}</p>
                   ${yourAnswer(q) ? `<p class="m-picked"><span class="visually-hidden">You answered: </span>${esc(q.type === "truefalse" ? `${yourAnswer(q)}: ${q.statement}` : yourAnswer(q))}</p>` : ""}
+                  ${q.mixup ? `<p class="m-mixup">${mixupMessage(q.mixup, other(q.shows))} Added to your mix-ups.</p>` : ""}
                 </li>`,
                 )
                 .join("")}</ul>
@@ -374,6 +458,7 @@ export function renderTest(deck) {
     const unanswered = q.picked === null && q.result === null;
     if (q.type === "choice" && unanswered && /^[1-9]$/.test(e.key) && q.options[Number(e.key) - 1] !== undefined) pick(q.options[Number(e.key) - 1]);
     else if (q.type === "truefalse" && unanswered && /^[tf12]$/i.test(e.key)) pick(/^[t1]$/i.test(e.key));
+    else if (t.confidence && unanswered && q.pending !== null && /^[sg]$/i.test(e.key)) lock(e.key.toLowerCase() === "s" ? "sure" : "guess");
     else if (e.key === "Enter" && !unanswered && !e.target.closest?.("a, button, input, select, textarea")) {
       e.preventDefault();
       advance();

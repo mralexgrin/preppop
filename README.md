@@ -12,12 +12,14 @@ A study companion for a high school student: Biology, clinical skills, Spanish, 
 - **Today and spaced review.** The deck list opens with a Today panel: cards due across every deck, a daily goal, a streak, and the next test. Every answer reschedules the card: known cards come back after 1, 3, 7, 14, 30, 60, then 120 days, missed ones the same day (`js/srs.js`). **Undo last card** fixes a mis-swipe.
 - **Test dates.** A countdown on the deck and on Today, a **Cram** button, and reviews pulled to the day before the test.
 - **Progress.** Streaks, a 12-week practice calendar, weekly accuracy, mastery by subject, what's coming up, and the most-missed cards. **Share my progress** sends a summary (`js/progress.js`).
+- **Confidence check.** In Test, she locks in each answer as **I'm sure** or **Guessing**. Lucky guesses don't count as known (back to learning, same box, back tomorrow). Progress shows how often she's right when sure, per subject, flags overconfidence, and lists **blind spots**: cards she was sure about and got wrong.
+- **Mix-ups.** When a wrong answer is another card's answer in the same deck, the pair is remembered (`js/mixups.js`). The flip card names it, Test offers the partner as a choice, and a two-choice drill (`#/mixups`) counts the pair down until she can tell them apart. Like Match, the drill doesn't touch the review schedule. Write only notes mix-ups; counting down needs both cards in front of her.
 - **Daily reminder.** A repeating calendar event (`.ics`) with an alert, from Settings.
 
 **Practice modes** (tabs on every deck)
 - **Flashcards.** Flip, then mark **I know it** or **Still learning**. Swipe on a phone, arrow keys on a computer. Read aloud (Spanish in a Spanish voice), hints, and **✦ Explain this card**.
 - **Write.** Type the answer. Fair grading: case and punctuation ignored, "a / b" alternatives, "(to) eat" optional words, missing accents flagged but counted, small typos marked "almost", and **I was right** to overrule (`js/answer.js`). Spanish accent keys.
-- **Test.** 10, 20, or all questions; any mix of multiple choice, written, and true or false. Claude writes the wrong answers (`js/testbuilder.js`).
+- **Test.** 10, 20, or all questions; any mix of multiple choice, written, and true or false. Claude writes the wrong answers, plus the card she usually mixes it up with (`js/testbuilder.js`). Optional confidence check.
 - **Steps.** For decks marked "in order" (procedures, timelines): tap the steps into order (`js/steps.js`).
 - **Match.** A quick timed game. It doesn't touch the schedule.
 

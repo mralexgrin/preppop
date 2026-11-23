@@ -206,6 +206,9 @@ export async function flows({ stubAnswers = true } = {}) {
     for (let i = 0; i < total; i++) {
       key("1");
       await wait(20);
+      check($(".option.is-selected") && !$("#next"), "confidence check: picking only selects");
+      key("s");
+      await wait(20);
       $("#next").click();
       await wait(20);
     }
@@ -230,9 +233,14 @@ export async function flows({ stubAnswers = true } = {}) {
       seen.add(type);
       if ($("[data-pick]")) $("[data-pick]").click();
       else if ($("[data-tf]")) $("[data-tf]").click();
-      else {
+      if ($(".lock-row")) {
+        await wait(20);
+        $('.lock-row [data-lock="sure"]').click();
+      } else {
         $("#answer").value = "zzz";
         $(".write-form").requestSubmit();
+        await wait(20);
+        $('.lock-row [data-lock="sure"]').click(); // Check asks how sure first
       }
       await until(() => $("#next"), "next button");
       $("#next").click();
@@ -240,6 +248,147 @@ export async function flows({ stubAnswers = true } = {}) {
     }
     await until(() => $(".result .big"), "results");
     check(seen.size === 3, `saw all 3 question types (saw ${[...seen].join(", ")})`);
+  });
+
+  await step("confidence check: a lucky guess comes back tomorrow, sure-and-wrong is a blind spot", async () => {
+    await go("#/new");
+    setValue($("#deck-name"), "Heart rates");
+    $("#toggle-import").click();
+    setValue($("#import-text"), "Tachycardia - Heart rate over 100\nBradycardia - Heart rate under 60\nApnea - No breathing");
+    $("#import-add").click();
+    $("form").requestSubmit();
+    await wait(150);
+    const cards = () => JSON.parse(localStorage.getItem("preppop:v1")).decks.find((d) => d.name === "Heart rates").cards;
+    const id = JSON.parse(localStorage.getItem("preppop:v1")).decks.find((d) => d.name === "Heart rates").id;
+    await go(`#/deck/${id}/test`);
+    // Written questions only, showing the definition, so the answers are known.
+    $(".chip-check input[value='written']").checked = true;
+    $(".chip-check input[value='written']").dispatchEvent(new Event("change", { bubbles: true }));
+    for (let box = $(".chip-check input:checked:not([value='written'])"); box; box = $(".chip-check input:checked:not([value='written'])")) {
+      box.checked = false;
+      box.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    $('[data-mode="definition"]').click();
+    await wait(20);
+    check($("#confidence").checked, "confidence check is on by default");
+    $("#start").click();
+    await until(() => $("#q-prompt"), "first question");
+    const byDef = Object.fromEntries(cards().map((c) => [c.definition, c.term]));
+    let sawMixup = false;
+    // Check asks how sure before showing the result; then lock in.
+    const lockIn = async (typed, which) => {
+      $("#answer").value = typed;
+      $(".write-form").requestSubmit();
+      await wait(20);
+      check($(".lock-row") && !$(".feedback").textContent.trim(), "Check asks how sure before showing the answer");
+      key(which === "sure" ? "s" : "g");
+      await wait(20);
+    };
+    // First: right but guessing. Then: sure, giving the other heart-rate term. Apnea: sure and right.
+    for (let i = 0; i < 3; i++) {
+      const right = byDef[$("#q-prompt").textContent];
+      if (i === 0) {
+        await lockIn(right, "guess");
+        check($(".feedback").textContent.includes("Lucky guess"), "lucky guess called out");
+      } else if (right !== "Apnea") {
+        await lockIn(right === "Tachycardia" ? "Bradycardia" : "Tachycardia", "sure");
+        check($(".feedback").textContent.includes("is a different card"), "mix-up named in feedback");
+        check($(".feedback").textContent.includes("blind spot"), "sure-and-wrong called a blind spot");
+        sawMixup = true;
+      } else {
+        await lockIn(right, "sure");
+      }
+      $("#next").click();
+      await wait(30);
+    }
+    await until(() => $(".result .big"), "results");
+    const stats = cards().map((c) => c.stats ?? {});
+    check(stats.reduce((n, s) => n + (s.guess ?? 0), 0) === 1, "one guess recorded");
+    check(stats.reduce((n, s) => n + (s.sure ?? 0), 0) === 2, "two sure answers recorded");
+    const guessed = cards().find((c) => c.stats?.guessRight);
+    check(guessed && guessed.status === "learning" && guessed.srs.due > guessed.srs.last, "a lucky guess isn't marked known and comes back tomorrow");
+    if (sawMixup) check($(".tag-blind") && $(".m-mixup"), "results mark the blind spot and the mix-up");
+
+    // True/false locks in the same way, and with the check off one tap answers.
+    $("#retake").click();
+    await wait(30);
+    $(".chip-check input[value='truefalse']").checked = true;
+    $(".chip-check input[value='truefalse']").dispatchEvent(new Event("change", { bubbles: true }));
+    $(".chip-check input[value='written']").checked = false;
+    $(".chip-check input[value='written']").dispatchEvent(new Event("change", { bubbles: true }));
+    $("#start").click();
+    await until(() => $("[data-tf]"), "true/false question");
+    key("t");
+    await wait(20);
+    check($('[data-tf="true"]').getAttribute("aria-pressed") === "true" && !$("#next"), "true/false picks, then waits for sure or guessing");
+    key("g");
+    await until(() => $("#next"), "true/false answered");
+    await go("#/");
+    await go(`#/deck/${id}/test`);
+    $("#confidence").click();
+    $("#start").click();
+    await until(() => $("[data-tf]"), "true/false question");
+    const seenBefore = cards().reduce((n, c) => n + (c.stats?.guess ?? 0) + (c.stats?.sure ?? 0), 0);
+    $("[data-tf]").click();
+    await wait(20);
+    check($("#next") && !$(".lock-row"), "confidence check off: one tap answers");
+    $("#next").click();
+    await wait(20);
+    check(cards().reduce((n, c) => n + (c.stats?.guess ?? 0) + (c.stats?.sure ?? 0), 0) === seenBefore, "no confidence recorded when it's off");
+    // Leave it on for later runs.
+    const store = await import("../js/store.js");
+    store.state.settings.test.confidence = true;
+    store.persist();
+  });
+
+  await step("mix-ups: noted from Write, shown on cards and Progress, sorted out in the drill", async () => {
+    const deck = () => JSON.parse(localStorage.getItem("preppop:v1")).decks.find((d) => d.name === "Heart rates");
+    // Start clean so this step doesn't depend on which card the test above asked first.
+    const store = await import("../js/store.js"); // the app's own module instance
+    for (const c of store.state.decks.find((d) => d.name === "Heart rates").cards) delete c.mixups;
+    store.persist();
+    await go(`#/deck/${deck().id}/write`);
+    // Answer with the other heart-rate term until one is noted as a mix-up.
+    for (let i = 0; i < 3 && !$(".mixup-note"); i++) {
+      const card = deck().cards.find((c) => c.definition === $("#w-prompt").textContent);
+      $("#answer").value = card.term === "Tachycardia" ? "Bradycardia" : "Tachycardia";
+      $(".write-form").requestSubmit();
+      await wait(30);
+      if ($(".mixup-note")) break;
+      $(".write-form").requestSubmit();
+      await wait(30);
+    }
+    check($(".mixup-note"), "Write names the card she mixed it up with");
+    $(".write-form").requestSubmit(); // moving on saves the mix-up
+    await wait(30);
+    check(deck().cards.some((c) => c.mixups), "mix-up saved on the card");
+    await go("#/");
+    check($(".today-link[href='#/mixups']"), "Today panel links to mix-ups");
+    await go(`#/deck/${deck().id}/study`);
+    for (let i = 0; i < 3 && !$(".face-mixup"); i++) {
+      key("ArrowRight");
+      await wait(30);
+    }
+    check($(".face-mixup"), "flip card says what it gets mixed up with");
+    await go("#/progress");
+    check($("#mixups-heading") && $("#confidence-heading"), "Progress shows mix-ups and confidence");
+    await go("#/mixups");
+    await until(() => $$(".mixup-pair").length, "mix-ups page lists the pair");
+    $("#drill").click();
+    for (let round = 0; round < 12 && deck().cards.some((c) => c.mixups); round++) {
+      await until(() => $("#q-prompt"), "drill question");
+      while (!$(".result .big")) {
+        const card = deck().cards.find((c) => c.definition === $("#q-prompt").textContent);
+        [...$$("[data-pick]")].find((b) => b.textContent.trim().endsWith(card.term)).click();
+        await wait(20);
+        check($(".mixup-contrast"), "both cards shown side by side after answering");
+        $("#next").click();
+        await wait(30);
+      }
+      if (deck().cards.some((c) => c.mixups)) $("#again").click();
+    }
+    check(!deck().cards.some((c) => c.mixups), "telling them apart sorts the pair out");
+    check($(".result .sub").textContent.includes("No mix-ups left"), "done screen says so");
   });
 
   await step("steps: reorder in the editor, then put steps in order", async () => {
@@ -332,7 +481,7 @@ export async function flows({ stubAnswers = true } = {}) {
   });
 
   await step("sync: encrypted upload, merge from another device, erase", async () => {
-    const { deriveVault, open, seal } = await import("/js/sync.js");
+    const { deriveVault, open, seal } = await import("../js/sync.js");
     const vaults = new Map(); // fake server: id -> { version, data }
     const realFetch = window.fetch;
     window.fetch = async (input, init = {}) => {

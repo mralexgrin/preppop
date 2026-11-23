@@ -80,3 +80,31 @@ export function progressSummary({ streakDays, week, mastery, next }) {
   if (next.today) lines.push(`${next.today} card${next.today === 1 ? "" : "s"} to review today`);
   return lines.join("\n");
 }
+
+// Confidence check, per subject: how often she's right when she says she's
+// sure, and when she says she's guessing. Only subjects with answers.
+export function calibration(decks) {
+  return SUBJECTS.map((subject) => {
+    const stats = decks.filter((d) => d.subject === subject.id).flatMap((d) => d.cards.map((c) => c.stats ?? {}));
+    const sure = stats.reduce((n, s) => n + (s.sure ?? 0), 0);
+    const sureRight = sure - stats.reduce((n, s) => n + (s.sureMissed ?? 0), 0);
+    const guess = stats.reduce((n, s) => n + (s.guess ?? 0), 0);
+    const guessRight = stats.reduce((n, s) => n + (s.guessRight ?? 0), 0);
+    const pct = (right, total) => (total ? Math.round((right / total) * 100) : null);
+    return { subject, sure, surePct: pct(sureRight, sure), guess, guessPct: pct(guessRight, guess) };
+  }).filter((s) => s.sure + s.guess > 0);
+}
+
+// "Sure" answers are trustworthy at about 90% right. Below 80%, with enough
+// answers to tell, she's overconfident in that subject.
+export const OVERCONFIDENT = { minAnswers: 10, belowPct: 80 };
+export const isOverconfident = (c) => c.sure >= OVERCONFIDENT.minAnswers && c.surePct < OVERCONFIDENT.belowPct;
+
+// Blind spots: cards she was sure about and got wrong, and hasn't learned since.
+export function blindSpots(decks, limit = 8) {
+  return decks
+    .flatMap((deck) => deck.cards.map((card) => ({ deck, card })))
+    .filter(({ card }) => (card.stats?.sureMissed ?? 0) > 0 && card.status !== "known")
+    .sort((a, b) => b.card.stats.sureMissed - a.card.stats.sureMissed || (b.card.srs?.last ?? "").localeCompare(a.card.srs?.last ?? ""))
+    .slice(0, limit);
+}

@@ -33,7 +33,7 @@ const SECTIONS = [
         <li><strong>✦ Explain this card:</strong> stuck on an idea? Under any flashcard (and after a wrong answer in Write), AI explains it in plain words with an example and a memory trick. Double-check it with your notes.</li>
         <li><strong>Flashcards:</strong> tap to flip. On a phone, swipe right if you know it, left if you're still learning. The speaker button reads the card aloud.</li>
         <li><strong>Write:</strong> type the answer. Capitals and punctuation don't matter, a missing accent still counts (you'll see the right spelling), and if you were right but the app disagrees, tap <strong>I was right</strong>.</li>
-        <li><strong>Test:</strong> choose how many questions and mix multiple choice, written, and true or false, like a real quiz.</li>
+        <li><strong>Test:</strong> choose how many questions and mix multiple choice, written, and true or false, like a real quiz. With the <strong>confidence check</strong> on, you pick an answer (or type one and tap Check) and then tap <strong>I'm sure</strong> or <strong>Guessing</strong> (S or G on a keyboard). A lucky guess comes back tomorrow instead of counting as known.</li>
         <li><strong>Steps:</strong> tap the steps of a procedure or events of a timeline in the right order.</li>
         <li><strong>Match:</strong> a quick game. Tap a term, then its definition, as fast as you can. It's a warm-up, so it doesn't change your review schedule.</li>
       </ul>`,
@@ -45,7 +45,12 @@ const SECTIONS = [
   },
   {
     title: "Your progress",
-    body: `<p>The <strong>Progress</strong> tab shows your streak, a calendar of the days you practiced, how many cards you know in each subject, and the cards you miss most.</p>`,
+    body: `
+      <p>The <strong>Progress</strong> tab shows your streak, a calendar of the days you practiced, how many cards you know in each subject, and the cards you miss most.</p>
+      <ul>
+        <li><strong>How sure vs. how right:</strong> how often you're right when you say you're sure. If you're sure but often wrong in a subject, slow down there. <strong>Blind spots</strong> are cards you were sure about and got wrong.</li>
+        <li><strong>Mix-ups:</strong> when you give one card's answer for another (like tachycardia for bradycardia), PrepPop remembers the pair. The card tells you what you mix it up with, Test puts the two side by side as choices, and <strong>Practice telling them apart</strong> drills just those pairs until they're sorted out. Like Match, the drill is a warm-up, so it doesn't change your review schedule.</li>
+      </ul>`,
   },
   {
     title: "Keeping your cards safe",

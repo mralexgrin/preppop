@@ -22,8 +22,9 @@ export function buildQuestions(cards, { count, mode, types }, rand = Math.random
   });
 }
 
-// Up to 3 wrong answers: Claude's first, then other cards' answers.
-export function wrongAnswersFor(q, fromAi, deckCards) {
+// Up to 3 wrong answers: the answer she's mixed this card up with before (so
+// she practices telling them apart), then Claude's, then other cards' answers.
+export function wrongAnswersFor(q, fromAi, deckCards, mixedUpWith = null) {
   const seen = new Set([normalize(q.answer)]);
   const out = [];
   const add = (a) => {
@@ -33,6 +34,7 @@ export function wrongAnswersFor(q, fromAi, deckCards) {
       out.push(a);
     }
   };
+  if (mixedUpWith) add(mixedUpWith);
   (fromAi ?? []).forEach(add);
   shuffle(deckCards).forEach((c) => add(c[other(q.shows)]));
   return out;

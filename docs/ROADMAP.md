@@ -21,8 +21,14 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - (none)
 
 ## Next up
+Approved order from the 2026-11-23 proposal ("make it competitive and unique"): check she can *use* what she learned, not just recognize it.
+
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
+| 22 | Word Builder: medical, Spanish, English roots | She memorizes thousands of terms one by one; ~150 roots let her decode words she's never seen, and link subjects (cardio / corazón / cardiac) | High | M | STRONG (root list needs human review) |
+| 23 | Teach It Back | Explaining in her own words is the strongest study technique; every flashcard app skips it | High | M | STRONG (new AI prompt, human review) |
+| 24 | Test readiness forecast | "Am I ready for Friday?" turned into a number and a daily plan | Med | M | STRONG |
+| 25 | Clinical Shift scenarios | Practice the actual job: history, vitals, terms, a short note, then a debrief | High | L | TOP for the prompt (medical safety, human review) |
 
 ## Ideas (unranked)
 - Sync pictures across devices (separate encrypted blobs per image; the current vault is capped at 300 KB)
@@ -34,6 +40,7 @@ Ranked by (user impact x confidence) / effort. Update after every shipped item.
 - Light/dark toggle
 
 ## Done
+- #21 Mix-up detector + confidence check (2026-11-23, branch feat/mixups-confidence)
 - (Phase 0 docs)
 - #1 Module split + test harness (2026-09-30, 70c13e8)
 - #2 Paste-a-list import (2026-09-30, 61e9f43)

@@ -52,7 +52,10 @@ function cleanDeck(deck, { freshIds }) {
       if (c?.image && typeof c.image === "object") card.image = { id: c.image.id, side: c.image.side, alt: c.image.alt };
       if (!freshIds) {
         if (["new", "learning", "known"].includes(c?.status)) card.status = c.status;
-        if (c?.stats && typeof c.stats === "object") card.stats = { seen: c.stats.seen, missed: c.stats.missed };
+        if (c?.stats && typeof c.stats === "object") {
+          card.stats = Object.fromEntries(["seen", "missed", "sure", "sureMissed", "guess", "guessRight"].map((k) => [k, c.stats[k]]));
+        }
+        if (c?.mixups && typeof c.mixups === "object") card.mixups = { ...c.mixups };
         if (c?.srs && typeof c.srs.due === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.srs.due) && Number.isInteger(c.srs.box)) {
           card.srs = { box: Math.max(0, Math.min(7, c.srs.box)), due: c.srs.due, ...(DAY.test(c.srs.last) ? { last: c.srs.last } : {}) };
         }
