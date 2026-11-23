@@ -49,6 +49,15 @@ export async function flows({ stubAnswers = true } = {}) {
     window.__realFetch = realFetch;
     window.fetch = async (input, init) => {
       const url = typeof input === "string" ? input : input.url;
+      if (url.includes("/teach-back")) {
+        // "slow" in the explanation earns Got it; a follow-up answer always gets Got it.
+        const { explanation, question } = JSON.parse(init.body);
+        const good = Boolean(question) || /slow/i.test(explanation);
+        const body = good
+          ? { verdict: "got_it", summary: "Nice, you've got it.", correct: ["It means a slow heart rate"], missing: [], wrong: [], followUp: question ? "" : "Why might an athlete have it?" }
+          : { verdict: "partly", summary: "Close.", correct: ["It's about the heart"], missing: ["It's slow: under 60 bpm"], wrong: ["It isn't fast"], followUp: "What number counts as slow?" };
+        return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+      }
       if (!url.includes("/wrong-answers")) return realFetch(input, init);
       const { items } = JSON.parse(init.body);
       const answers = Object.fromEntries(items.map((it) => [it.key, [`Stub A ${it.key}`, `Stub B ${it.key}`, `Stub C ${it.key}`]]));
@@ -391,6 +400,37 @@ export async function flows({ stubAnswers = true } = {}) {
     check($(".result .sub").textContent.includes("No mix-ups left"), "done screen says so");
   });
 
+  await step("explain it: feedback on her own words, a follow-up, only Got it counts as known (AI stubbed)", async () => {
+    const deck = () => JSON.parse(localStorage.getItem("preppop:v1")).decks.find((d) => d.name === "Heart rates");
+    await go(`#/deck/${deck().id}/write`);
+    $('[data-type="explain"]').click();
+    await until(() => $(".teach-form"), "explain form");
+    check($(".progress-label").textContent.trim().endsWith("/ 3"), "explain rounds are short");
+    const answers = [];
+    while (!$(".result .big")) {
+      const term = $("#w-prompt").textContent;
+      const good = term === "Bradycardia";
+      setValue($("#answer"), good ? "When the heart beats slow" : "Something about the heart");
+      $(".teach-form").requestSubmit();
+      await until(() => $(".teach-feedback"), "feedback");
+      check($(".teach-card") && $(".teach-question"), "shows the card and a follow-up question");
+      if (good) {
+        check($(".teach-chip").textContent === "Got it", "Got it verdict shown");
+        setValue($("#follow-answer"), "Their hearts pump more blood per beat");
+        $(".teach-follow-form").requestSubmit();
+        await until(() => $$(".teach-feedback").length === 2, "follow-up feedback");
+      } else {
+        check($(".teach-list.missing") && $(".teach-list.wrong"), "missing and wrong points listed");
+      }
+      answers.push({ term, good });
+      $("#next").click();
+      await wait(30);
+    }
+    const known = deck().cards.filter((c) => answers.some((a) => a.term === c.term && a.good)).every((c) => c.srs.last && c.status === "known");
+    const missed = deck().cards.filter((c) => answers.some((a) => a.term === c.term && !a.good)).every((c) => c.status === "learning");
+    check(known && missed, "Got it counts as known, the rest as still learning");
+  });
+
   await step("word builder: decode and build medical words, practicing the part cards", async () => {
     await go("#/starters");
     $("[data-add='med-terms']")?.click();
@@ -408,7 +448,7 @@ export async function flows({ stubAnswers = true } = {}) {
       const prompt = $("#q-prompt").textContent;
       if ($(".q-type").textContent === "Decode") {
         const w = WORDS.find((x) => x.word === prompt);
-        [...$$("[data-pick]")].find((b) => b.textContent.includes(w.meaning)).click();
+        [...$$("[data-pick]")].find((b) => b.querySelector(".opt-text").textContent === w.meaning).click();
       } else {
         const w = WORDS.find((x) => x.meaning === prompt);
         for (const part of w.parts) {

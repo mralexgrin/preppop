@@ -1,6 +1,7 @@
 // AI features go through the PrepPop answer service, a Cloudflare Worker (see
 // worker/) that holds the Anthropic key and calls Claude: wrong answers for
-// Test mode, flashcards made from class notes, and card explanations.
+// Test mode, flashcards made from class notes, card explanations, and
+// feedback on her own explanations (Teach It Back).
 
 export const MODEL_LABEL = "Claude Opus 5.5";
 
@@ -35,6 +36,19 @@ export async function explainCard({ term, definition, subject }) {
   if (typeof x?.explanation !== "string" || !x.explanation) throw new Error("the AI service had a problem");
   const text = (v) => (typeof v === "string" ? v : "");
   return { explanation: x.explanation, example: text(x.example), memoryTrick: text(x.memoryTrick), cardIssue: text(x.cardIssue) };
+}
+
+export const MAX_EXPLANATION = 1500;
+export const VERDICTS = ["got_it", "partly", "not_yet"];
+
+// Feedback on her own explanation of a card, or on her answer to a follow-up
+// question (question). Returns { verdict, summary, correct, missing, wrong, followUp }.
+export async function teachBack({ term, definition, subject, explanation, question = "" }) {
+  const x = await request("/teach-back", { term, definition, subject, explanation: explanation.slice(0, MAX_EXPLANATION), ...(question ? { question } : {}) });
+  if (!VERDICTS.includes(x?.verdict)) throw new Error("the AI service had a problem");
+  const text = (v) => (typeof v === "string" ? v : "");
+  const list = (v) => (Array.isArray(v) ? v.filter((s) => typeof s === "string" && s.trim()) : []);
+  return { verdict: x.verdict, summary: text(x.summary), correct: list(x.correct), missing: list(x.missing), wrong: list(x.wrong), followUp: text(x.followUp) };
 }
 
 async function request(path, body) {

@@ -2,6 +2,10 @@
 
 User-facing release notes. Newest first.
 
+## Unreleased (branch `feat/teach-back`)
+### Added
+- **✦ Explain it** (Teach It Back), in Write mode. See a term, explain it in your own words (type, or use your keyboard's mic), and get feedback: what you got right, what's missing, what's not quite right, and the card itself. Then answer one follow-up question if you want. Only "Got it" counts as known.
+
 ## Unreleased (branch `feat/word-builder`)
 ### Added
 - **Word Builder.** A **Words** tab on the *Medical terminology* starter deck. Decode words you've never seen (what does *bradypnea* mean?) and build words from their meaning by tapping the parts in order. Every answer shows the parts, what each means, and the Spanish medical word. It also practices the deck's cards for those parts.

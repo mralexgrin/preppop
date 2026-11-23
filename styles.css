@@ -744,3 +744,21 @@ h1[tabindex="-1"]:focus { outline: none; }
   .mode-tabs a { padding: 10px 9px 12px; font-size: .95rem; }
   .mode-tabs a[aria-current="page"]::after { left: 6px; right: 6px; }
 }
+
+/* Explain it (Teach It Back) */
+.teach-feedback { display: grid; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin-top: 14px; }
+.teach-verdict { margin: 0; }
+.teach-chip { display: inline-block; font-weight: 700; font-size: .85rem; border-radius: 999px; padding: 3px 12px; }
+.v-got_it .teach-chip { background: var(--know-soft); color: var(--know); }
+.v-partly .teach-chip { background: var(--pop-soft); color: var(--pop-ink); }
+.v-not_yet .teach-chip { background: var(--learn-soft); color: var(--learn); }
+.teach-summary { font-size: 1.02rem; }
+.teach-list-title { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin-bottom: 4px; }
+.teach-list ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; overflow-wrap: anywhere; }
+.teach-list.got li::marker { content: "✓  "; color: var(--know); }
+.teach-list.missing li::marker { content: "+  "; color: var(--pop-ink); }
+.teach-list.wrong li::marker { content: "✗  "; color: var(--learn); }
+.teach-yours, .teach-card { margin-top: 14px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--surface-2); overflow-wrap: anywhere; white-space: pre-wrap; }
+.teach-follow { margin-top: 18px; display: grid; gap: 10px; }
+.teach-question { font-weight: 700; font-size: 1.05rem; }
+.teach-follow-form { display: grid; gap: 10px; }

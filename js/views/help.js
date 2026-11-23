@@ -32,6 +32,7 @@ const SECTIONS = [
       <ul class="help-list">
         <li><strong>✦ Explain this card:</strong> stuck on an idea? Under any flashcard (and after a wrong answer in Write), AI explains it in plain words with an example and a memory trick. Double-check it with your notes.</li>
         <li><strong>Flashcards:</strong> tap to flip. On a phone, swipe right if you know it, left if you're still learning. The speaker button reads the card aloud.</li>
+        <li><strong>✦ Explain it</strong> (in Write): explain a card in your own words, like you're teaching a friend. To talk instead of type, tap the mic on your keyboard. AI tells you what you got right, what's missing, and asks one question to make you think further. Explaining from memory is one of the best ways to really learn something.</li>
         <li><strong>Write:</strong> type the answer. Capitals and punctuation don't matter, a missing accent still counts (you'll see the right spelling), and if you were right but the app disagrees, tap <strong>I was right</strong>.</li>
         <li><strong>Test:</strong> choose how many questions and mix multiple choice, written, and true or false, like a real quiz. With the <strong>confidence check</strong> on, you pick an answer (or type one and tap Check) and then tap <strong>I'm sure</strong> or <strong>Guessing</strong> (S or G on a keyboard). A lucky guess comes back tomorrow instead of counting as known.</li>
         <li><strong>Steps:</strong> tap the steps of a procedure or events of a timeline in the right order.</li>
