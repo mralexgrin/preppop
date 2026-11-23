@@ -4,7 +4,11 @@
 // feedback on her own explanations (Teach It Back), and Clinical Shift
 // practice with a fictional patient.
 
+import { currentLevel } from "./profiles.js";
+
 export const MODEL_LABEL = "Claude Opus 5.5";
+// Only the learner's school level is sent, so answers fit their reading level; never their name.
+const level = () => currentLevel();
 
 export const SERVICE_URL = "https://preppop-ai.preppop-ai.workers.dev";
 const BATCH_SIZE = 30;
@@ -21,19 +25,19 @@ const ERRORS = {
 export async function writeWrongAnswers({ deckName, items }) {
   const batches = [];
   for (let i = 0; i < items.length; i += BATCH_SIZE) batches.push(items.slice(i, i + BATCH_SIZE));
-  const results = await Promise.all(batches.map((batch) => request("/wrong-answers", { deckName, items: batch })));
+  const results = await Promise.all(batches.map((batch) => request("/wrong-answers", { deckName, items: batch, level: level() })));
   return Object.assign({}, ...results.map((r) => r.answers ?? {}));
 }
 
 // Returns [{ term, definition }] suggested from pasted class notes.
 export async function makeCardsFromNotes({ notes, subject, deckName }) {
-  const { cards } = await request("/cards-from-notes", { notes: notes.slice(0, MAX_NOTES), subject, deckName });
+  const { cards } = await request("/cards-from-notes", { notes: notes.slice(0, MAX_NOTES), subject, deckName, level: level() });
   return Array.isArray(cards) ? cards.filter((c) => typeof c?.term === "string" && typeof c?.definition === "string") : [];
 }
 
 // Returns { explanation, example, memoryTrick, cardIssue }.
 export async function explainCard({ term, definition, subject }) {
-  const x = await request("/explain", { term, definition, subject });
+  const x = await request("/explain", { term, definition, subject, level: level() });
   if (typeof x?.explanation !== "string" || !x.explanation) throw new Error("the AI service had a problem");
   const text = (v) => (typeof v === "string" ? v : "");
   return { explanation: x.explanation, example: text(x.example), memoryTrick: text(x.memoryTrick), cardIssue: text(x.cardIssue) };
@@ -46,7 +50,7 @@ export const VERDICTS = ["got_it", "partly", "not_yet"];
 // question (question). Returns { verdict, summary, correct, missing, wrong, followUp }.
 // signal (optional): an AbortSignal to cancel it.
 export async function teachBack({ term, definition, subject, explanation, question = "" }, { signal } = {}) {
-  const x = await request("/teach-back", { term, definition, subject, explanation: explanation.slice(0, MAX_EXPLANATION), ...(question ? { question } : {}) }, { signal });
+  const x = await request("/teach-back", { term, definition, subject, explanation: explanation.slice(0, MAX_EXPLANATION), level: level(), ...(question ? { question } : {}) }, { signal });
   if (!VERDICTS.includes(x?.verdict)) throw new Error("the AI service had a problem");
   const text = (v) => (typeof v === "string" ? v : "");
   const list = (v) => (Array.isArray(v) ? v.filter((s) => typeof s === "string" && s.trim()) : []);

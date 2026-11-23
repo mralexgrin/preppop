@@ -2,6 +2,11 @@
 
 User-facing release notes. Newest first.
 
+## Unreleased (branch `feat/reading-level`)
+### Improved
+- **AI writes at each learner's level.** Explain this card, ✦ Explain in Write, Cards from notes, and Test's wrong answers are written for the learner's grade. Elementary gets short, simple sentences with no jargon, middle school gets clear words with technical terms explained, and high school stays as it was. Only the school level is sent, never a name.
+- Math, Science, and Social studies decks are recognized by the AI service (they were treated as Other).
+
 ## Unreleased (branch `feat/profiles`)
 ### Added
 - **Learners and onboarding.** A first visit asks who's learning (a first name or nickname and an avatar), their grade (elementary, middle, or high school), and their subjects, then adds matching starter decks. Everyone on a shared device can have their own learner with their own decks and progress; tap your avatar at the top to switch or add one. No email or password.
