@@ -4,11 +4,17 @@ import { state, persist, blankCard } from "../store.js";
 import { esc, plural, uid } from "../util.js";
 import { app, toast, setTitle } from "../ui.js";
 import { SUBJECTS } from "../subjects.js";
-import { STARTERS } from "../starters.js";
+import { STARTERS, levelOf } from "../starters.js";
+import { currentLevel } from "../profiles.js";
+
+// Shows the current learner's level first; "All levels" shows everything.
+let showAll = false;
 
 export function renderStarters() {
   setTitle("Starter decks");
   const added = (starter) => state.decks.find((d) => d.starter === starter.id);
+  const level = levelOf(currentLevel());
+  const shown = showAll ? STARTERS : STARTERS.filter((s) => s.levels.includes(level.id));
 
   app.innerHTML = `
     <header class="page-head">
@@ -18,8 +24,12 @@ export function renderStarters() {
         <p class="lede">Ready-made decks for common classes. Add one, then edit it to match what your teacher covers.</p>
       </div>
     </header>
+    <div class="seg starter-levels" role="group" aria-label="Which decks">
+      <button type="button" data-all="false" aria-pressed="${!showAll}">${esc(level.name)}</button>
+      <button type="button" data-all="true" aria-pressed="${showAll}">All levels</button>
+    </div>
     ${SUBJECTS.map((subject) => {
-      const starters = STARTERS.filter((s) => s.subject === subject.id);
+      const starters = shown.filter((s) => s.subject === subject.id);
       if (!starters.length) return "";
       return `
         <section class="subject-group" data-subject="${subject.id}" aria-labelledby="starter-${subject.id}">
@@ -50,6 +60,13 @@ export function renderStarters() {
         </section>`;
     }).join("")}`;
 
+  app.querySelectorAll("[data-all]").forEach((b) =>
+    b.addEventListener("click", () => {
+      showAll = b.dataset.all === "true";
+      renderStarters();
+      app.querySelector(`[data-all="${showAll}"]`)?.focus();
+    }),
+  );
   app.querySelectorAll("[data-add]").forEach((b) =>
     b.addEventListener("click", () => {
       const starter = STARTERS.find((s) => s.id === b.dataset.add);

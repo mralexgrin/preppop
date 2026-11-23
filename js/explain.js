@@ -6,11 +6,12 @@ import { state, persist } from "./store.js";
 import { esc, hash } from "./util.js";
 import { announce } from "./ui.js";
 import { explainCard, MODEL_LABEL } from "./ai.js";
+import { aiAllowed } from "./aiaccess.js";
 
 const keyFor = (card) => hash(`${card.term}\u0000${card.definition}`);
 
 export const explainButtonHTML = () =>
-  `<div class="explain"><button class="text-btn explain-btn" type="button" id="explain" aria-expanded="false" aria-controls="explain-box"><span class="spark" aria-hidden="true">✦</span> Explain this card</button><div class="explain-box" id="explain-box" hidden></div></div>`;
+  !aiAllowed() ? "" : `<div class="explain"><button class="text-btn explain-btn" type="button" id="explain" aria-expanded="false" aria-controls="explain-box"><span class="spark" aria-hidden="true">✦</span> Explain this card</button><div class="explain-box" id="explain-box" hidden></div></div>`;
 
 const render = (x) => `
   <p>${esc(x.explanation)}</p>

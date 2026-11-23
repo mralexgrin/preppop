@@ -1,6 +1,8 @@
 import { state, persist, getDeck, dailyGoal, deleteDeck } from "../store.js";
 import { dueCards, isDue, isNew, streak, dayKey, addDays } from "../srs.js";
 import { mixupPairs } from "../mixups.js";
+import { currentProfile } from "../profiles.js";
+import { shiftAllowed } from "../aiaccess.js";
 import { forecast, readinessText } from "../readiness.js";
 import { esc, plural } from "../util.js";
 import { app, toast, setTitle, view, examLabel, announce, focusHeading } from "../ui.js";
@@ -18,7 +20,7 @@ export function renderLibrary() {
       <section class="empty">
         <div class="empty-art" aria-hidden="true"><span></span><span></span><span>Aa</span></div>
         <h1>Let's set up your decks</h1>
-        <p>Start with a ready-made deck for your classes (medical terms, vital signs, cell parts, Spanish, and more) or make your own. Paste a vocab list and PrepPop makes the cards.</p>
+        <p>Start with a ready-made deck for your classes (${{ elementary: "times tables, planets, continents, Spanish colors, and more", middle: "pre-algebra, Earth science, the American Revolution, Spanish, and more" }[currentProfile()?.level] ?? "medical terms, vital signs, cell parts, Spanish, and more"}) or make your own. Paste a vocab list and PrepPop makes the cards.</p>
         <div class="actions">
           <a class="btn btn-primary btn-lg" href="#/starters" id="starters">Browse starter decks</a>
           <a class="btn btn-soft btn-lg" href="#/new">Make my own deck</a>
@@ -46,6 +48,7 @@ export function renderLibrary() {
     </div>
     <div id="search-results"></div>
     <div id="library-main">
+    ${nameTip()}
     ${introTip()}
     ${todayPanel()}
     ${backupNudge(cardTotal)}
@@ -56,7 +59,7 @@ export function renderLibrary() {
         <section class="subject-group" data-subject="${subject.id}" aria-labelledby="group-${subject.id}">
           <h2 class="group-head" id="group-${subject.id}"><span class="subject-dot" aria-hidden="true"></span>${subject.name}<span class="group-count">${plural(decks.length, "deck")}</span></h2>
           <ul class="deck-grid">${decks.map(deckTile).join("")}</ul>
-          ${subject.id === "clinical" ? shiftPromo : ""}
+          ${subject.id === "clinical" && shiftAllowed() ? shiftPromo : ""}
         </section>`;
     }).join("")}
     </div>`;
@@ -180,6 +183,16 @@ function todayPanel() {
       </div>
       ${action ? `<div class="today-action">${action}</div>` : ""}
       ${mixups ? `<a class="today-link" href="#/mixups">${plural(mixups, "mix-up")} to sort out <span aria-hidden="true">→</span></a>` : ""}
+    </section>`;
+}
+
+// Data from before profiles became an unnamed learner: invite a name and avatar.
+function nameTip() {
+  const p = currentProfile();
+  if (!p || p.name) return "";
+  return `
+    <section class="notice name-tip" aria-label="Who's learning?">
+      <span>New: each person on this device can have their own decks and progress. <a href="#/profiles">Add your name and avatar</a>, or add another learner.</span>
     </section>`;
 }
 

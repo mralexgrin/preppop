@@ -3,6 +3,20 @@
 Newest entries at the top. This file is the memory of the run: read it at the start of every session.
 
 ## Flagged for human review
+- **Learner profiles (2026-11-23): a personal-data change, and a legal question for the owner (children's privacy, COPPA).**
+  - **What's stored:** each learner's first name or nickname, an emoji avatar, and a school level, in localStorage (`preppop:profiles`), on the device only. They aren't synced, backed up, or sent to the AI service. Each learner's data is under its own key; the first uses `preppop:v1`, so existing data carries over.
+  - **The open question:** having no email doesn't by itself settle COPPA. The law covers personal information collected online from children under 13. That includes free text a child types, and persistent identifiers like IP addresses (the Worker reads the IP for rate limiting). Elementary and middle school learners can be under 13. **Please decide, or get advice, on whether a parental notice or consent is needed, and check Anthropic's current requirements for products used by minors.**
+  - **What the app does meanwhile:**
+    - For elementary and middle school learners, all AI features are off by default: Test wrong answers (her other cards are used instead), Explain this card, Explain it in Write, and Cards from notes. Settings → AI features has a switch labeled for a parent or guardian, with a plain explanation of what's sent where.
+    - Clinical Shift is high school only (route and entry card).
+    - Hints say not to type personal details, and the Shift patient never asks for or uses her name.
+    - The AI prompts still say "high school student". Writing at each learner's reading level is the next PR.
+  - **Removing a learner:** deletes their data on this device after a confirm. If they use sync, it offers to erase their cloud copy too (their sync key is only in their data here). Pictures only they used are cleaned up right away.
+  - **Shared device:** showing a learner's sync key now asks first, since anyone with it can open their cloud copy.
+  - **Also:** names lose invisible and control characters. Learner data the list loses track of (another tab, or a damaged list) is kept as an unnamed learner, never dropped. Tabs reload when another tab changes the learners or this learner's data.
+  - **Deferred, logged in ROADMAP:** give imported pictures fresh ids (pictures are shared on the device), and host fonts locally so Google Fonts doesn't see visitors' IP addresses.
+  - **Please review:** the new kid and middle-school starter content in `js/starters.js` (14 decks).
+
 - **Clinical Shift pilot (2026-11-23): two AI prompts plus clinical scenarios, for a minor. Highest-risk item; please review before merging. Not deployed to production. Tried on the real model through preview versions (no production traffic).**
   - **Prompts:** `PATIENT_SYSTEM` (Claude plays a fictional patient) and `DEBRIEF_SYSTEM` (clinical-instructor feedback), in `worker/src/index.js`.
   - **Scenarios:** `SCENARIOS`, three fictional cases. Ages are worked out from the date of birth. The Worker writes the readings from the scenario, so the model can't make up numbers. Please check the values and the "findings for the doctor":
@@ -48,6 +62,33 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-11-23: Learners and onboarding
+- The owner chose profiles with no email, switching on a shared device, and three learner types: elementary, middle, and high school.
+- **Onboarding:** 3 steps (who's learning, grade, subjects), then starter decks are added. It reloads into the new learner.
+- **Who's learning? screen:** switch, edit (name, avatar, level), remove, add, with up to 8 learners.
+- **Levels shape the app:** the subjects offered, the starter decks (with a level filter and "All levels" on the Starter decks screen), the daily goal (10/15/20), the confidence check (off for elementary), and text at 106% for elementary.
+- **New subjects:** Math, Science, and Social studies. There are 14 new starter decks, and every starter is tagged with its levels.
+- **Decisions:**
+  - Switching reloads the page, so no stale state, sync timers, or views carry over.
+  - Onboarding hides the menus until there's a learner.
+  - The browser test reset now seeds one high-school learner (onboarding is checked by hand plus unit tests).
+- **Also:**
+  - Progress bars scale with a transform instead of animating their width.
+  - Deck tiles have no 4px accent border.
+  - Fixed the Today button overflowing on phones with long deck names.
+- **Not done yet (next PR):** the AI writing at the learner's reading level. The prompts still say "high school student".
+- **Review fixes (code review plus privacy review):**
+  - The blocker found by both: a sync still running could mix learners when adding one. Fixed by saving the new learner straight to their own key.
+  - Learner data the list has lost track of is kept as an unnamed learner, and picture cleanup is skipped if any learner's data can't be read.
+  - Save failures are reported, Start learning can't be pressed twice, a new learner never takes an id whose data exists, and other tabs reload on changes.
+  - Onboarding has an "already use PrepPop elsewhere" option (no starter decks, so nothing is duplicated when sync connects).
+  - Level subjects and decks match (with a test), and Clinical skills is no longer checked by default.
+  - Times tables don't repeat an answer.
+  - Accessibility: avatar names, focus after edits, visible name errors, and the step number read with the heading.
+  - Science and Social studies have distinct colors.
+  - Content precision: "water vapor" in the gas card; the order of operations works left to right.
+  - AI is gated for under-13 levels, Clinical Shift is high school only, and the remove flow offers to erase the cloud copy.
+
 ### 2026-11-23: Clinical Shift review fixes (code + security)
 - **Blockers fixed:**
   - Resending the report after a feedback error could duplicate it and lock her out at the limit. The report is now its own field and is added only once the debrief comes back.

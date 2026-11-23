@@ -26,6 +26,9 @@ Approved order from the 2026-11-23 proposal ("make it competitive and unique"): 
 (All five approved items are built; see Done. Next ideas are below.)
 
 ## Ideas (unranked)
+- AI at the learner's reading level (pass the level to every Worker route; prompts for elementary and middle school), once the COPPA decision is made
+- Imported pictures get fresh ids, so a file imported by one learner can't replace another learner's picture
+- Host the fonts locally (no Google Fonts request carrying visitors' IP addresses)
 - Clinical Shift: more scenarios once the pilot's prompts are reviewed (a Spanish-speaking patient would join her Spanish and clinical work)
 - Sync pictures across devices (separate encrypted blobs per image; the current vault is capped at 300 KB)
 - Crop or annotate a picture (e.g. hide one label on a diagram)

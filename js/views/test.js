@@ -7,6 +7,7 @@ import { esc, plural, hash, isTyping } from "../util.js";
 import { app, setTitle, view, deckHeader, announce, keepFocus } from "../ui.js";
 import { langFor } from "../speech.js";
 import { writeWrongAnswers, MODEL_LABEL } from "../ai.js";
+import { aiAllowed } from "../aiaccess.js";
 import { TYPES, buildQuestions, wrongAnswersFor, makeTrueFalse } from "../testbuilder.js";
 import { checkAnswer, countsAsCorrect, needsAccentKeys, ACCENT_KEYS } from "../answer.js";
 import { shuffle } from "../util.js";
@@ -92,7 +93,7 @@ export function renderTest(deck) {
           <label class="check order-check"><input type="checkbox" id="confidence" ${t.confidence ? "checked" : ""}> <span><strong>Confidence check.</strong> Before you see the answer, say if you're sure or guessing. Lucky guesses come back tomorrow, and Progress shows where you're sure but wrong.</span></label>
         </div>
       </div>
-      ${aiTypes ? `<div class="notice ai"><span class="spark" aria-hidden="true">✦</span><span>${MODEL_LABEL} writes believable wrong answers for multiple choice and true or false.</span></div>` : ""}
+      ${aiTypes && aiAllowed() ? `<div class="notice ai"><span class="spark" aria-hidden="true">✦</span><span>${MODEL_LABEL} writes believable wrong answers for multiple choice and true or false.</span></div>` : ""}
       <div class="row">
         <button class="btn btn-primary btn-lg" type="button" id="start" ${n ? "" : "disabled"}>Start test · ${plural(questionCount(), "question")}</button>
         ${n ? "" : `<span class="hint">Add some cards to this deck first.</span>`}
@@ -146,7 +147,8 @@ export function renderTest(deck) {
       done: false,
     }));
 
-    const missing = t.questions.filter((q) => TYPES[q.type].needsWrong && !state.distractors[cacheKey(q)]);
+    // Without AI, wrong answers come from her other cards.
+    const missing = aiAllowed() ? t.questions.filter((q) => TYPES[q.type].needsWrong && !state.distractors[cacheKey(q)]) : [];
     if (missing.length) {
       t.phase = "loading";
       draw();

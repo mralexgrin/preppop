@@ -16,6 +16,7 @@ const SHELL = [
   "icons/icon-512.png",
   "icons/apple-touch-icon.png",
   "js/ai.js",
+  "js/aiaccess.js",
   "js/answer.js",
   "js/app.js",
   "js/backup.js",
@@ -25,6 +26,7 @@ const SHELL = [
   "js/images.js",
   "js/import.js",
   "js/mixups.js",
+  "js/profiles.js",
   "js/progress.js",
   "js/readiness.js",
   "js/reminder.js",
@@ -46,6 +48,7 @@ const SHELL = [
   "js/views/library.js",
   "js/views/match.js",
   "js/views/mixups.js",
+  "js/views/profiles.js",
   "js/views/progress.js",
   "js/views/review.js",
   "js/views/settings.js",
@@ -55,6 +58,7 @@ const SHELL = [
   "js/views/study.js",
   "js/views/test.js",
   "js/views/write.js",
+  "js/views/welcome.js",
   "js/views/words.js",
 ];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];

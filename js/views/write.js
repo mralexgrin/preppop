@@ -15,6 +15,7 @@ import { imageSlot, hydrateImages } from "../images.js";
 import { explainButtonHTML, bindExplain } from "../explain.js";
 import { findMixup, noteMixup, mixupMessage } from "../mixups.js";
 import { teachBack, MODEL_LABEL, MAX_EXPLANATION } from "../ai.js";
+import { aiAllowed } from "../aiaccess.js";
 
 // Explaining takes longer than typing a word, so those rounds are shorter.
 const EXPLAIN_ROUND = 5;
@@ -58,7 +59,7 @@ export function renderWrite(deck) {
         <div class="seg" role="group" aria-label="What you write">
           <button type="button" data-type="term" aria-pressed="${w.typeSide === "term"}">Type term</button>
           <button type="button" data-type="definition" aria-pressed="${w.typeSide === "definition"}">Type definition</button>
-          <button type="button" data-type="explain" aria-pressed="${w.typeSide === "explain"}"><span aria-hidden="true">✦ </span>Explain</button>
+          ${!aiAllowed() ? "" : `<button type="button" data-type="explain" aria-pressed="${w.typeSide === "explain"}"><span aria-hidden="true">✦ </span>Explain</button>`}
         </div>
         <div class="seg" role="group" aria-label="Which cards">
           <button type="button" data-only="all" aria-pressed="${!w.onlyLearning}">All (${deck.cards.length})</button>
@@ -331,7 +332,7 @@ export function renderWrite(deck) {
             <span class="field-label">Explain it in your own words</span>
             <textarea class="input write-input" id="answer" aria-describedby="w-prompt teach-tip" rows="5" maxlength="${MAX_EXPLANATION}" autocomplete="off" spellcheck="true">${esc(t.text)}</textarea>
           </label>
-          <p class="hint" id="teach-tip">Say what it means and why it matters, like you're teaching a friend. To talk instead of type, tap the mic on your keyboard.${shortcutsOn() ? " On a computer, Ctrl+Enter sends it." : ""}</p>
+          <p class="hint" id="teach-tip">Say what it means and why it matters, like you're teaching a friend. To talk instead of type, tap the mic on your keyboard. Don't include personal details.${shortcutsOn() ? " On a computer, Ctrl+Enter sends it." : ""}</p>
           <div class="row write-actions">
             <button class="btn btn-primary" type="submit"><span aria-hidden="true">✦ </span>Get feedback</button>
             <button class="btn btn-ghost" type="button" id="dont-know">I don't know</button>

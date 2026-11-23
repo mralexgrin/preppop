@@ -6,6 +6,8 @@ Make your own flashcards, study them, and test yourself.
 
 ## Features
 
+**Learners and onboarding.** Each person on a device gets a learner profile (`js/profiles.js`): a first name or nickname, an avatar, and a level (elementary, middle, or high school), with no email or password. First run asks who's learning, their grade, and their subjects, then adds matching starter decks (`js/views/welcome.js`). Learners switch from the header (`#/profiles`). Each learner's data is saved under its own key, and the first learner uses the original key, so existing data carries over untouched. The level sets the subjects, the starter decks (32 across levels), the daily goal, the confidence-check default, and slightly larger text for elementary.
+
 A study companion for a high school student: Biology, clinical skills, Spanish, History, English, Geometry. Phone-first, works offline, no account needed.
 
 **Study every day**

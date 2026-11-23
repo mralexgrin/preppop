@@ -4,6 +4,7 @@ import { app, toast, setTitle, view, saveFile } from "../ui.js";
 import { makeDeckFile, imageIds } from "../backup.js";
 import { addImage, imageSlot, hydrateImages, exportImages } from "../images.js";
 import { makeCardsFromNotes, MAX_NOTES, MODEL_LABEL } from "../ai.js";
+import { aiAllowed } from "../aiaccess.js";
 import { parseList, SEPARATORS } from "../import.js";
 import { SUBJECTS, guessSubject } from "../subjects.js";
 
@@ -61,8 +62,8 @@ export function renderEditor(deck) {
       <p class="form-error" id="form-error" role="alert" hidden></p>
       <div class="import-bar">
         <button class="btn btn-soft" type="button" id="toggle-import" aria-expanded="false" aria-controls="import-panel">Paste a list</button>
-        <button class="btn btn-soft" type="button" id="toggle-notes" aria-expanded="false" aria-controls="notes-panel"><span class="spark" aria-hidden="true">✦</span> Cards from notes</button>
-        <span class="hint">Paste a vocab list, or paste your class notes and let AI suggest cards.</span>
+        ${aiAllowed() ? `<button class="btn btn-soft" type="button" id="toggle-notes" aria-expanded="false" aria-controls="notes-panel"><span class="spark" aria-hidden="true">✦</span> Cards from notes</button>` : ""}
+        <span class="hint">${aiAllowed() ? "Paste a vocab list, or paste your class notes and let AI suggest cards." : "Paste a vocab list, one card per line."}</span>
       </div>
       <section class="panel import-panel" id="notes-panel" hidden aria-labelledby="notes-heading">
         <h2 id="notes-heading">Make cards from your notes</h2>

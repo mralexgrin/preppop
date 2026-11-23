@@ -195,6 +195,18 @@ export async function connectSync(input) {
 
 // Stop syncing on this device. Optionally erase the cloud copy too, which
 // also turns sync off on every other device the next time it syncs.
+// Erases the cloud copy for a sync key that isn't the active learner's
+// (removing another learner). Returns null, or a message to show.
+export async function eraseCloudCopy(key) {
+  try {
+    const v = { key, ...(await deriveVault(key)) };
+    const res = await api("DELETE", v);
+    return res.status === 200 || res.status === 404 || res.status === 410 ? null : `Couldn't erase the cloud copy: ${failure(res).message}.`;
+  } catch (err) {
+    return `Couldn't erase the cloud copy: ${err.message}.`;
+  }
+}
+
 export async function disableSync({ eraseCloud = false } = {}) {
   if (!state.sync) return null;
   if (eraseCloud) {

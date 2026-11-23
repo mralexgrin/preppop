@@ -137,7 +137,7 @@ export function renderShift(id) {
           <span class="field-label">What do you say or do?</span>
           <textarea class="input" id="say" rows="3" maxlength="${MAX_LINE}" enterkeyhint="send" aria-describedby="say-tip" placeholder="Hi, I'm the student assistant working with the doctor today. Could you tell me your full name and date of birth?">${esc(s.draft)}</textarea>
         </label>
-        <p class="hint" id="say-tip">You can describe actions too, like "I wash my hands and take her temperature."${keys ? " Enter sends; Shift+Enter starts a new line." : ""} <span id="left">${plural(left, "message")} left.</span></p>
+        <p class="hint" id="say-tip">You can describe actions too, like "I wash my hands and take her temperature." Don't type your real name or other personal details.${keys ? " Enter sends; Shift+Enter starts a new line." : ""} <span id="left">${plural(left, "message")} left.</span></p>
         <div class="row">
           <button class="btn btn-primary" type="submit" id="send">Send</button>
           <button class="btn btn-soft" type="button" id="to-report" ${canReport ? "" : `disabled aria-describedby="report-when"`}>Finish: report to the doctor</button>

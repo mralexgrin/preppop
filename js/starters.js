@@ -322,3 +322,207 @@ export const STARTERS = [
     ["Midpoint formula", "((x₁ + x₂) ÷ 2, (y₁ + y₂) ÷ 2)"],
   ]),
 ];
+
+// Times tables as cards: "7 × 8" → "56". Each answer appears once (no 8 × 6
+// after 6 × 8, and products already used are skipped), so Match and Test
+// never show two cards with the same answer.
+function facts(tables, from = 2, to = 12) {
+  const used = new Set();
+  const cards = [];
+  for (const a of tables) {
+    for (let b = from; b <= to; b++) {
+      if (used.has(a * b)) continue;
+      used.add(a * b);
+      cards.push([`${a} × ${b}`, String(a * b)]);
+    }
+  }
+  return cards;
+}
+
+// Starter decks for elementary and middle school.
+STARTERS.push(
+  deck("times-6-7-8", "math", "Times tables: 6s, 7s, and 8s", "The trickiest facts. Say the answer before you flip.", facts([6, 7, 8], 2, 10)),
+  deck("shapes", "math", "Shapes and measuring", "Shapes, sides, and how to measure them.", [
+    ["Triangle", "A shape with 3 sides"],
+    ["Quadrilateral", "A shape with 4 sides, like a square or rectangle"],
+    ["Pentagon", "A shape with 5 sides"],
+    ["Hexagon", "A shape with 6 sides"],
+    ["Octagon", "A shape with 8 sides, like a stop sign"],
+    ["Right angle", "A square corner that measures 90 degrees"],
+    ["Parallel lines", "Lines that stay the same distance apart and never meet"],
+    ["Perimeter", "The distance all the way around a shape"],
+    ["Area", "The amount of space inside a flat shape, measured in square units"],
+  ]),
+  deck("planets", "science", "Planets in our solar system", "In order from the Sun: My Very Educated Mother Just Served Us Noodles.", [
+    ["Mercury", "The planet closest to the Sun, and the smallest planet"],
+    ["Venus", "The hottest planet, covered in thick clouds"],
+    ["Earth", "The only planet we know has life"],
+    ["Mars", "The red planet"],
+    ["Jupiter", "The biggest planet"],
+    ["Saturn", "The planet best known for its bright rings"],
+    ["Uranus", "The planet that spins on its side"],
+    ["Neptune", "The planet farthest from the Sun"],
+    ["The Sun", "The star at the center of our solar system"],
+    ["Pluto", "A dwarf planet, smaller than the eight planets"],
+  ]),
+  deck("matter-water", "science", "States of matter and the water cycle", "How water changes and moves around.", [
+    ["Solid", "Matter that keeps its own shape, like ice"],
+    ["Liquid", "Matter that takes the shape of its container, like water"],
+    ["Gas", "Matter that spreads out to fill any space, like water vapor in the air"],
+    ["Melting", "A solid turning into a liquid"],
+    ["Freezing", "A liquid turning into a solid"],
+    ["Evaporation", "A liquid turning into a gas, like a puddle drying up"],
+    ["Condensation", "A gas turning into a liquid, like drops on a cold glass"],
+    ["Precipitation", "Water falling from clouds as rain, snow, sleet, or hail"],
+    ["Water cycle", "Water moving from the ground to the sky and back again, over and over"],
+  ]),
+  deck("plant-parts", "science", "Parts of a plant", "What each part of a plant does.", [
+    ["Roots", "Hold the plant in the ground and take in water"],
+    ["Stem", "Holds the plant up and carries water to the leaves"],
+    ["Leaves", "Make food for the plant using sunlight"],
+    ["Flower", "The part that makes seeds"],
+    ["Seed", "Can grow into a new plant"],
+    ["Photosynthesis", "How plants use sunlight, water, and air to make their own food"],
+    ["Pollen", "A powder made by flowers that helps them make seeds"],
+    ["Germination", "When a seed starts to grow into a plant"],
+    ["Nutrients", "Things in the soil that help a plant grow, taken in by the roots"],
+  ]),
+  deck("continents-oceans", "social", "Continents and oceans", "7 continents and 5 oceans.", [
+    ["Asia", "The biggest continent"],
+    ["Australia", "The smallest continent"],
+    ["Antarctica", "The coldest continent, around the South Pole"],
+    ["North America", "The continent where the United States is"],
+    ["South America", "The continent with the Amazon rainforest"],
+    ["Africa", "The continent with the Sahara Desert"],
+    ["Europe", "The continent with France, Germany, and Italy"],
+    ["Pacific Ocean", "The biggest and deepest ocean"],
+    ["Atlantic Ocean", "The ocean between the Americas and Europe and Africa"],
+    ["Indian Ocean", "The ocean between Africa, Asia, and Australia"],
+    ["Arctic Ocean", "The smallest ocean, around the North Pole"],
+    ["Southern Ocean", "The ocean around Antarctica"],
+  ]),
+  deck("word-types", "english", "Kinds of words", "Nouns, verbs, and the rest, with simple examples.", [
+    ["Noun", "A person, place, thing, or idea (dog, school, happiness)"],
+    ["Verb", "An action or state of being (run, jump, is)"],
+    ["Adjective", "Describes a noun (big, red, funny)"],
+    ["Adverb", "Describes a verb; many end in -ly (quickly, quietly)"],
+    ["Pronoun", "Takes the place of a noun (he, she, it, they)"],
+    ["Preposition", "Shows where or when (in, on, under, after)"],
+    ["Conjunction", "Joins words or ideas (and, but, or)"],
+    ["Interjection", "Shows a strong feeling (wow, oh, yay)"],
+    ["Article", "A, an, or the"],
+  ]),
+  deck("spanish-colors", "spanish", "Spanish: colors", "Los colores.", [
+    ["rojo", "red"],
+    ["azul", "blue"],
+    ["verde", "green"],
+    ["amarillo", "yellow"],
+    ["anaranjado", "orange"],
+    ["morado", "purple"],
+    ["rosado", "pink"],
+    ["negro", "black"],
+    ["blanco", "white"],
+    ["marrón", "brown"],
+  ]),
+  deck("ratios-percents", "math", "Ratios, rates, and percents", "Middle school math vocabulary and quick facts.", [
+    ["Ratio", "A comparison of two quantities, like 3 to 2 or 3:2"],
+    ["Unit rate", "A rate for one unit, like 60 miles per 1 hour"],
+    ["Percent", "A part out of 100"],
+    ["50%", "1/2 or 0.5"],
+    ["25%", "1/4 or 0.25"],
+    ["10%", "1/10 or 0.1"],
+    ["Proportion", "Two ratios that are equal"],
+    ["Finding 10% of a number", "Move the decimal point one place to the left"],
+    ["Rate", "A ratio comparing two different units, like miles per hour"],
+  ]),
+  deck("pre-algebra", "math", "Pre-algebra vocabulary", "Words you'll see in every algebra problem.", [
+    ["Variable", "A letter that stands for a number, like x"],
+    ["Expression", "Numbers, variables, and operations with no equals sign, like 3x + 2"],
+    ["Equation", "A math sentence with an equals sign, like 3x + 2 = 11"],
+    ["Coefficient", "The number multiplying a variable (in 3x, it's 3)"],
+    ["Constant", "A number on its own that doesn't change"],
+    ["Integer", "A whole number or its negative: …, −2, −1, 0, 1, 2, …"],
+    ["Inverse operation", "The operation that undoes another, like subtraction undoes addition"],
+    ["Order of operations", "Parentheses, exponents, then multiply and divide left to right, then add and subtract left to right (PEMDAS)"],
+    ["Like terms", "Terms with the same variable and power, like 3x and 5x, that can be added"],
+  ]),
+  deck("rocks-earth", "science", "Rocks and Earth's layers", "Earth science basics.", [
+    ["Igneous rock", "Rock formed when melted rock (magma or lava) cools"],
+    ["Sedimentary rock", "Rock formed from layers of sediment pressed together"],
+    ["Metamorphic rock", "Rock changed by heat and pressure"],
+    ["Crust", "Earth's thin outer layer"],
+    ["Mantle", "The thick, hot layer under the crust"],
+    ["Outer core", "A layer of liquid iron and nickel"],
+    ["Inner core", "Earth's solid, very hot center"],
+    ["Weathering", "Breaking rock into smaller pieces"],
+    ["Erosion", "Moving pieces of rock and soil to a new place"],
+  ]),
+  deck("ecology", "science", "Ecosystems and food webs", "Who eats whom, and why it matters.", [
+    ["Ecosystem", "All the living and nonliving things in an area, working together"],
+    ["Producer", "Makes its own food, usually from sunlight (plants)"],
+    ["Consumer", "Gets energy by eating other living things"],
+    ["Decomposer", "Breaks down dead things and returns nutrients to the soil (fungi, bacteria)"],
+    ["Food chain", "One path of energy from a producer to consumers"],
+    ["Food web", "All the connected food chains in an ecosystem"],
+    ["Predator", "An animal that hunts other animals for food"],
+    ["Prey", "An animal that is hunted for food"],
+    ["Habitat", "The natural home of a living thing"],
+  ]),
+  deck("american-revolution", "history", "The American Revolution", "Key events and people.", [
+    ["Boston Tea Party (1773)", "Colonists dumped British tea into Boston Harbor to protest a tax"],
+    ["\"No taxation without representation\"", "Colonists' complaint that Britain taxed them without a vote in Parliament"],
+    ["Lexington and Concord (1775)", "The first battles of the American Revolution"],
+    ["Declaration of Independence (1776)", "Announced the colonies' independence from Britain"],
+    ["Thomas Jefferson", "Main author of the Declaration of Independence"],
+    ["George Washington", "Commander of the Continental Army"],
+    ["Patriots", "Colonists who wanted independence"],
+    ["Loyalists", "Colonists who stayed loyal to Britain"],
+    ["Treaty of Paris (1783)", "Ended the war and recognized the United States"],
+  ]),
+  deck("figurative-language", "english", "Figurative language", "Ways writers say more than the words alone.", [
+    ["Simile", "Compares two things using like or as (fast as a cheetah)"],
+    ["Metaphor", "Compares two things by saying one is the other (time is money)"],
+    ["Personification", "Gives human traits to something that isn't human (the wind whispered)"],
+    ["Hyperbole", "A big exaggeration (I've told you a million times)"],
+    ["Onomatopoeia", "A word that sounds like what it means (buzz, sizzle)"],
+    ["Alliteration", "Repeating the first sound in nearby words (Peter Piper picked)"],
+    ["Idiom", "A saying that means something other than its words (break a leg)"],
+    ["Imagery", "Words that help you see, hear, smell, taste, or feel something"],
+    ["Symbol", "Something that stands for a bigger idea, like a dove for peace"],
+  ]),
+);
+
+// Which school levels each starter deck is for. Unlisted decks are high school.
+export const LEVELS = [
+  // subjects: offered in onboarding; defaults: checked to start with.
+  { id: "elementary", name: "Elementary school", grades: "Grades 1 to 5", subjects: ["math", "science", "english", "social", "spanish"], defaults: ["math", "science", "english", "social", "spanish"], dailyGoal: 10 },
+  { id: "middle", name: "Middle school", grades: "Grades 6 to 8", subjects: ["math", "science", "english", "history", "social", "spanish"], defaults: ["math", "science", "english", "history"], dailyGoal: 15 },
+  { id: "high", name: "High school", grades: "Grades 9 to 12", subjects: ["biology", "clinical", "spanish", "history", "english", "geometry", "math", "science"], defaults: ["biology", "spanish", "history", "english", "geometry"], dailyGoal: 20 },
+];
+const DECK_LEVELS = {
+  "times-6-7-8": ["elementary", "middle"],
+  shapes: ["elementary"],
+  planets: ["elementary"],
+  "matter-water": ["elementary"],
+  "plant-parts": ["elementary"],
+  "continents-oceans": ["elementary", "middle"],
+  "word-types": ["elementary"],
+  "spanish-colors": ["elementary", "middle"],
+  "spanish-numbers": ["elementary", "middle", "high"],
+  "spanish-greetings": ["middle", "high"],
+  "ratios-percents": ["middle"],
+  "pre-algebra": ["middle", "high"],
+  "rocks-earth": ["middle"],
+  ecology: ["middle", "high"],
+  "american-revolution": ["middle", "high"],
+  "figurative-language": ["middle", "high"],
+  "parts-of-speech": ["middle", "high"],
+
+  "literary-terms": ["middle", "high"],
+};
+for (const s of STARTERS) s.levels = DECK_LEVELS[s.id] ?? ["high"];
+
+export const isLevel = (id) => LEVELS.some((l) => l.id === id);
+export const levelOf = (id) => LEVELS.find((l) => l.id === id) ?? null;
+// Starter decks for a level, optionally only these subjects.
+export const startersFor = (level, subjects = null) => STARTERS.filter((s) => s.levels.includes(level) && (!subjects || subjects.includes(s.subject)));
