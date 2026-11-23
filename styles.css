@@ -715,3 +715,32 @@ h1[tabindex="-1"]:focus { outline: none; }
 .calib-line strong { color: var(--ink); }
 .calib-warn { margin-top: 4px; font-size: .92rem; color: var(--learn); font-weight: 600; }
 .sub-heading { font-size: 1.05rem; margin-top: 6px; }
+
+/* Word Builder */
+.words-intro p { max-width: 60ch; }
+.word-slots { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 14px; }
+.word-slot { min-width: 88px; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; border-radius: var(--radius-sm); border: 2px dashed var(--line); font-weight: 700; font-size: 1rem; background: transparent; color: var(--ink); }
+.word-slot.filled { border-style: solid; border-color: var(--pop); background: var(--pop-soft); cursor: pointer; }
+.word-slot.filled:disabled { cursor: default; }
+.word-slot.is-correct { border-color: var(--know); background: var(--know-soft); }
+.word-slot.is-wrong { border-color: var(--learn); background: var(--learn-soft); }
+.word-plus { color: var(--ink-3); font-weight: 700; list-style: none; }
+.word-tray { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+@media (min-width: 560px) { .word-tray { grid-template-columns: repeat(3, 1fr); } }
+.word-tile { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 10px 14px; border-radius: var(--radius-sm); border: 1.5px solid var(--line); background: var(--surface); font-weight: 700; font-size: 1rem; cursor: pointer; text-align: left; }
+.word-tile:hover:not(:disabled) { border-color: var(--pop); }
+.word-tile:disabled { opacity: .45; cursor: default; }
+.word-tile .opt-key { flex: none; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 7px; background: var(--surface-2); font-size: .8rem; color: var(--ink-2); }
+.word-reveal { flex-basis: 100%; display: grid; gap: 8px; background: var(--surface-2); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 12px; }
+.word-name { font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; overflow-wrap: anywhere; }
+.word-meaning { color: var(--ink-2); }
+.word-parts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.word-parts li:not(.word-plus) { display: grid; gap: 1px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 6px 12px; }
+.word-parts li span { font-size: .85rem; color: var(--ink-2); }
+.word-es { font-size: .95rem; color: var(--ink-2); }
+.word-es strong { color: var(--ink); }
+@media (max-width: 420px) {
+  .mode-tabs { gap: 0; margin-inline: -8px; }
+  .mode-tabs a { padding: 10px 9px 12px; font-size: .95rem; }
+  .mode-tabs a[aria-current="page"]::after { left: 6px; right: 6px; }
+}

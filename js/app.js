@@ -15,7 +15,9 @@ import { renderSteps } from "./views/steps.js";
 import { renderHelp } from "./views/help.js";
 import { renderMatch } from "./views/match.js";
 import { renderMixups } from "./views/mixups.js";
+import { renderWords } from "./views/words.js";
 import { syncNow, pushChanges, syncStatus } from "./cloud.js";
+import { hasWordBuilder } from "./wordparts.js";
 
 hooks.onPersistError = () => toast("Couldn't save. Browser storage is full or blocked.");
 load();
@@ -31,7 +33,13 @@ window.addEventListener("hashchange", () => {
   }
   route();
   focusHeading();
+  showActiveTab();
 });
+
+// On a phone the deck's mode tabs can scroll sideways; keep the current one in view.
+function showActiveTab() {
+  document.querySelector(".mode-tabs [aria-current]")?.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
 
 function route() {
   view.cleanup?.();
@@ -68,10 +76,12 @@ function route() {
   if (deck && mode === "write") return renderWrite(deck);
   if (deck && mode === "steps") return renderSteps(deck);
   if (deck && mode === "match") return renderMatch(deck);
+  if (deck && mode === "words" && hasWordBuilder(deck)) return renderWords(deck);
   renderLibrary();
 }
 
 route();
+showActiveTab();
 
 // Offline support. Skipped on localhost so edits show up immediately while
 // developing; add ?sw to the URL to test it locally.

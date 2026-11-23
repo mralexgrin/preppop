@@ -98,7 +98,7 @@ export function migrate(saved, today = dayKey()) {
     .filter(isObject)
     .map((deck) => {
       const cardIds = new Set();
-      const { examDate, ...rest } = deck;
+      const { examDate, starter, ...rest } = deck;
       return {
         ...rest,
         id: safeId(deck.id, deckIds),
@@ -106,6 +106,7 @@ export function migrate(saved, today = dayKey()) {
         subject: isSubject(deck.subject) ? deck.subject : "other",
         ordered: deck.ordered === true,
         ...(isDay(deck.examDate) ? { examDate: deck.examDate } : {}),
+        ...(typeof starter === "string" && SAFE_ID.test(starter) ? { starter } : {}),
         deletedCards: cleanStamps(deck.deletedCards),
         updatedAt: Number.isFinite(deck.updatedAt) ? deck.updatedAt : Number.isFinite(deck.createdAt) ? deck.createdAt : 0,
         cards: (Array.isArray(deck.cards) ? deck.cards : []).filter(isObject).map((card) =>
