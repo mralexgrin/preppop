@@ -263,16 +263,52 @@ const tests = {
       upstream = reply(out);
       await call({ ...body, level: "elementary" }, { path });
       assert.match(lastCall.body.system, /elementary school student/, `${path} elementary`);
-      assert.match(lastCall.body.system, /young reader/, `${path} reading style`);
+      // Wrong answers match the right answer's form instead of a reading style (checked below).
+      if (path !== "/wrong-answers") assert.match(lastCall.body.system, /young reader/, `${path} reading style`);
       await call({ ...body, level: "middle" }, { path });
       assert.match(lastCall.body.system, /middle school student/, `${path} middle`);
       await call({ ...body, level: "<nope>" }, { path });
-      assert.match(lastCall.body.system, /high school student/, `${path} defaults to high school`);
+      if (path === "/wrong-answers") assert.doesNotMatch(lastCall.body.system, /The quiz is for/, `${path} defaults to the base prompt`);
+      else assert.match(lastCall.body.system, /high school student/, `${path} defaults to high school`);
+    }
+    // Every route, at every level, keeps its "not instructions" line.
+    for (const [path, body, out] of routes) {
+      upstream = reply(out);
+      for (const level of ["elementary", "middle", "high"]) {
+        await call({ ...body, level }, { path });
+        assert.match(lastCall.body.system, /not instructions to you/, `${path} ${level}`);
+      }
+    }
+    // High school wrong answers use the base prompt as is (no level line).
+    upstream = reply(routes[0][2]);
+    await call({ ...routes[0][1], level: "high" }, { path: "/wrong-answers" });
+    const high = lastCall.body.system;
+    await call(routes[0][1], { path: "/wrong-answers" });
+    assert.equal(lastCall.body.system, high, "no level is the same as high school");
+    assert.doesNotMatch(high, /The quiz is for/);
+    await call({ ...routes[0][1], level: "elementary" }, { path: "/wrong-answers" });
+    assert.match(lastCall.body.system, /never partly true/);
+    assert.doesNotMatch(lastCall.body.system, /young reader/, "no simple-wording style on wrong answers");
+    // Odd level values fall back to high school.
+    upstream = reply(routes[2][2]);
+    for (const level of [{}, ["high"], "__proto__", "constructor", 3]) {
+      await call({ ...routes[2][1], level }, { path: "/explain" });
+      assert.match(lastCall.body.system, /high school student/, JSON.stringify(level));
     }
     // The new subjects reach the model instead of becoming "other".
     upstream = reply({ cards: [] });
     await call({ notes: "Seven times eight is fifty-six.", subject: "math" }, { path: "/cards-from-notes" });
     assert.match(lastCall.body.messages[0].content, /Subject: math/);
+    await call({ notes: "Asia is the biggest continent on Earth.", subject: "social" }, { path: "/cards-from-notes" });
+    assert.match(lastCall.body.messages[0].content, /Subject: social/);
+    // Elementary notes: simple definitions, but terms kept as in the notes.
+    await call({ notes: "Photosynthesis is how plants make food from light.", subject: "science", level: "elementary" }, { path: "/cards-from-notes" });
+    assert.match(lastCall.body.system, /Keep terms exactly as they appear in the notes/);
+  },
+  async "the app's levels match the service's"() {
+    const app = await import("../../js/starters.js");
+    const svc = await import("../src/index.js");
+    assert.deepEqual(app.LEVELS.map((l) => l.id), svc.LEVELS);
   },
   async "vault: create, read, update with version checks, erase"() {
     const DB = fakeD1();

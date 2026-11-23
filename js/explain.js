@@ -7,8 +7,10 @@ import { esc, hash } from "./util.js";
 import { announce } from "./ui.js";
 import { explainCard, MODEL_LABEL } from "./ai.js";
 import { aiAllowed } from "./aiaccess.js";
+import { currentLevel } from "./profiles.js";
 
-const keyFor = (card) => hash(`${card.term}\u0000${card.definition}`);
+// Saved per reading level, so changing a learner's level gets fresh explanations.
+const keyFor = (card) => `${currentLevel()}:${hash(`${card.term}\u0000${card.definition}`)}`;
 
 export const explainButtonHTML = () =>
   !aiAllowed() ? "" : `<div class="explain"><button class="text-btn explain-btn" type="button" id="explain" aria-expanded="false" aria-controls="explain-box"><span class="spark" aria-hidden="true">✦</span> Explain this card</button><div class="explain-box" id="explain-box" hidden></div></div>`;

@@ -8,6 +8,7 @@ import { app, setTitle, view, deckHeader, announce, keepFocus } from "../ui.js";
 import { langFor } from "../speech.js";
 import { writeWrongAnswers, MODEL_LABEL } from "../ai.js";
 import { aiAllowed } from "../aiaccess.js";
+import { currentLevel } from "../profiles.js";
 import { TYPES, buildQuestions, wrongAnswersFor, makeTrueFalse } from "../testbuilder.js";
 import { checkAnswer, countsAsCorrect, needsAccentKeys, ACCENT_KEYS } from "../answer.js";
 import { shuffle } from "../util.js";
@@ -127,7 +128,8 @@ export function renderTest(deck) {
     app.querySelector("#start").addEventListener("click", start);
   };
 
-  const cacheKey = (q) => `${q.shows}:${hash(q.prompt)}:${hash(q.answer)}`;
+  // Saved per reading level, so changing a learner's level gets fresh wrong answers.
+  const cacheKey = (q) => `${currentLevel()}:${q.shows}:${hash(q.prompt)}:${hash(q.answer)}`;
 
   const start = async () => {
     state.settings.test = { mode: t.mode, count: t.count, types: t.types, confidence: t.confidence };

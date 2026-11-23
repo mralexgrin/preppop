@@ -493,6 +493,7 @@ STARTERS.push(
 );
 
 // Which school levels each starter deck is for. Unlisted decks are high school.
+// Level ids must match LEVELS in worker/src/index.js (checked in worker/test).
 export const LEVELS = [
   // subjects: offered in onboarding; defaults: checked to start with.
   { id: "elementary", name: "Elementary school", grades: "Grades 1 to 5", subjects: ["math", "science", "english", "social", "spanish"], defaults: ["math", "science", "english", "social", "spanish"], dailyGoal: 10 },
