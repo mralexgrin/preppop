@@ -89,6 +89,8 @@ function mergeCard(textFrom, a, b) {
   else delete out.srs;
   if (progress.stats) out.stats = progress.stats;
   else delete out.stats;
+  if (progress.mixups) out.mixups = progress.mixups;
+  else delete out.mixups;
   return out;
 }
 

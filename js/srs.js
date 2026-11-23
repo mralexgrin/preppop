@@ -23,8 +23,12 @@ export const isDue = (card, today) => Boolean(card.srs) && card.srs.due <= today
 // examDate (optional, "YYYY-MM-DD"): the deck has a test coming up, so a
 // known card comes back no later than the day before it (or the morning of
 // the test, if that's tomorrow).
-export function grade(card, correct, today, examDate = null) {
+// guessed: right, but she said she was guessing. That isn't knowing it yet, so
+// the card goes back to learning, keeps its box, and comes back tomorrow
+// (even if it wasn't due for weeks).
+export function grade(card, correct, today, examDate = null, { guessed = false } = {}) {
   if (!correct) return { status: "learning", srs: { box: 0, due: today, last: today } };
+  if (guessed) return { status: "learning", srs: { box: card.srs?.box ?? 0, due: addDays(today, 1), last: today } };
   // Right again before it's due (e.g. flipping through a deck twice in one
   // night) doesn't push it further out.
   if (card.srs && card.srs.due > today) return { status: "known", srs: { ...card.srs, last: today } };

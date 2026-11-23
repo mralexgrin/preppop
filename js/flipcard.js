@@ -4,12 +4,14 @@ import { esc } from "./util.js";
 import { canSpeak, speak, langFor, SPEAKER_ICON } from "./speech.js";
 import { imageSlot } from "./images.js";
 import { explainButtonHTML } from "./explain.js";
+import { partnerOf } from "./mixups.js";
 
 const LABEL = { term: "Term", definition: "Definition" };
 
 export function flipCardHTML({ card, deck = null, front = "term", flipped = false, topLeft = LABEL[front], topRight = "", canUndo = false }) {
   const back = front === "term" ? "definition" : "term";
   const lang = (side) => (langFor(deck, side, card[side]).startsWith("es") ? ' lang="es"' : "");
+  const partner = deck ? partnerOf(deck, card) : null;
   return `
     <div class="card-stage">
     <button type="button" class="flip-card ${flipped ? "flipped" : ""}" id="flip" aria-describedby="flip-live">
@@ -25,6 +27,7 @@ export function flipCardHTML({ card, deck = null, front = "term", flipped = fals
           <span class="face-label">${LABEL[back]}</span>
           ${card.image?.side === back ? imageSlot(card.image) : ""}
           <span class="face-text"${lang(back)}>${esc(card[back])}</span>
+          ${partner ? `<span class="face-mixup">You've mixed this up with <strong${langFor(deck, "term", partner.term).startsWith("es") ? ' lang="es"' : ""}>${esc(partner.term)}</strong></span>` : ""}
           <span class="face-hint">Tap to flip back</span>
         </span>
       </span>
@@ -51,7 +54,8 @@ export function setFlipped(root, flipped) {
   btn.querySelector(".back").setAttribute("aria-hidden", !flipped);
   // Read out what's now showing, not just "flipped".
   const face = btn.querySelector(flipped ? ".back" : ".front");
-  root.querySelector("#flip-live").textContent = `${face.querySelector(".face-label").textContent}: ${face.querySelector(".face-text").textContent}`;
+  const mixup = face.querySelector(".face-mixup")?.textContent;
+  root.querySelector("#flip-live").textContent = `${face.querySelector(".face-label").textContent}: ${face.querySelector(".face-text").textContent}${mixup ? `. ${mixup}` : ""}`;
 }
 
 // Swipe the card right (know it) or left (still learning). A drag suppresses

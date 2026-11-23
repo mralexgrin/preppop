@@ -68,7 +68,7 @@ export function renderSettings() {
 
     <section class="panel" aria-labelledby="keys-heading">
       <h2 id="keys-heading">Keyboard shortcuts</h2>
-      <p>On a computer: arrow keys mark flashcards, 1–4 and T/F answer test questions, Space flips a card. Turn these off if you use a screen reader or voice control and they get in the way.</p>
+      <p>On a computer: arrow keys mark flashcards, Space flips a card, 1–4 and T/F answer test questions, and S or G says you're sure or guessing. Turn these off if you use a screen reader or voice control and they get in the way.</p>
       <label class="check"><input type="checkbox" id="shortcuts" ${shortcutsOn() ? "checked" : ""}> Use keyboard shortcuts</label>
     </section>
 

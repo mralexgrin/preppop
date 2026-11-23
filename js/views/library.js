@@ -1,5 +1,6 @@
 import { state, persist, getDeck, dailyGoal, deleteDeck } from "../store.js";
 import { dueCards, isDue, isNew, streak, dayKey, addDays } from "../srs.js";
+import { mixupPairs } from "../mixups.js";
 import { esc, plural } from "../util.js";
 import { app, toast, setTitle, view, examLabel, announce, focusHeading } from "../ui.js";
 import { SUBJECTS } from "../subjects.js";
@@ -133,6 +134,7 @@ function todayPanel() {
   const days = streak(state.activity, today);
   const done = state.activity[today]?.answered ?? 0;
   const goal = dailyGoal();
+  const mixups = mixupPairs(state.decks).length;
   const learnDeck = [...state.decks]
     .map((d) => ({ d, fresh: d.cards.filter(isNew).length }))
     .filter((x) => x.fresh)
@@ -164,6 +166,7 @@ function todayPanel() {
         <span class="goal-label">${done >= goal ? "Daily goal done" : `${done} / ${goal} today`}</span>
       </div>
       ${action ? `<div class="today-action">${action}</div>` : ""}
+      ${mixups ? `<a class="today-link" href="#/mixups">${plural(mixups, "mix-up")} to sort out <span aria-hidden="true">→</span></a>` : ""}
     </section>`;
 }
 

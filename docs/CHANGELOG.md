@@ -2,7 +2,13 @@
 
 User-facing release notes. Newest first.
 
-## Unreleased (branch `autonomous/product-improvements`)
+## Unreleased (branch `feat/mixups-confidence`)
+### Added
+- **Confidence check in Test.** Pick an answer (or type one and tap Check), then tap **I'm sure** or **Guessing** (S / G). A lucky guess comes back tomorrow instead of counting as known. Results call out answers you were sure about but got wrong. Turn it off in the test setup.
+- **How sure vs. how right** on Progress: per subject, how often you're right when you're sure or guessing, a warning when you're often sure and wrong, and a list of **blind spots**.
+- **Mix-ups.** Giving one card's answer for another (tachycardia for bradycardia, ser for estar) is remembered as a pair. Feedback names the other card, the flip card says "You've mixed this up with…", Test includes the partner as one of the choices, and **Practice telling them apart** (from Progress or the Today panel) drills those pairs side by side until they're sorted out. The drill doesn't change your review schedule.
+
+## 2026-10-01 (merged from `autonomous/product-improvements`)
 ### Improved
 - Settings are ordered by how often you'll need them: Daily goal, Daily reminder, Sync, Backup, Install, Keyboard shortcuts, AI answers.
 - **Accessibility:** screen readers now hear answer results in Write and Test, the new question after Next, the card's content when it flips, and the page name after moving between screens. Focus stays on the control you used when a screen redraws. Spanish text is marked as Spanish, so it's read with a Spanish voice. Right and wrong answers are marked with ✓/✗, not just color. Selected buttons and tabs show more than a color change. The practice calendar has a text version, and tap targets are at least 44px. **Settings → Keyboard shortcuts** turns off single-key shortcuts (arrows, 1–4, T/F) for screen reader or voice control users.

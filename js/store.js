@@ -4,6 +4,7 @@ import { uid } from "./util.js";
 import { isSubject } from "./subjects.js";
 import { dayKey, grade, seedSchedule } from "./srs.js";
 import { normalizeSyncKey } from "./sync.js";
+import { MAX_COUNT as MAX_MIXUPS } from "./mixups.js";
 
 export const STORE_KEY = "preppop:v1";
 
@@ -20,7 +21,26 @@ function cleanStats(stats) {
   // Returns undefined for "no stats"; migrate removes the key in that case.
   if (!stats || typeof stats !== "object") return undefined;
   const seen = count(stats.seen);
-  return { seen, missed: Math.min(seen, count(stats.missed)) };
+  const out = { seen, missed: Math.min(seen, count(stats.missed)) };
+  // Confidence check (Test mode): answers marked sure or guessing, and how they went.
+  const sure = Math.min(seen, count(stats.sure));
+  const guess = Math.min(seen - sure, count(stats.guess));
+  if (sure) out.sure = sure;
+  if (sure && out.missed && count(stats.sureMissed)) out.sureMissed = Math.min(sure, out.missed, count(stats.sureMissed));
+  if (guess) out.guess = guess;
+  if (guess && count(stats.guessRight)) out.guessRight = Math.min(guess, count(stats.guessRight));
+  return out;
+}
+
+// { otherCardId: count } for cards in the same deck she's confused this one with.
+export function cleanMixups(mixups, cardIds) {
+  if (!mixups || typeof mixups !== "object" || Array.isArray(mixups)) return undefined;
+  const out = Object.fromEntries(
+    Object.entries(mixups)
+      .filter(([id, n]) => SAFE_ID.test(id) && (!cardIds || cardIds.has(id)) && Number.isInteger(n) && n > 0)
+      .map(([id, n]) => [id, Math.min(MAX_MIXUPS, n)]),
+  );
+  return Object.keys(out).length ? out : undefined;
 }
 
 // { id: timestamp } maps (deletion markers), keeping only safe ids and numbers.
@@ -41,6 +61,7 @@ const withoutEmpty = (card) => {
   if (card.stats === undefined) delete card.stats;
   if (card.image === undefined) delete card.image;
   if (card.hint === undefined) delete card.hint;
+  if (card.mixups === undefined) delete card.mixups;
   return card;
 };
 
@@ -104,6 +125,15 @@ export function migrate(saved, today = dayKey()) {
         ),
       };
     });
+  for (const deck of out.decks) {
+    const ids = new Set(deck.cards.map((c) => c.id));
+    for (const card of deck.cards) {
+      ids.delete(card.id);
+      card.mixups = cleanMixups(card.mixups, ids);
+      ids.add(card.id);
+      withoutEmpty(card);
+    }
+  }
   if (!isSubject(out.settings.lastSubject)) delete out.settings.lastSubject;
   if (out.settings.introDone !== undefined && out.settings.introDone !== true) delete out.settings.introDone;
   if (out.settings.shortcuts !== undefined && typeof out.settings.shortcuts !== "boolean") delete out.settings.shortcuts;
@@ -143,12 +173,20 @@ export const blankCard = () => ({ id: uid(), term: "", definition: "", status: "
 
 // Schedules the card's next review and counts the answer toward today's practice.
 // deck (optional): lets a coming test pull the next review earlier.
+// confidence (optional): "sure" or "guess", from Test mode's confidence check.
 // Returns undo(), which puts the card and today's count back exactly as they were.
-export function recordAnswer(card, correct, today = dayKey(), deck = null) {
+export function recordAnswer(card, correct, today = dayKey(), deck = null, { confidence = null } = {}) {
   const before = { status: card.status, srs: card.srs, stats: card.stats };
-  Object.assign(card, grade(card, correct, today, deck?.examDate ?? null));
+  Object.assign(card, grade(card, correct, today, deck?.examDate ?? null, { guessed: correct && confidence === "guess" }));
   const stats = card.stats ?? { seen: 0, missed: 0 };
-  card.stats = { seen: stats.seen + 1, missed: stats.missed + (correct ? 0 : 1) };
+  card.stats = { ...stats, seen: stats.seen + 1, missed: stats.missed + (correct ? 0 : 1) };
+  if (confidence === "sure") {
+    card.stats.sure = (stats.sure ?? 0) + 1;
+    if (!correct) card.stats.sureMissed = (stats.sureMissed ?? 0) + 1;
+  } else if (confidence === "guess") {
+    card.stats.guess = (stats.guess ?? 0) + 1;
+    if (correct) card.stats.guessRight = (stats.guessRight ?? 0) + 1;
+  }
   const day = (state.activity[today] ??= { answered: 0, correct: 0 });
   day.answered++;
   if (correct) day.correct++;
@@ -167,7 +205,7 @@ export function recordAnswer(card, correct, today = dayKey(), deck = null) {
 
 export const dailyGoal = () => state.settings.dailyGoal ?? DEFAULT_DAILY_GOAL;
 
-// Single-key shortcuts (arrows, 1-4, T/F) can be turned off in Settings.
+// Single-key shortcuts (arrows, 1-4, T/F, S/G) can be turned off in Settings.
 export const shortcutsOn = () => state.settings.shortcuts !== false;
 
 // Removes a deck and remembers the deletion so synced devices drop it too.

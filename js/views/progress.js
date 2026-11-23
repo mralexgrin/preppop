@@ -5,7 +5,8 @@ import { state, dailyGoal } from "../store.js";
 import { esc, plural } from "../util.js";
 import { app, setTitle, toast } from "../ui.js";
 import { dayKey, streak } from "../srs.js";
-import { longestStreak, weekSummary, calendar, subjectMastery, weakCards, upcoming, progressSummary } from "../progress.js";
+import { longestStreak, weekSummary, calendar, subjectMastery, weakCards, upcoming, progressSummary, calibration, isOverconfident, blindSpots } from "../progress.js";
+import { mixupPairs } from "../mixups.js";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
@@ -20,6 +21,9 @@ export function renderProgress() {
   const weak = weakCards(state.decks);
   const next = upcoming(state.decks, today);
   const practicedDays = cells.filter((c) => c.count > 0).length;
+  const sureness = calibration(state.decks);
+  const blind = blindSpots(state.decks);
+  const pairs = mixupPairs(state.decks);
 
   if (!state.decks.length) {
     app.innerHTML = `
@@ -97,6 +101,9 @@ export function renderProgress() {
         : ""
     }
 
+    ${confidencePanel(sureness, blind)}
+    ${mixupPanel(pairs)}
+
     <section class="panel wide" aria-labelledby="weak-heading">
       <h2 id="weak-heading">Cards to work on</h2>
       ${
@@ -133,4 +140,56 @@ export function renderProgress() {
       toast("Couldn't share or copy on this device.");
     }
   });
+}
+
+// How often she's right when she says she's sure, per subject, and the cards
+// she was sure about but got wrong. Shown once she's used the confidence check.
+function confidencePanel(sureness, blind) {
+  if (!sureness.length) return "";
+  const pct = (n) => (n === null ? "–" : `${n}%`);
+  return `
+    <section class="panel wide" aria-labelledby="confidence-heading">
+      <h2 id="confidence-heading">How sure vs. how right</h2>
+      <p>From Test mode's confidence check. When you're sure, you should be right about 9 times in 10.</p>
+      <ul class="calibration">${sureness
+        .map(
+          (c) => `
+        <li data-subject="${c.subject.id}">
+          <p class="mastery-head"><span><span class="subject-dot" aria-hidden="true"></span>${c.subject.name}</span></p>
+          <p class="calib-line">Sure: <strong>${pct(c.surePct)}</strong> right <span class="calib-n">(${plural(c.sure, "answer")})</span> · Guessing: <strong>${pct(c.guessPct)}</strong> right <span class="calib-n">(${plural(c.guess, "answer")})</span></p>
+          ${isOverconfident(c) ? `<p class="calib-warn">You're often sure and wrong here. Slow down and check before you lock in.</p>` : ""}
+        </li>`,
+        )
+        .join("")}</ul>
+      ${
+        blind.length
+          ? `<h3 class="sub-heading">Blind spots</h3>
+             <p>Cards you were sure about but got wrong. They're back in your review.</p>
+             <ul class="weak">${blind
+               .map(
+                 ({ deck, card }) => `
+               <li data-subject="${deck.subject}">
+                 <p class="m-prompt">${esc(card.term)}</p>
+                 <p class="weak-def">${esc(card.definition)}</p>
+                 <p class="weak-meta"><span class="subject-dot" aria-hidden="true"></span>${esc(deck.name)} · sure but wrong ${card.stats.sureMissed === 1 ? "once" : `${card.stats.sureMissed} times`}</p>
+               </li>`,
+               )
+               .join("")}</ul>`
+          : ""
+      }
+    </section>`;
+}
+
+function mixupPanel(pairs) {
+  if (!pairs.length) return "";
+  const top = pairs.slice(0, 3);
+  return `
+    <section class="panel wide" aria-labelledby="mixups-heading">
+      <h2 id="mixups-heading">Mix-ups</h2>
+      <p>${plural(pairs.length, "pair")} of cards you've given each other's answers for.</p>
+      <ul class="mixup-mini">${top
+        .map(({ deck, a, b }) => `<li data-subject="${deck.subject}"><span class="subject-dot" aria-hidden="true"></span><strong>${esc(a.term)}</strong> <span class="mixup-vs">vs</span> <strong>${esc(b.term)}</strong></li>`)
+        .join("")}</ul>
+      <div class="row"><a class="btn btn-primary" href="#/mixups">Practice telling them apart</a></div>
+    </section>`;
 }

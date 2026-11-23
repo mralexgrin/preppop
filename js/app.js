@@ -14,6 +14,7 @@ import { renderProgress } from "./views/progress.js";
 import { renderSteps } from "./views/steps.js";
 import { renderHelp } from "./views/help.js";
 import { renderMatch } from "./views/match.js";
+import { renderMixups } from "./views/mixups.js";
 import { syncNow, pushChanges, syncStatus } from "./cloud.js";
 
 hooks.onPersistError = () => toast("Couldn't save. Browser storage is full or blocked.");
@@ -40,7 +41,7 @@ function route() {
   window.scrollTo(0, 0);
 
   const [page, id, mode, option] = currentHash.replace(/^#\/?/, "").split("/");
-  const section = ["settings", "review", "new", "progress"].includes(page) ? page : "decks";
+  const section = ["settings", "review", "new", "progress"].includes(page) ? page : page === "mixups" ? "progress" : "decks";
   document.querySelectorAll("[data-nav]").forEach((a) => {
     a.dataset.nav === section ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current");
   });
@@ -59,6 +60,7 @@ function route() {
   if (page === "starters") return renderStarters();
   if (page === "progress") return renderProgress();
   if (page === "help") return renderHelp();
+  if (page === "mixups") return renderMixups();
   const deck = page === "deck" && getDeck(id);
   if (deck && mode === "edit") return renderEditor(deck);
   if (deck && mode === "study") return renderStudy(deck, { cram: option === "cram" });

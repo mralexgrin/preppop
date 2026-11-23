@@ -11,6 +11,7 @@ import { canSpeak, speak, langFor, SPEAKER_ICON } from "../speech.js";
 import { bindHint } from "../flipcard.js";
 import { imageSlot, hydrateImages } from "../images.js";
 import { explainButtonHTML, bindExplain } from "../explain.js";
+import { findMixup, noteMixup, mixupMessage } from "../mixups.js";
 
 const LABEL = { term: "Term", definition: "Definition" };
 
@@ -177,6 +178,7 @@ export function renderWrite(deck) {
         ${canSpeak() ? `<button type="button" class="text-btn hear" id="hear">${SPEAKER_ICON}<span>Hear it</span></button>` : ""}
         ${right ? "" : explainButtonHTML()}
         ${!right && r.typed.trim() ? `<p class="typed"><span class="visually-hidden">You wrote: </span>${esc(r.typed)}</p>` : ""}
+        ${!right && r.mixup ? `<p class="mixup-note">${mixupMessage(r.mixup, w.typeSide)} Added to your mix-ups.</p>` : ""}
       </div>
       <div class="row write-actions">
         <button class="btn btn-primary" type="submit" id="next">${w.i === w.queue.length - 1 ? "See results" : "Next"} <kbd>Enter</kbd></button>
@@ -187,6 +189,7 @@ export function renderWrite(deck) {
   const check = (typed) => {
     const card = w.queue[w.i];
     w.result = { typed, ...checkAnswer(typed, card[w.typeSide]) };
+    if (!countsAsCorrect(w.result.verdict)) w.result.mixup = findMixup(deck, card, w.typeSide, typed, { typed: true });
     draw();
     const expected = card[w.typeSide];
     announce(
@@ -205,10 +208,13 @@ export function renderWrite(deck) {
     const card = w.queue[w.i];
     const r = w.result;
     const correct = r.overruled || countsAsCorrect(r.verdict);
+    // Write only notes mix-ups. Counting them down needs both cards in front
+    // of her (Test choices or the mix-up drill).
+    if (!correct && r.mixup) noteMixup(card, r.mixup);
     recordAnswer(card, correct, undefined, deck);
     persist();
     if (correct) w.score++;
-    else w.missed.push({ card, typed: r.typed });
+    else w.missed.push({ card, typed: r.typed, mixup: r.mixup });
     w.i++;
     w.result = null;
     draw();
@@ -232,11 +238,12 @@ export function renderWrite(deck) {
         w.missed.length
           ? `<section class="missed"><h2>To practice</h2><ul>${w.missed
               .map(
-                ({ card, typed }) => `
+                ({ card, typed, mixup }) => `
             <li>
               <p class="m-prompt">${esc(card[w.typeSide === "term" ? "definition" : "term"])}</p>
               <p class="m-answer">✓ ${esc(card[w.typeSide])}</p>
               ${typed.trim() ? `<p class="m-picked"><span class="visually-hidden">You wrote: </span>${esc(typed)}</p>` : ""}
+              ${mixup ? `<p class="m-mixup">${mixupMessage(mixup, w.typeSide)}</p>` : ""}
             </li>`,
               )
               .join("")}</ul></section>`
