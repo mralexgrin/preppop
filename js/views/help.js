@@ -37,6 +37,7 @@ const SECTIONS = [
         <li><strong>Test:</strong> choose how many questions and mix multiple choice, written, and true or false, like a real quiz. With the <strong>confidence check</strong> on, you pick an answer (or type one and tap Check) and then tap <strong>I'm sure</strong> or <strong>Guessing</strong> (S or G on a keyboard). A lucky guess comes back tomorrow instead of counting as known.</li>
         <li><strong>Steps:</strong> tap the steps of a procedure or events of a timeline in the right order.</li>
         <li><strong>Words</strong> (on the <em>Medical terminology</em> starter deck): work out medical words from their parts. <strong>Decode</strong> a word like <em>bradypnea</em> by picking what it means, or <strong>build</strong> one by tapping its parts in order. You'll see the Spanish word too.</li>
+        <li><strong>✦ Clinical Shift</strong> (under your Clinical decks): practice rooming a made-up patient the way you will alongside a doctor. Introduce yourself, check their name and date of birth, take vital signs, ask about their symptoms, then report to the doctor and get feedback on what you did well and what to do next time. The patient is played by AI, and nothing you type there is saved.</li>
         <li><strong>Match:</strong> a quick game. Tap a term, then its definition, as fast as you can. It's a warm-up, so it doesn't change your review schedule.</li>
       </ul>`,
   },

@@ -3,6 +3,17 @@
 Newest entries at the top. This file is the memory of the run: read it at the start of every session.
 
 ## Flagged for human review
+- **Clinical Shift pilot (2026-11-23): two new AI prompts plus clinical scenarios, for a minor. Highest-risk item; please review before merging. Not tried on the real model and not deployed (Cloudflare login expired).**
+  - **Prompts:** `PATIENT_SYSTEM` (Claude plays a fictional patient) and `DEBRIEF_SYSTEM` (clinical-instructor feedback), in `worker/src/index.js`.
+  - **Scenarios:** `SCENARIOS`, three fictional cases with fixed vital signs.
+    - Fever and cough: T 101.8 °F, HR 108, RR 22.
+    - Short of breath: SpO2 91%, BP 152/94, RR 24.
+    - Belly pain moving to the lower right, in a 16-year-old: T 100.6 °F, HR 104, pain 7/10.
+    - Please check the values and the "findings for the doctor".
+  - **Her role** is a student clinical assistant: no diagnosing or treatment. The patient never gives medical advice; the debrief names concerning findings for the doctor but doesn't diagnose.
+  - **Safety:** if her message sounds like a real emergency or distress in her own life, the patient adds an out-of-character note suggesting a trusted adult, 911 in an emergency, or 988 (Suicide & Crisis Lifeline). Please confirm that wording is what you want.
+  - **Inputs:** the transcript goes in as JSON (no tag injection). Scenarios come only from the server, and unknown or prototype ids are refused. Limits: 14 turns plus the report, 400 characters per line. Patient lines are effort low, the debrief medium. Nothing is saved on the device or the server.
+  - **To finish:** `cd worker && npx wrangler login && npx wrangler deploy`, then play each scenario a few times: well, badly, off-topic, with an injection attempt, and with a "real life" distress message.
 - **New AI prompt: /teach-back (worker/src/index.js, TEACH_SYSTEM), 2026-11-23. Not yet tried against the real model, and not deployed:** the Cloudflare login on this Mac expired, so neither `wrangler dev --remote` nor `wrangler deploy` can run. It grades her own-words explanation as got_it / partly / not_yet, lists what's right, missing, and wrong, and asks one follow-up question. It's lenient on wording and strict on facts, uses textbook facts with no medical advice for clinical cards, and treats the card and her text as material, not instructions. Output is schema-constrained (verdict enum), trimmed, capped, and escaped. Only "got_it" marks a card known. To finish: `cd worker && npx wrangler login && npx wrangler deploy`, then try a few real explanations (good, partial, wrong, off-topic, and one containing instructions).
 - **Word Builder content (js/wordparts.js, 2026-11-23).** 39 medical words with their parts, plain meanings, and Spanish medical terms (taquicardia, nefrectomía…). Standard textbook definitions, but it's clinical content for a minor: please skim the meanings and the Spanish spellings and accents. Meanings for anemia, leukemia, and gastrostomy are simplified on purpose.
 - **Sync (roadmap #14) touches accounts and personal data of a minor. Please review before merging or deploying.** Design: no account; a random 125-bit sync key on the device derives the vault id, an auth secret (the server stores only its SHA-256), and an AES-GCM key. The server holds only ciphertext. Files: `js/sync.js`, `js/cloud.js`, `js/views/settings.js` (Sync section), `worker/src/index.js` (handleVault, cleanupVaults), `worker/migrations/0001_vaults.sql`. Deploying needs `wrangler d1 create preppop-sync`, the database_id in wrangler.jsonc, and `wrangler d1 migrations apply preppop-sync --remote`. Known limits: no daily cap on new vaults per IP (only 3/min) and no recovery if she loses the key (her local data stays). The privacy text says unused cloud copies are deleted after 12 months.
@@ -21,6 +32,15 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-11-23: #25 Clinical Shift pilot
+- `#/shift`: pick one of 3 made-up patients, then chat as the student clinical assistant.
+  - Readings appear when she measures something, and a "What a good visit includes" checklist is available.
+  - "Finish: report to the doctor" leads to the debrief: did well, next time, findings for the doctor, terms used, and an example chart note.
+  - Entry point: a Clinical Shift card under her Clinical decks.
+- Worker route `/shift`: fixed server-side scenarios, a single-turn request per patient line with the transcript as JSON, and output constrained to a schema.
+- Decision: nothing is persisted, because there's no need and it's simpler and more private.
+- Tests: Worker test (17 pass), app tests that the scenario ids match the Worker's (157 unit tests pass), and a browser flow with the AI stubbed (24 flows pass).
+
 ### 2026-11-23: #24 Test readiness forecast
 - `js/readiness.js` estimates recall on the test date as 0.9^(t / interval), which matches the Leitner schedule: about 90% at the due date. Learning cards start at 0.6 and fade daily; unpracticed cards count as 0.
 - A day-by-day simulation reviews the weakest due cards, and finds the smallest of 5/10/15/20/30/40/60 cards a day that reaches 90%. Minutes assume 12 seconds a card.

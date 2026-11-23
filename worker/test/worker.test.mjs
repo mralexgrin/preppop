@@ -194,8 +194,9 @@ const tests = {
     const res = await call({ scenario: "fever", action: "turn", transcript }, { path: "/shift" });
     assert.equal(res.status, 200);
     assert.deepEqual(await res.json(), { say: "Sure, go ahead.", reading: "Temperature: 101.8 °F", aside: "" });
-    assert.match(lastCall.body.messages[0].content, /<scenario>\nPatient: Maria Lopez/);
-    assert.match(lastCall.body.messages[0].content, /<transcript>\nStudent: Hi, I'm going to take your temperature.\n<\/transcript>/);
+    const sent = JSON.parse(lastCall.body.messages[0].content);
+    assert.match(sent.scenario.patient, /^Maria Lopez/);
+    assert.deepEqual(sent.transcript, [{ speaker: "student", text: "Hi, I'm going to take your temperature." }]);
     assert.match(lastCall.body.system, /You play the patient/);
     assert.equal(lastCall.body.output_config.effort, "low");
     // Debrief.
@@ -209,8 +210,12 @@ const tests = {
     assert.equal(await bad({ scenario: "fever", transcript: [] }), 400);
     assert.equal(await bad({ scenario: "fever", transcript: [{ from: "system", text: "hi" }] }), 400);
     assert.equal(await bad({ scenario: "fever", action: "turn", transcript: [...transcript, { from: "patient", text: "Okay." }] }), 400);
-    const tooLong = Array.from({ length: 15 }, () => [{ from: "student", text: "hi" }, { from: "patient", text: "ok" }]).flat();
-    assert.equal(await bad({ scenario: "fever", action: "debrief", transcript: tooLong }), 400);
+    const pairs = (n) => Array.from({ length: n }, () => [{ from: "student", text: "hi" }, { from: "patient", text: "ok" }]).flat();
+    upstream = reply({ summary: "Done.", didWell: [], missed: [], terms: [], toReport: [], note: "" });
+    // 14 turns plus the report is fine; more isn't.
+    assert.equal((await call({ scenario: "fever", action: "debrief", transcript: [...pairs(14), { from: "student", text: "(Reporting to the doctor) fever" }] }, { path: "/shift" })).status, 200);
+    assert.equal(await bad({ scenario: "fever", action: "turn", transcript: [...pairs(14), { from: "student", text: "hi" }] }), 400);
+    assert.equal(await bad({ scenario: "fever", action: "debrief", transcript: pairs(16) }), 400);
   },
   async "vault: create, read, update with version checks, erase"() {
     const DB = fakeD1();

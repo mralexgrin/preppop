@@ -49,6 +49,15 @@ export async function flows({ stubAnswers = true } = {}) {
     window.__realFetch = realFetch;
     window.fetch = async (input, init) => {
       const url = typeof input === "string" ? input : input.url;
+      if (url.includes("/shift")) {
+        const { action, transcript } = JSON.parse(init.body);
+        const last = transcript.at(-1).text;
+        const body =
+          action === "debrief"
+            ? { summary: "Nice first visit.", didWell: ["You checked her name and date of birth"], missed: ["Wash your hands first"], terms: ["Tachycardia: fast heart rate"], toReport: ["Fever 101.8 °F"], note: "Pt: Maria Lopez\nT 101.8 °F" }
+            : { say: /temperature/i.test(last) ? "Sure. [She opens her mouth for the thermometer]" : "Hi. I'm Maria Lopez.", reading: /temperature/i.test(last) ? "Temperature: 101.8 °F" : "", aside: "" };
+        return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+      }
       if (url.includes("/teach-back")) {
         // "slow" in the explanation earns Got it; a follow-up answer always gets Got it.
         // "Apnea" fails like a service outage.
@@ -452,6 +461,32 @@ export async function flows({ stubAnswers = true } = {}) {
     $("#dont-know").click();
     await wait(20);
     check($(".teach-card") && !$(".teach-yours") && !$(".source-tag"), "I don't know shows just the card");
+  });
+
+  await step("clinical shift: talk to the patient, collect readings, report, get a debrief (AI stubbed)", async () => {
+    await go("#/shift");
+    check($$(".shift-list .deck-tile").length === 3, "three patients to choose from");
+    await go("#/shift/fever");
+    check($(".shift-empty") && $("#to-report").disabled, "starts in the room; can't report yet");
+    const say = async (text) => {
+      setValue($("#say"), text);
+      $("#say").dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      await until(() => $$(".shift-line.patient").length === $$(".shift-line.you").length && !$("#say").disabled, "patient reply");
+    };
+    await say("Hi, I'm a student assistant. What's your full name and date of birth?");
+    await say("I'm going to take your temperature now.");
+    check($(".shift-reading").textContent === "Temperature: 101.8 °F" && $(".shift-readings li"), "the reading shows in the visit and in Your readings");
+    $("#to-report").click();
+    await until(() => $("#report"), "report form");
+    setValue($("#report"), "Maria Lopez, fever 101.8 for three days.");
+    $("#report-form").requestSubmit();
+    await until(() => $("#debrief-h"), "debrief");
+    check($(".shift-debrief-part.missing li") && $(".shift-note"), "debrief lists next steps and a chart note");
+    check(document.activeElement === $("#debrief-h"), "focus moves to the debrief");
+    $("#again").click();
+    await wait(20);
+    check($(".shift-empty"), "practice again starts fresh");
+    await go("#/");
   });
 
   await step("word builder: decode and build medical words, practicing the part cards", async () => {

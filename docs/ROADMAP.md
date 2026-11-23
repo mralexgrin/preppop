@@ -25,9 +25,9 @@ Approved order from the 2026-11-23 proposal ("make it competitive and unique"): 
 
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
-| 25 | Clinical Shift scenarios | Practice the actual job: history, vitals, terms, a short note, then a debrief | High | L | TOP for the prompt (medical safety, human review) |
 
 ## Ideas (unranked)
+- Clinical Shift: more scenarios once the pilot's prompts are reviewed (a Spanish-speaking patient would join her Spanish and clinical work)
 - Sync pictures across devices (separate encrypted blobs per image; the current vault is capped at 300 KB)
 - Crop or annotate a picture (e.g. hide one label on a diagram)
 - QR code for the sync key (scan instead of typing 25 characters)
@@ -37,6 +37,7 @@ Approved order from the 2026-11-23 proposal ("make it competitive and unique"): 
 - Light/dark toggle
 
 ## Done
+- #25 Clinical Shift pilot (2026-11-23, branch feat/clinical-shift; prompts not yet live-tested; needs clinical review)
 - #24 Test readiness forecast (2026-11-23, branch feat/readiness)
 - #23 Teach It Back (2026-11-23, branch feat/teach-back; prompt not yet live-tested)
 - #22 Word Builder (2026-11-23, branch feat/word-builder, PR #3)
