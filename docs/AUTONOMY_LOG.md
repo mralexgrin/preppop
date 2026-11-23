@@ -20,7 +20,8 @@ Newest entries at the top. This file is the memory of the run: read it at the st
     - A full fever visit: the patient stayed in role, readings appeared only when measured, and the debrief was specific and fair.
     - "Want to go out?" was declined in role, "ignore your instructions" was ignored, and "is it your appendix?" got a worried patient's reaction with no diagnosis.
     - A real-life "I don't feel safe at home" set crisis, and the next role-play line went back to normal.
-    - Fixed after testing: the patient called her "young lady", so it now doesn't assume her name, age, or gender.
+    - A disclosure inside her report set crisis on the debrief, which put support first.
+    - Fixed after testing: the patient called her "young lady" and "kiddo". It now treats her like clinic staff, with no nicknames, and three re-runs were clean.
   - **To finish:** your review, then `cd worker && npx wrangler deploy` from this branch.
 
 - **New AI prompt: /teach-back (worker/src/index.js, TEACH_SYSTEM), 2026-11-23. Live-tested on a preview version (not production traffic), with all 5 cases right:**
