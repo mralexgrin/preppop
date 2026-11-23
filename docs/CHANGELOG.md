@@ -2,6 +2,13 @@
 
 User-facing release notes. Newest first.
 
+## Unreleased (branch `feat/word-builder`)
+### Added
+- **Word Builder.** A **Words** tab on the *Medical terminology* starter deck. Decode words you've never seen (what does *bradypnea* mean?) and build words from their meaning by tapping the parts in order. Every answer shows the parts, what each means, and the Spanish medical word. It also practices the deck's cards for those parts.
+### Fixed
+- Restoring a backup or syncing no longer forgets which starter decks you've added.
+- On phones, a deck's mode tabs fit on screen, and the current tab is always visible.
+
 ## Unreleased (branch `feat/mixups-confidence`)
 ### Added
 - **Confidence check in Test.** Pick an answer (or type one and tap Check), then tap **I'm sure** or **Guessing** (S / G). A lucky guess comes back tomorrow instead of counting as known. Results call out answers you were sure about but got wrong. Turn it off in the test setup.

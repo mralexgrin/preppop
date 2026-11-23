@@ -6,7 +6,7 @@
 const deck = (id, subject, name, note, pairs, ordered = false) => ({ id, subject, name, note, ordered, cards: pairs.map(([term, definition]) => ({ term, definition })) });
 
 export const STARTERS = [
-  deck("med-terms", "clinical", "Medical terminology: prefixes and suffixes", "Word parts you'll see in charts and doctors' notes.", [
+  deck("med-terms", "clinical", "Medical terminology: prefixes and suffixes", "Word parts you'll see in charts and doctors' notes. Includes Word Builder: work out whole medical words from these parts.", [
     ["brady-", "slow"],
     ["tachy-", "fast"],
     ["hyper-", "above normal, excessive"],

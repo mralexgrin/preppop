@@ -25,7 +25,6 @@ Approved order from the 2026-11-23 proposal ("make it competitive and unique"): 
 
 | # | Item | Why (user problem) | Impact | Effort | Tier |
 |---|------|--------------------|--------|--------|------|
-| 22 | Word Builder: medical, Spanish, English roots | She memorizes thousands of terms one by one; ~150 roots let her decode words she's never seen, and link subjects (cardio / corazón / cardiac) | High | M | STRONG (root list needs human review) |
 | 23 | Teach It Back | Explaining in her own words is the strongest study technique; every flashcard app skips it | High | M | STRONG (new AI prompt, human review) |
 | 24 | Test readiness forecast | "Am I ready for Friday?" turned into a number and a daily plan | Med | M | STRONG |
 | 25 | Clinical Shift scenarios | Practice the actual job: history, vitals, terms, a short note, then a debrief | High | L | TOP for the prompt (medical safety, human review) |
@@ -40,7 +39,8 @@ Approved order from the 2026-11-23 proposal ("make it competitive and unique"): 
 - Light/dark toggle
 
 ## Done
-- #21 Mix-up detector + confidence check (2026-11-23, branch feat/mixups-confidence)
+- #22 Word Builder (2026-11-23, branch feat/word-builder, PR #3)
+- #21 Mix-up detector + confidence check (2026-11-23, branch feat/mixups-confidence, PR #2)
 - (Phase 0 docs)
 - #1 Module split + test harness (2026-09-30, 70c13e8)
 - #2 Paste-a-list import (2026-09-30, 61e9f43)

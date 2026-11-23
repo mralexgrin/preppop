@@ -1,4 +1,5 @@
 import { esc } from "./util.js";
+import { hasWordBuilder } from "./wordparts.js";
 
 // DOM helpers shared by views, plus the router's per-view hooks.
 
@@ -80,7 +81,7 @@ export function deckHeader(deck, active, right = "") {
       ${right}
     </header>
     <nav class="mode-tabs" aria-label="Study modes" data-subject="${deck.subject}">
-      ${[...MODE_TABS, ...(deck.ordered ? [["steps", "Steps"]] : [])].map(([mode, label]) => `<a href="#/deck/${deck.id}/${mode}" ${mode === active ? 'aria-current="page"' : ""}>${label}</a>`).join("")}
+      ${[...MODE_TABS, ...(deck.ordered ? [["steps", "Steps"]] : []), ...(hasWordBuilder(deck) ? [["words", "Words"]] : [])].map(([mode, label]) => `<a href="#/deck/${deck.id}/${mode}" ${mode === active ? 'aria-current="page"' : ""}>${label}</a>`).join("")}
     </nav>`;
 }
 

@@ -3,6 +3,7 @@
 Newest entries at the top. This file is the memory of the run: read it at the start of every session.
 
 ## Flagged for human review
+- **Word Builder content (js/wordparts.js, 2026-11-23).** 39 medical words with their parts, plain meanings, and Spanish medical terms (taquicardia, nefrectomía…). Standard textbook definitions, but it's clinical content for a minor: please skim the meanings and the Spanish spellings and accents. Meanings for anemia, leukemia, and gastrostomy are simplified on purpose.
 - **Sync (roadmap #14) touches accounts and personal data of a minor. Please review before merging or deploying.** Design: no account; a random 125-bit sync key on the device derives the vault id, an auth secret (the server stores only its SHA-256), and an AES-GCM key. The server holds only ciphertext. Files: `js/sync.js`, `js/cloud.js`, `js/views/settings.js` (Sync section), `worker/src/index.js` (handleVault, cleanupVaults), `worker/migrations/0001_vaults.sql`. Deploying needs `wrangler d1 create preppop-sync`, the database_id in wrangler.jsonc, and `wrangler d1 migrations apply preppop-sync --remote`. Known limits: no daily cap on new vaults per IP (only 3/min) and no recovery if she loses the key (her local data stays). The privacy text says unused cloud copies are deleted after 12 months.
 - **Pictures don't sync across devices** (#20): backups and shared decks carry them; sync carries only the reference.
 - **Production ALLOWED_ORIGINS is now only https://mralexgrin.github.io.** localhost moved to .dev.vars for local testing.
@@ -19,6 +20,17 @@ Newest entries at the top. This file is the memory of the run: read it at the st
 - Open PR: https://github.com/mralexgrin/preppop/pull/1 (not merged; merging publishes to Pages)
 
 ## Log
+### 2026-11-23: Proposal approved; items 1–2 of the new roadmap
+- The owner asked for ideas to make PrepPop competitive and unique, approved the recommended order (mix-ups + confidence check → Word Builder → Teach It Back → test readiness → Clinical Shift), and said to start building.
+- **#21 Mix-ups + confidence check** → PR #2 (`feat/mixups-confidence`). A code-reviewer pass found 1 blocker (a lucky guess on a not-yet-due card kept its far-off due date) and 7 should-fix items. All fixed, and the browser suite then caught one more (the typed answer was lost while asking how sure). Decisions:
+  - Confidence check only in Test, where grading is objective.
+  - The mix-up drill doesn't touch the review schedule, like Match.
+  - Write only notes mix-ups; counting them down needs both cards in front of her.
+- **#22 Word Builder** → PR #3 (`feat/word-builder`, stacked on #2). A Words tab on the Medical terminology starter deck: decode (pick the meaning; wrong choices share a part) and build (tap the parts in order). Each answer practices the part cards: the part she misread counts as missed. Spanish medical word shown for each.
+  - Fixed a pre-existing bug: a deck's `starter` marker was dropped by backup restore and sync, which would hide the Words tab on her other devices and re-offer starters she already had.
+  - Mode tabs now fit on a 375px phone, and the current tab scrolls into view.
+- Ops: git pushes as `alexgrin-arena` (now the active gh account) are refused by mralexgrin/preppop. Pushes use the saved `mralexgrin` login per command (`gh auth token -u mralexgrin`) without switching the global account.
+
 ### 2026-09-30: Items since the last reflection + reflection
 - Shipped: pictures (b0d1776), code review fixes (b0974fb), accessibility fixes (701fae0), Match (c26843a), undo + picture descriptions (929f599), daily reminder + share progress (2d3fbe7), Explain this card (c334d6c), README rewrite (02a2800), 7 more starter decks (11b6870), Settings reordered by use.
 - Reflection: the brief said "should be simple". Checks against it:

@@ -22,6 +22,7 @@ A study companion for a high school student: Biology, clinical skills, Spanish, 
 - **Test.** 10, 20, or all questions; any mix of multiple choice, written, and true or false. Claude writes the wrong answers, plus the card she usually mixes it up with (`js/testbuilder.js`). Optional confidence check.
 - **Steps.** For decks marked "in order" (procedures, timelines): tap the steps into order (`js/steps.js`).
 - **Match.** A quick timed game. It doesn't touch the schedule.
+- **Words** (Word Builder, on the *Medical terminology* starter deck). Decode medical words she's never seen by picking their meaning (wrong choices share a part), or build a word from its meaning by tapping parts in order. 39 words from the deck's parts, each with its Spanish medical term (`js/wordparts.js`). Each answer practices the part cards; the part she misread counts as missed.
 
 **Making cards**
 - **18 starter decks** for her subjects (`js/starters.js`): medical terminology, vital signs, body directions, handwashing and radial pulse steps, cell parts, DNA basics, photosynthesis and respiration, Spanish greetings, verbs, present tense, and numbers, U.S. government, a U.S. timeline, literary terms, parts of speech, angles and triangles, and geometry formulas.

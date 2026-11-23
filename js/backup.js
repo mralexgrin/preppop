@@ -73,6 +73,8 @@ function cleanDeck(deck, { freshIds }) {
     createdAt: Number.isFinite(deck?.createdAt) ? deck.createdAt : Date.now(),
     ...(!freshIds && Number.isFinite(deck?.updatedAt) ? { updatedAt: deck.updatedAt } : {}),
     ...(!freshIds && deck?.deletedCards ? { deletedCards: deck.deletedCards } : {}),
+    // Which starter deck this came from (keeps the Words tab and "Added" on other devices).
+    ...(!freshIds && typeof deck?.starter === "string" ? { starter: deck.starter } : {}),
     cards,
   };
 }

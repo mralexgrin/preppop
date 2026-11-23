@@ -391,6 +391,44 @@ export async function flows({ stubAnswers = true } = {}) {
     check($(".result .sub").textContent.includes("No mix-ups left"), "done screen says so");
   });
 
+  await step("word builder: decode and build medical words, practicing the part cards", async () => {
+    await go("#/starters");
+    $("[data-add='med-terms']")?.click();
+    await wait(100);
+    const deck = () => JSON.parse(localStorage.getItem("preppop:v1")).decks.find((d) => d.starter === "med-terms");
+    await go(`#/deck/${deck().id}/study`);
+    check([...$$(".mode-tabs a")].some((a) => a.textContent === "Words"), "Words tab on the medical terminology deck");
+    await go(`#/deck/${deck().id}/words`);
+    $("#start").click();
+    await until(() => $("#q-prompt"), "first word");
+    const { WORDS } = await import("../js/wordparts.js");
+    const seenBefore = deck().cards.reduce((n, c) => n + (c.stats?.seen ?? 0), 0);
+    let built = false;
+    while (!$(".result .big")) {
+      const prompt = $("#q-prompt").textContent;
+      if ($(".q-type").textContent === "Decode") {
+        const w = WORDS.find((x) => x.word === prompt);
+        [...$$("[data-pick]")].find((b) => b.querySelector(".opt-text").textContent === w.meaning).click();
+      } else {
+        const w = WORDS.find((x) => x.meaning === prompt);
+        for (const part of w.parts) {
+          [...$$("[data-tile]")].find((b) => b.textContent.endsWith(part)).click();
+          await wait(10);
+        }
+        check(!$("#check").disabled, "Check is ready once every slot is filled");
+        $("#check").click();
+        built = true;
+      }
+      await wait(20);
+      check($(".feedback.good") && $(".word-reveal .word-es"), "right answer shows the parts and the Spanish word");
+      $("#next").click();
+      await wait(20);
+    }
+    check(built, "saw a build question");
+    check($(".result .big").textContent === "10/10", "all right");
+    check(deck().cards.reduce((n, c) => n + (c.stats?.seen ?? 0), 0) > seenBefore, "practicing words practices the part cards");
+  });
+
   await step("steps: reorder in the editor, then put steps in order", async () => {
     await go("#/new");
     setValue($("#deck-name"), "Morning routine");

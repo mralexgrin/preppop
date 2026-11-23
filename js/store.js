@@ -98,7 +98,7 @@ export function migrate(saved, today = dayKey()) {
     .filter(isObject)
     .map((deck) => {
       const cardIds = new Set();
-      const { examDate, ...rest } = deck;
+      const { examDate, starter, ...rest } = deck;
       return {
         ...rest,
         id: safeId(deck.id, deckIds),
@@ -106,6 +106,7 @@ export function migrate(saved, today = dayKey()) {
         subject: isSubject(deck.subject) ? deck.subject : "other",
         ordered: deck.ordered === true,
         ...(isDay(deck.examDate) ? { examDate: deck.examDate } : {}),
+        ...(typeof starter === "string" && SAFE_ID.test(starter) ? { starter } : {}),
         deletedCards: cleanStamps(deck.deletedCards),
         updatedAt: Number.isFinite(deck.updatedAt) ? deck.updatedAt : Number.isFinite(deck.createdAt) ? deck.createdAt : 0,
         cards: (Array.isArray(deck.cards) ? deck.cards : []).filter(isObject).map((card) =>
@@ -174,8 +175,10 @@ export const blankCard = () => ({ id: uid(), term: "", definition: "", status: "
 // Schedules the card's next review and counts the answer toward today's practice.
 // deck (optional): lets a coming test pull the next review earlier.
 // confidence (optional): "sure" or "guess", from Test mode's confidence check.
+// count: false leaves today's practice count alone (Word Builder counts once
+// per word with countPractice, though one word grades 2-3 part cards).
 // Returns undo(), which puts the card and today's count back exactly as they were.
-export function recordAnswer(card, correct, today = dayKey(), deck = null, { confidence = null } = {}) {
+export function recordAnswer(card, correct, today = dayKey(), deck = null, { confidence = null, count = true } = {}) {
   const before = { status: card.status, srs: card.srs, stats: card.stats };
   Object.assign(card, grade(card, correct, today, deck?.examDate ?? null, { guessed: correct && confidence === "guess" }));
   const stats = card.stats ?? { seen: 0, missed: 0 };
@@ -187,20 +190,26 @@ export function recordAnswer(card, correct, today = dayKey(), deck = null, { con
     card.stats.guess = (stats.guess ?? 0) + 1;
     if (correct) card.stats.guessRight = (stats.guessRight ?? 0) + 1;
   }
-  const day = (state.activity[today] ??= { answered: 0, correct: 0 });
-  day.answered++;
-  if (correct) day.correct++;
+  if (count) countPractice(correct, today);
   return function undo() {
     for (const [key, value] of Object.entries(before)) {
       if (value === undefined) delete card[key];
       else card[key] = value;
     }
+    if (!count) return;
     const d = state.activity[today];
     if (!d) return;
     d.answered = Math.max(0, d.answered - 1);
     if (correct) d.correct = Math.max(0, d.correct - 1);
     if (!d.answered) delete state.activity[today];
   };
+}
+
+// One answer toward today's practice (the daily goal and streak).
+export function countPractice(correct, today = dayKey()) {
+  const day = (state.activity[today] ??= { answered: 0, correct: 0 });
+  day.answered++;
+  if (correct) day.correct++;
 }
 
 export const dailyGoal = () => state.settings.dailyGoal ?? DEFAULT_DAILY_GOAL;

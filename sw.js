@@ -35,6 +35,7 @@ const SHELL = [
   "js/testbuilder.js",
   "js/ui.js",
   "js/util.js",
+  "js/wordparts.js",
   "js/views/editor.js",
   "js/views/help.js",
   "js/views/library.js",
@@ -48,6 +49,7 @@ const SHELL = [
   "js/views/study.js",
   "js/views/test.js",
   "js/views/write.js",
+  "js/views/words.js",
 ];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
