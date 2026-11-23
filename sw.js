@@ -23,6 +23,7 @@ const SHELL = [
   "js/import.js",
   "js/mixups.js",
   "js/progress.js",
+  "js/readiness.js",
   "js/reminder.js",
   "js/search.js",
   "js/speech.js",

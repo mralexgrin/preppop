@@ -1,12 +1,14 @@
-// Progress: streaks, a practice calendar, this week's numbers, mastery by
-// subject, what's coming up, and the cards she misses most.
+// Progress: streaks, a practice calendar, this week's numbers, tests coming
+// up and how ready she is, mastery by subject, what's coming up, and the cards
+// she misses most.
 
 import { state, dailyGoal } from "../store.js";
 import { esc, plural } from "../util.js";
-import { app, setTitle, toast } from "../ui.js";
-import { dayKey, streak } from "../srs.js";
+import { app, setTitle, toast, examLabel } from "../ui.js";
+import { dayKey, streak, addDays } from "../srs.js";
 import { longestStreak, weekSummary, calendar, subjectMastery, weakCards, upcoming, progressSummary, calibration, isOverconfident, blindSpots } from "../progress.js";
 import { mixupPairs } from "../mixups.js";
+import { forecast, readinessText, pct } from "../readiness.js";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
@@ -101,6 +103,7 @@ export function renderProgress() {
         : ""
     }
 
+    ${testsPanel(today)}
     ${confidencePanel(sureness, blind)}
     ${mixupPanel(pairs)}
 
@@ -146,7 +149,7 @@ export function renderProgress() {
 // she was sure about but got wrong. Shown once she's used the confidence check.
 function confidencePanel(sureness, blind) {
   if (!sureness.length) return "";
-  const pct = (n) => (n === null ? "–" : `${n}%`);
+  const fmtPct = (n) => (n === null ? "–" : `${n}%`);
   return `
     <section class="panel wide" aria-labelledby="confidence-heading">
       <h2 id="confidence-heading">How sure vs. how right</h2>
@@ -156,7 +159,10 @@ function confidencePanel(sureness, blind) {
           (c) => `
         <li data-subject="${c.subject.id}">
           <p class="mastery-head"><span><span class="subject-dot" aria-hidden="true"></span>${c.subject.name}</span></p>
-          <p class="calib-line">Sure: <strong>${pct(c.surePct)}</strong> right <span class="calib-n">(${plural(c.sure, "answer")})</span> · Guessing: <strong>${pct(c.guessPct)}</strong> right <span class="calib-n">(${plural(c.guess, "answer")})</span></p>
+          <p class="calib-line">${[
+            c.sure ? `When sure: <strong>${fmtPct(c.surePct)}</strong> right <span class="calib-n">(${plural(c.sure, "answer")})</span>` : "",
+            c.guess ? `When guessing: <strong>${fmtPct(c.guessPct)}</strong> right <span class="calib-n">(${plural(c.guess, "answer")})</span>` : "",
+          ].filter(Boolean).join(" · ")}</p>
           ${isOverconfident(c) ? `<p class="calib-warn">You're often sure and wrong here. Slow down and check before you lock in.</p>` : ""}
         </li>`,
         )
@@ -191,5 +197,30 @@ function mixupPanel(pairs) {
         .map(({ deck, a, b }) => `<li data-subject="${deck.subject}"><span class="subject-dot" aria-hidden="true"></span><strong>${esc(a.term)}</strong> <span class="mixup-vs">vs</span> <strong>${esc(b.term)}</strong></li>`)
         .join("")}</ul>
       <div class="row"><a class="btn btn-primary" href="#/mixups">Practice telling them apart</a></div>
+    </section>`;
+}
+
+// Tests in the next 30 days: how ready she is and what daily practice gets her there.
+function testsPanel(today) {
+  const tests = state.decks
+    .filter((d) => d.examDate && d.examDate >= today && d.examDate <= addDays(today, 30) && d.cards.length)
+    .sort((a, b) => a.examDate.localeCompare(b.examDate));
+  if (!tests.length) return "";
+  return `
+    <section class="panel wide" aria-labelledby="tests-heading">
+      <h2 id="tests-heading">Tests coming up</h2>
+      <ul class="tests">${tests
+        .map((deck) => {
+          const f = forecast(deck, today);
+          return `
+        <li data-subject="${deck.subject}">
+          <div class="mastery-head"><span><span class="subject-dot" aria-hidden="true"></span>${esc(deck.name)}</span><span>${examLabel(deck.examDate, today)}</span></div>
+          <div class="meter" aria-hidden="true"><span class="m-know" style="width:${pct(f.now)}%"></span></div>
+          <p class="readiness-line">${readinessText(f)}</p>
+          <div class="row"><a class="btn btn-soft" href="#/deck/${deck.id}/study/cram">Cram<span class="visually-hidden"> ${esc(deck.name)}</span></a><a class="btn btn-ghost" href="#/deck/${deck.id}/test">Practice test<span class="visually-hidden">: ${esc(deck.name)}</span></a></div>
+        </li>`;
+        })
+        .join("")}</ul>
+      <p class="hint">An estimate from your practice so far, assuming you get most reviews right. It's a guide, not a grade. <a href="#/help">How it works</a></p>
     </section>`;
 }

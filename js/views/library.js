@@ -1,6 +1,7 @@
 import { state, persist, getDeck, dailyGoal, deleteDeck } from "../store.js";
 import { dueCards, isDue, isNew, streak, dayKey, addDays } from "../srs.js";
 import { mixupPairs } from "../mixups.js";
+import { forecast, readinessText } from "../readiness.js";
 import { esc, plural } from "../util.js";
 import { app, toast, setTitle, view, examLabel, announce, focusHeading } from "../ui.js";
 import { SUBJECTS } from "../subjects.js";
@@ -123,7 +124,10 @@ function examBanner(today) {
   const left = soon.cards.filter((c) => c.status !== "known").length;
   return `
     <div class="exam-banner" data-subject="${soon.subject}">
-      <p><strong>${examLabel(soon.examDate, today)}:</strong> ${esc(soon.name)}. ${left ? `${plural(left, "card")} not known yet.` : "You know every card. A quick review keeps it fresh."}</p>
+      <div>
+        <p><strong>${examLabel(soon.examDate, today)}:</strong> ${esc(soon.name)}. ${left ? `${plural(left, "card")} not known yet.` : "You've learned every card."}</p>
+        <p class="readiness-line">${readinessText(forecast(soon, today))} <a href="#/help">How this is estimated</a></p>
+      </div>
       <a class="btn btn-soft" href="#/deck/${soon.id}/study/cram">Cram</a>
     </div>`;
 }

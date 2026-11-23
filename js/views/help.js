@@ -43,7 +43,8 @@ const SECTIONS = [
   {
     title: "Before a test",
     body: `
-      <p>Open the deck, tap <strong>Edit</strong>, and set the <strong>Test date</strong>. You'll see a countdown, and until the test PrepPop brings cards back by the day before it. The Today panel gets a <strong>Cram</strong> button for the cards you don't know yet. Then take a practice <strong>Test</strong> the night before.</p>`,
+      <p>Open the deck, tap <strong>Edit</strong>, and set the <strong>Test date</strong>. You'll see a countdown, and until the test PrepPop brings cards back by the day before it. The Today panel gets a <strong>Cram</strong> button for the cards you don't know yet. Then take a practice <strong>Test</strong> the night before.</p>
+      <p><strong>How ready am I?</strong> The Today panel and Progress estimate how much of the deck you'd remember on the test day, and how many cards a day would get you to about 90%. It's based on when you last practiced each card and how well you know it: cards you haven't practiced yet count as not known, cards you just missed count as barely known, and things fade if you don't review them. It assumes you get most of your reviews right, so treat it as a guide, not a grade.</p>`,
   },
   {
     title: "Your progress",
