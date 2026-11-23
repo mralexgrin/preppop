@@ -95,3 +95,15 @@ test("learner data the list lost track of is kept as an unnamed learner, never d
   const reg = loadRegistry(storage);
   assert.deepEqual(reg.list.map((p) => p.id).sort(), ["main", "pabc"]);
 });
+
+test("picture cleanup is skipped if any learner's data can't be read", () => {
+  const storage = memoryStorage({ "preppop:v1": "{not json" });
+  const reg = { active: FIRST_ID, list: [{ id: FIRST_ID }] };
+  assert.equal(allDecks(reg, storage), null);
+});
+
+test("a new learner never takes an id whose data already exists", () => {
+  const hasData = (id) => id === FIRST_ID;
+  const { profile } = addProfile(null, { name: "New", level: "high" }, Date.now(), hasData);
+  assert.notEqual(profile.id, FIRST_ID);
+});

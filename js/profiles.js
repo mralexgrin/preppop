@@ -16,6 +16,7 @@ export const MAX_NAME = 30;
 export const MAX_PROFILES = 8;
 
 export const AVATARS = ["🦊", "🐼", "🐸", "🦉", "🐙", "🦁", "🐢", "🐝", "🦄", "🐳", "🐧", "🦖"];
+export const AVATAR_NAMES = ["Fox", "Panda", "Frog", "Owl", "Octopus", "Lion", "Turtle", "Bee", "Unicorn", "Whale", "Penguin", "Dinosaur"];
 
 export const profileKey = (id) => (id === FIRST_ID ? LEGACY_KEY : `${LEGACY_KEY}:${id}`);
 
@@ -98,12 +99,14 @@ export const activeProfile = (registry) => registry?.list.find((p) => p.id === r
 
 // Adds a profile and makes it active. The first one on a device takes the
 // original storage key. Returns the new profile, or null if there are too many.
-export function addProfile(registry, { name, avatar, level }, now = Date.now()) {
+// hasData(id): true if a learner's data is already saved under that id, so a
+// new learner never takes over existing data.
+export function addProfile(registry, { name, avatar, level }, now = Date.now(), hasData = () => false) {
   const reg = registry ?? { active: null, list: [] };
   if (reg.list.length >= MAX_PROFILES) return null;
-  const taken = new Set(reg.list.map((p) => p.id));
+  const taken = new Set([...reg.list.map((p) => p.id), ...[FIRST_ID].filter(hasData)]);
   let id = taken.has(FIRST_ID) ? `p${uid().replace(/[^A-Za-z0-9]/g, "").slice(0, 12)}` : FIRST_ID;
-  while (taken.has(id)) id = `p${uid().replace(/[^A-Za-z0-9]/g, "").slice(0, 12)}`;
+  while (taken.has(id) || hasData(id)) id = `p${uid().replace(/[^A-Za-z0-9]/g, "").slice(0, 12)}`;
   const profile = cleanProfile({ id, name, avatar, level, createdAt: now });
   reg.list.push(profile);
   reg.active = id;
@@ -113,7 +116,7 @@ export function addProfile(registry, { name, avatar, level }, now = Date.now()) 
 export function updateProfile(registry, id, changes) {
   const p = registry.list.find((x) => x.id === id);
   if (!p) return null;
-  Object.assign(p, cleanProfile({ ...p, ...changes, id }));
+  Object.assign(p, cleanProfile({ ...p, ...changes, avatar: changes.avatar ?? p.avatar, id }));
   return p;
 }
 
@@ -130,16 +133,20 @@ export function removeProfile(registry, id, storage = globalThis.localStorage) {
   return true;
 }
 
-// Every profile's decks, for cleaning up pictures no profile uses anymore.
+// Every learner's decks, for cleaning up pictures no learner uses anymore.
+// Returns null if any learner's data can't be read, so cleanup is skipped
+// rather than deleting pictures that learner might use.
 export function allDecks(registry, storage = globalThis.localStorage) {
-  return (registry?.list ?? []).flatMap((p) => {
+  const out = [];
+  for (const p of registry?.list ?? []) {
     try {
       const decks = JSON.parse(read(storage, profileKey(p.id)) ?? "{}").decks;
-      return Array.isArray(decks) ? decks.filter((d) => d && Array.isArray(d.cards)) : [];
+      if (Array.isArray(decks)) out.push(...decks.filter((d) => d && Array.isArray(d.cards)));
     } catch {
-      return [];
+      return null;
     }
-  });
+  }
+  return out;
 }
 
 export const displayName = (p) => p?.name || "Learner";
@@ -160,7 +167,8 @@ export const currentLevel = () => currentProfile()?.level ?? "high";
 export function switchTo(id, storage = globalThis.localStorage) {
   if (!session.registry?.list.some((p) => p.id === id)) return;
   session.registry.active = id;
-  saveRegistry(session.registry, storage);
+  if (!saveRegistry(session.registry, storage)) return false;
   location.hash = "#/";
   location.reload();
+  return true;
 }

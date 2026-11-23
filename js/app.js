@@ -48,7 +48,10 @@ window.addEventListener("storage", (e) => {
 // Remove stored pictures no card uses anymore (e.g. from an editor that wasn't saved).
 // Pictures are shared by every learner on the device, so every learner's decks count.
 if ("indexedDB" in window && session.registry) {
-  setTimeout(() => import("./images.js").then((m) => m.collectGarbage([...state.decks, ...allDecks(session.registry)])).catch(() => {}), 3000);
+  setTimeout(() => {
+    const decks = allDecks(session.registry);
+    if (decks) import("./images.js").then((m) => m.collectGarbage([...state.decks, ...decks])).catch(() => {});
+  }, 3000);
 }
 
 // The header shows who's learning; tapping it switches learner.
@@ -91,7 +94,8 @@ function route() {
   // First run: onboarding before anything else (no menus until there's a learner).
   const onboarding = !session.registry || page === "welcome";
   document.body.classList.toggle("onboarding", !session.registry);
-  if (onboarding) return renderWelcome({ adding: Boolean(session.registry) && id === "add" });
+  if (onboarding && session.registry && id !== "add") return location.replace("#/welcome/add");
+  if (onboarding) return renderWelcome({ adding: Boolean(session.registry) });
   if (page === "profiles") return renderProfiles();
   const section = ["settings", "review", "new", "progress"].includes(page) ? page : page === "mixups" ? "progress" : "decks";
   document.querySelectorAll("[data-nav]").forEach((a) => {

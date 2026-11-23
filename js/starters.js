@@ -323,8 +323,21 @@ export const STARTERS = [
   ]),
 ];
 
-// Times tables as cards: "7 × 8" → "56".
-const facts = (tables, from = 2, to = 12) => tables.flatMap((a) => Array.from({ length: to - from + 1 }, (_, i) => [`${a} × ${from + i}`, String(a * (from + i))]));
+// Times tables as cards: "7 × 8" → "56". Each answer appears once (no 8 × 6
+// after 6 × 8, and products already used are skipped), so Match and Test
+// never show two cards with the same answer.
+function facts(tables, from = 2, to = 12) {
+  const used = new Set();
+  const cards = [];
+  for (const a of tables) {
+    for (let b = from; b <= to; b++) {
+      if (used.has(a * b)) continue;
+      used.add(a * b);
+      cards.push([`${a} × ${b}`, String(a * b)]);
+    }
+  }
+  return cards;
+}
 
 // Starter decks for elementary and middle school.
 STARTERS.push(
@@ -355,7 +368,7 @@ STARTERS.push(
   deck("matter-water", "science", "States of matter and the water cycle", "How water changes and moves around.", [
     ["Solid", "Matter that keeps its own shape, like ice"],
     ["Liquid", "Matter that takes the shape of its container, like water"],
-    ["Gas", "Matter that spreads out to fill any space, like steam"],
+    ["Gas", "Matter that spreads out to fill any space, like water vapor in the air"],
     ["Melting", "A solid turning into a liquid"],
     ["Freezing", "A liquid turning into a solid"],
     ["Evaporation", "A liquid turning into a gas, like a puddle drying up"],
@@ -430,7 +443,7 @@ STARTERS.push(
     ["Constant", "A number on its own that doesn't change"],
     ["Integer", "A whole number or its negative: …, −2, −1, 0, 1, 2, …"],
     ["Inverse operation", "The operation that undoes another, like subtraction undoes addition"],
-    ["Order of operations", "Parentheses, exponents, multiply and divide, then add and subtract (PEMDAS)"],
+    ["Order of operations", "Parentheses, exponents, then multiply and divide left to right, then add and subtract left to right (PEMDAS)"],
     ["Like terms", "Terms with the same variable and power, like 3x and 5x, that can be added"],
   ]),
   deck("rocks-earth", "science", "Rocks and Earth's layers", "Earth science basics.", [
@@ -481,9 +494,10 @@ STARTERS.push(
 
 // Which school levels each starter deck is for. Unlisted decks are high school.
 export const LEVELS = [
-  { id: "elementary", name: "Elementary school", grades: "Grades 1 to 5", subjects: ["math", "science", "english", "social", "spanish"], dailyGoal: 10 },
-  { id: "middle", name: "Middle school", grades: "Grades 6 to 8", subjects: ["math", "science", "english", "history", "spanish"], dailyGoal: 15 },
-  { id: "high", name: "High school", grades: "Grades 9 to 12", subjects: ["biology", "clinical", "spanish", "history", "english", "geometry"], dailyGoal: 20 },
+  // subjects: offered in onboarding; defaults: checked to start with.
+  { id: "elementary", name: "Elementary school", grades: "Grades 1 to 5", subjects: ["math", "science", "english", "social", "spanish"], defaults: ["math", "science", "english", "social", "spanish"], dailyGoal: 10 },
+  { id: "middle", name: "Middle school", grades: "Grades 6 to 8", subjects: ["math", "science", "english", "history", "social", "spanish"], defaults: ["math", "science", "english", "history"], dailyGoal: 15 },
+  { id: "high", name: "High school", grades: "Grades 9 to 12", subjects: ["biology", "clinical", "spanish", "history", "english", "geometry", "math", "science"], defaults: ["biology", "spanish", "history", "english", "geometry"], dailyGoal: 20 },
 ];
 const DECK_LEVELS = {
   "times-6-7-8": ["elementary", "middle"],
@@ -503,8 +517,7 @@ const DECK_LEVELS = {
   "american-revolution": ["middle", "high"],
   "figurative-language": ["middle", "high"],
   "parts-of-speech": ["middle", "high"],
-  "angles-triangles": ["middle", "high"],
-  "cell-parts": ["middle", "high"],
+
   "literary-terms": ["middle", "high"],
 };
 for (const s of STARTERS) s.levels = DECK_LEVELS[s.id] ?? ["high"];

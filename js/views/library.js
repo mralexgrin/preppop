@@ -20,7 +20,7 @@ export function renderLibrary() {
       <section class="empty">
         <div class="empty-art" aria-hidden="true"><span></span><span></span><span>Aa</span></div>
         <h1>Let's set up your decks</h1>
-        <p>Start with a ready-made deck for your classes (medical terms, vital signs, cell parts, Spanish, and more) or make your own. Paste a vocab list and PrepPop makes the cards.</p>
+        <p>Start with a ready-made deck for your classes (${{ elementary: "times tables, planets, continents, Spanish colors, and more", middle: "pre-algebra, Earth science, the American Revolution, Spanish, and more" }[currentProfile()?.level] ?? "medical terms, vital signs, cell parts, Spanish, and more"}) or make your own. Paste a vocab list and PrepPop makes the cards.</p>
         <div class="actions">
           <a class="btn btn-primary btn-lg" href="#/starters" id="starters">Browse starter decks</a>
           <a class="btn btn-soft btn-lg" href="#/new">Make my own deck</a>

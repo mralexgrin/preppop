@@ -5,7 +5,7 @@ import { state, setStoreKey } from "../store.js";
 import { esc } from "../util.js";
 import { app, setTitle, toast, announce } from "../ui.js";
 import { LEVELS, levelOf } from "../starters.js";
-import { session, AVATARS, MAX_NAME, MAX_PROFILES, saveRegistry, updateProfile, removeProfile, switchTo, displayName, profileKey, allDecks, refreshRegistry } from "../profiles.js";
+import { session, AVATARS, AVATAR_NAMES, MAX_NAME, MAX_PROFILES, saveRegistry, updateProfile, removeProfile, switchTo, displayName, profileKey, allDecks, refreshRegistry } from "../profiles.js";
 import { eraseCloudCopy } from "../cloud.js";
 import { normalizeSyncKey } from "../sync.js";
 
@@ -44,7 +44,7 @@ export function renderProfiles({ editing = null } = {}) {
   app.querySelectorAll("[data-switch]").forEach((b) =>
     b.addEventListener("click", () => {
       if (b.dataset.switch === reg.active) location.hash = "#/";
-      else switchTo(b.dataset.switch);
+      else if (!switchTo(b.dataset.switch)) toast("Couldn't switch. Browser storage is full or blocked.");
     }),
   );
   app.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", () => renderProfiles({ editing: b.dataset.edit })));
@@ -53,24 +53,38 @@ export function renderProfiles({ editing = null } = {}) {
   const form = app.querySelector(".profile-edit");
   if (form) {
     form.querySelector("#edit-name").focus();
-    form.querySelector("#edit-cancel").addEventListener("click", () => renderProfiles());
+    const back = () => app.querySelector(`[data-edit="${editing}"]`)?.focus();
+    form.querySelector("#edit-cancel").addEventListener("click", () => {
+      renderProfiles();
+      back();
+    });
+    const nameInput = form.querySelector("#edit-name");
+    const error = form.querySelector("#edit-error");
+    nameInput.addEventListener("input", () => {
+      if (nameInput.value.trim()) {
+        error.hidden = true;
+        nameInput.removeAttribute("aria-invalid");
+      }
+    });
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const name = form.querySelector("#edit-name").value;
-      if (!name.trim()) return form.querySelector("#edit-name").focus();
+      const name = nameInput.value;
+      if (!name.trim()) {
+        error.hidden = false;
+        nameInput.setAttribute("aria-invalid", "true");
+        return nameInput.focus();
+      }
       const p = updateProfile(reg, editing, {
         name,
         avatar: form.querySelector('input[name="edit-avatar"]:checked')?.value,
         level: form.querySelector("#edit-level").value,
       });
-      saveRegistry(reg);
-      // The header shows the active learner, so a change there needs a fresh page.
-      if (p.id === reg.active) {
-        document.documentElement.dataset.level = p.level;
-        window.dispatchEvent(new Event("profilechange"));
-      }
+      const saved = saveRegistry(reg);
+      // The header shows the active learner: update it.
+      if (p.id === reg.active) window.dispatchEvent(new Event("profilechange"));
       renderProfiles();
-      toast("Saved");
+      back();
+      toast(saved ? "Saved" : "Couldn't save. Browser storage is full or blocked.");
     });
   }
 }
@@ -79,12 +93,13 @@ const editForm = (p) => `
   <form class="profile-edit" novalidate>
     <label class="field">
       <span class="field-label">Name or nickname</span>
-      <input class="input" id="edit-name" maxlength="${MAX_NAME}" autocomplete="off" value="${esc(p.name)}">
+      <input class="input" id="edit-name" maxlength="${MAX_NAME}" autocomplete="off" value="${esc(p.name)}" aria-describedby="edit-error">
     </label>
+    <p class="form-error" id="edit-error" hidden>Type a first name or a nickname.</p>
     <fieldset class="avatar-pick">
       <legend class="field-label">Avatar</legend>
       <div class="avatars">${AVATARS.map(
-        (a, i) => `<label class="avatar-opt"><input type="radio" name="edit-avatar" value="${a}" ${a === p.avatar ? "checked" : ""}><span aria-hidden="true">${a}</span><span class="visually-hidden">Avatar ${i + 1}</span></label>`,
+        (a, i) => `<label class="avatar-opt"><input type="radio" name="edit-avatar" value="${a}" ${a === p.avatar ? "checked" : ""}><span aria-hidden="true">${a}</span><span class="visually-hidden">${AVATAR_NAMES[i]}</span></label>`,
       ).join("")}</div>
     </fieldset>
     <label class="field">
@@ -123,7 +138,9 @@ async function remove(id) {
   saveRegistry(reg);
   if (wasActive) return switchTo(reg.active);
   // Pictures only they used are cleaned up now, not on the next visit.
-  import("../images.js").then((m) => m.collectGarbage(allDecks(reg))).catch(() => {});
+  const decks = allDecks(reg);
+  if (decks) import("../images.js").then((m) => m.collectGarbage(decks)).catch(() => {});
   renderProfiles();
+  app.querySelector("[data-switch]")?.focus();
   announce(`${name} removed.`);
 }

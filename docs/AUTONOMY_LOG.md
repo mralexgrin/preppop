@@ -77,6 +77,17 @@ Newest entries at the top. This file is the memory of the run: read it at the st
   - Deck tiles have no 4px accent border.
   - Fixed the Today button overflowing on phones with long deck names.
 - **Not done yet (next PR):** the AI writing at the learner's reading level. The prompts still say "high school student".
+- **Review fixes (code review plus privacy review):**
+  - The blocker found by both: a sync still running could mix learners when adding one. Fixed by saving the new learner straight to their own key.
+  - Learner data the list has lost track of is kept as an unnamed learner, and picture cleanup is skipped if any learner's data can't be read.
+  - Save failures are reported, Start learning can't be pressed twice, a new learner never takes an id whose data exists, and other tabs reload on changes.
+  - Onboarding has an "already use PrepPop elsewhere" option (no starter decks, so nothing is duplicated when sync connects).
+  - Level subjects and decks match (with a test), and Clinical skills is no longer checked by default.
+  - Times tables don't repeat an answer.
+  - Accessibility: avatar names, focus after edits, visible name errors, and the step number read with the heading.
+  - Science and Social studies have distinct colors.
+  - Content precision: "water vapor" in the gas card; the order of operations works left to right.
+  - AI is gated for under-13 levels, Clinical Shift is high school only, and the remove flow offers to erase the cloud copy.
 
 ### 2026-11-23: Clinical Shift review fixes (code + security)
 - **Blockers fixed:**

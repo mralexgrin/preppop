@@ -327,13 +327,13 @@ textarea.input { min-height: 52px; line-height: 1.45; }
 :root {
   --subj-biology: #2b8a3e; --subj-clinical: #0b7285; --subj-spanish: #e03131; --subj-history: #b35c00;
   --subj-english: #1971c2; --subj-geometry: #6741d9; --subj-other: #868e96;
-  --subj-math: #c2255c; --subj-science: #2f9e44; --subj-social: #e8590c;
+  --subj-math: #c2255c; --subj-science: #9c36b5; --subj-social: #5c940d;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --subj-biology: #51cf66; --subj-clinical: #3bc9db; --subj-spanish: #ff6b6b; --subj-history: #ffa94d;
     --subj-english: #4dabf7; --subj-geometry: #9775fa; --subj-other: #adb5bd;
-    --subj-math: #f06595; --subj-science: #69db7c; --subj-social: #ff922b;
+    --subj-math: #f06595; --subj-science: #da77f2; --subj-social: #a9e34b;
   }
 }
 [data-subject="biology"] { --subj: var(--subj-biology); }
