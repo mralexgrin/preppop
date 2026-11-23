@@ -215,7 +215,7 @@ export const STARTERS = [
     ["leer", "to read"],
     ["estudiar", "to study"],
   ]),
-  deck("spanish-present", "spanish", "Spanish: present tense (-ar, -er, -ir)", "Regular verbs. Practice in Write with Type the definition.", [
+  deck("spanish-present", "spanish", "Spanish: present tense (-ar, -er, -ir)", "Regular verbs. Practice in Write with Type definition.", [
     ["hablar: yo", "hablo"],
     ["hablar: tú", "hablas"],
     ["hablar: él / ella / usted", "habla"],

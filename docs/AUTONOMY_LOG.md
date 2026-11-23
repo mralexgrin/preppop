@@ -36,6 +36,23 @@ Newest entries at the top. This file is the memory of the run: read it at the st
   - If the service fails, she compares with the card and grades herself.
   - Rounds of 5.
 - Tests: Worker test for the route (16 Worker tests pass); a browser flow with the AI stubbed (23 flows pass).
+- Review (code-reviewer): no blockers; the should-fix items are done.
+  - A 45-second request timeout, plus a "Skip, I'll check it myself" button.
+  - Requests are cancelled when she leaves.
+  - Her draft is protected when switching modes or leaving.
+  - Focus and announcements after feedback and after errors.
+  - "I don't know" no longer shows an empty box or AI credit.
+  - Prompt additions:
+    - When the card itself is wrong, judge by the textbook.
+    - Repeating the card word for word earns "partly", with a request to explain it.
+    - No follow-up question on a follow-up.
+    - Off-topic or personal text isn't engaged with, and she's pointed to a trusted adult if she seems upset.
+    - Feedback is in English.
+  - Her text is sent as JSON, so typing a closing tag can't add instructions.
+  - The follow-up is graded at low effort.
+  - Clearer toolbar labels ("Type term", "Type definition", "✦ Explain").
+  - Tests: the error path with self-grading, "I don't know", and each card recorded exactly once.
+- Kept as designed: "Partly" on a card she already knew moves it back to learning. A gap in the explanation is worth seeing again soon.
 
 ### 2026-11-23: Proposal approved; items 1–2 of the new roadmap
 - The owner asked for ideas to make PrepPop competitive and unique, approved the recommended order (mix-ups + confidence check → Word Builder → Teach It Back → test readiness → Clinical Shift), and said to start building.

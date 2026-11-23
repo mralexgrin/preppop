@@ -6,7 +6,7 @@
 
 import { persist, recordAnswer, shortcutsOn } from "../store.js";
 import { esc, plural, shuffle, isTyping } from "../util.js";
-import { app, setTitle, view, deckHeader, announce, keepFocus } from "../ui.js";
+import { app, setTitle, view, deckHeader, announce } from "../ui.js";
 import { ROUND_SIZE } from "../srs.js";
 import { checkAnswer, countsAsCorrect, needsAccentKeys, ACCENT_KEYS } from "../answer.js";
 import { canSpeak, speak, langFor, SPEAKER_ICON } from "../speech.js";
@@ -56,9 +56,9 @@ export function renderWrite(deck) {
     return `
       <div class="toolbar">
         <div class="seg" role="group" aria-label="What you write">
-          <button type="button" data-type="term" aria-pressed="${w.typeSide === "term"}"><span class="visually-hidden">Type the </span>Term</button>
-          <button type="button" data-type="definition" aria-pressed="${w.typeSide === "definition"}"><span class="visually-hidden">Type the </span>Definition</button>
-          <button type="button" data-type="explain" aria-pressed="${w.typeSide === "explain"}"><span aria-hidden="true">✦ </span>Explain it</button>
+          <button type="button" data-type="term" aria-pressed="${w.typeSide === "term"}">Type term</button>
+          <button type="button" data-type="definition" aria-pressed="${w.typeSide === "definition"}">Type definition</button>
+          <button type="button" data-type="explain" aria-pressed="${w.typeSide === "explain"}"><span aria-hidden="true">✦ </span>Explain</button>
         </div>
         <div class="seg" role="group" aria-label="Which cards">
           <button type="button" data-only="all" aria-pressed="${!w.onlyLearning}">All (${deck.cards.length})</button>
@@ -70,12 +70,14 @@ export function renderWrite(deck) {
   const bindToolbar = () => {
     app.querySelectorAll("[data-type]").forEach((b) =>
       b.addEventListener("click", () => {
+        if (b.dataset.type === w.typeSide || !okToDropDraft()) return;
         w.typeSide = b.dataset.type;
         restart();
       }),
     );
     app.querySelectorAll("[data-only]").forEach((b) =>
       b.addEventListener("click", () => {
+        if ((b.dataset.only === "learning") === w.onlyLearning || !okToDropDraft()) return;
         w.onlyLearning = b.dataset.only === "learning";
         restart();
       }),
@@ -272,11 +274,39 @@ export function renderWrite(deck) {
   // w.teach: { phase: "write" | "loading" | "feedback" | "error", text, feedback,
   //            followText, followPhase, followFeedback, error, selfGraded }
   let alive = true;
+  let controller = null; // the request in flight, so leaving or skipping cancels it
 
-  const teachState = () => (w.teach ??= { phase: "write", text: "", feedback: null, followText: "", followPhase: "idle", followFeedback: null, error: "", selfGraded: null });
+  const cancelRequest = () => {
+    controller?.abort();
+    controller = null;
+  };
+
+  const teachState = () => (w.teach ??= { phase: "write", text: "", feedback: null, followText: "", followPhase: "idle", followFeedback: null, error: "", selfGraded: null, local: false });
+
+  // Switching mode or leaving would throw away what she's written so far.
+  function okToDropDraft() {
+    const t = w.teach;
+    const unsaved = explaining() && t && ((t.phase === "write" && t.text.trim()) || t.phase === "loading");
+    if (unsaved && !confirm("Leave this explanation? What you wrote will be lost.")) return false;
+    cancelRequest();
+    return true;
+  }
+
+  const submitOnCmdEnter = (input, form) =>
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+  const feedbackAnnouncement = (f) =>
+    [VERDICT_LABEL[f.verdict], f.summary, f.missing.length ? `${plural(f.missing.length, "thing")} missing.` : "", f.wrong.length ? `${plural(f.wrong.length, "thing")} not quite right.` : ""]
+      .filter(Boolean)
+      .join(" ");
 
   const teachFeedbackHTML = (f, { heading }) => `
-    <div class="teach-feedback v-${f.verdict}">
+    <div class="teach-feedback v-${f.verdict}" tabindex="-1">
       <p class="teach-verdict"><span class="teach-chip">${VERDICT_LABEL[f.verdict]}</span>${heading ? `<span class="visually-hidden"> ${heading}</span>` : ""}</p>
       ${f.summary ? `<p class="teach-summary">${esc(f.summary)}</p>` : ""}
       ${teachList("You got", "got", f.correct)}
@@ -301,7 +331,7 @@ export function renderWrite(deck) {
             <span class="field-label">Explain it in your own words</span>
             <textarea class="input write-input" id="answer" aria-describedby="w-prompt teach-tip" rows="5" maxlength="${MAX_EXPLANATION}" autocomplete="off" spellcheck="true">${esc(t.text)}</textarea>
           </label>
-          <p class="hint" id="teach-tip">Say what it means and why it matters, like you're teaching a friend. To talk instead of type, tap the mic on your keyboard.</p>
+          <p class="hint" id="teach-tip">Say what it means and why it matters, like you're teaching a friend. To talk instead of type, tap the mic on your keyboard.${shortcutsOn() ? " On a computer, Ctrl+Enter sends it." : ""}</p>
           <div class="row write-actions">
             <button class="btn btn-primary" type="submit"><span aria-hidden="true">✦ </span>Get feedback</button>
             <button class="btn btn-ghost" type="button" id="dont-know">I don't know</button>
@@ -309,9 +339,10 @@ export function renderWrite(deck) {
         </form>`;
     } else if (t.phase === "loading") {
       body = `
-        <section class="loading" aria-live="polite">
+        <section class="loading">
           <div class="loader" aria-hidden="true"><span></span><span></span><span></span></div>
           <p>Reading your explanation…</p>
+          <button class="btn btn-ghost" type="button" id="skip-teach">Skip, I'll check it myself</button>
         </section>`;
     } else if (t.phase === "error") {
       body = `
@@ -330,8 +361,8 @@ export function renderWrite(deck) {
     } else {
       const f = t.feedback;
       body = `
-        <div class="teach-yours"><p class="teach-list-title">You wrote</p><p>${esc(t.text)}</p></div>
-        <div role="status">${teachFeedbackHTML(f, { heading: "" })}</div>
+        ${t.text.trim() ? `<div class="teach-yours"><p class="teach-list-title">You wrote</p><p>${esc(t.text)}</p></div>` : ""}
+        ${teachFeedbackHTML(f, { heading: "" })}
         ${answerHTML}
         ${
           f.followUp
@@ -340,12 +371,12 @@ export function renderWrite(deck) {
                 <p class="teach-question" id="follow-q">${esc(f.followUp)}</p>
                 ${
                   t.followPhase === "done"
-                    ? `<div class="teach-yours"><p class="teach-list-title">Your answer</p><p>${esc(t.followText)}</p></div><div role="status">${teachFeedbackHTML(t.followFeedback, { heading: "on your follow-up" })}</div>`
+                    ? `<div class="teach-yours"><p class="teach-list-title">Your answer</p><p>${esc(t.followText)}</p></div>${teachFeedbackHTML(t.followFeedback, { heading: "on your follow-up" })}`
                     : t.followPhase === "loading"
-                      ? `<p class="hint" aria-live="polite">Reading your answer…</p>`
+                      ? `<p class="hint">Reading your answer…</p>`
                       : `<form class="teach-follow-form" novalidate>
                           <label class="visually-hidden" for="follow-answer">Your answer to the follow-up question</label>
-                          <textarea class="input write-input" id="follow-answer" rows="3" maxlength="${MAX_EXPLANATION}" autocomplete="off" spellcheck="true">${esc(t.followText)}</textarea>
+                          <textarea class="input write-input" id="follow-answer" aria-describedby="follow-q" rows="3" maxlength="${MAX_EXPLANATION}" autocomplete="off" spellcheck="true">${esc(t.followText)}</textarea>
                           ${t.followPhase === "error" ? `<p class="hint" role="alert">Couldn't get feedback on that. You can try again or move on.</p>` : ""}
                           <div class="row"><button class="btn btn-soft" type="submit">Answer</button><span class="hint">Optional</span></div>
                         </form>`
@@ -366,8 +397,8 @@ export function renderWrite(deck) {
         <p class="q-prompt" id="w-prompt"${langAttr(deck, "term", card.term)}>${esc(card.term)}</p>
       </section>
       ${body}
-      ${done ? `<div class="row write-actions"><button class="btn btn-primary" type="button" id="next">${w.i === w.queue.length - 1 ? "See results" : "Next card"} <kbd>Enter</kbd></button></div>` : ""}
-      ${writing ? "" : `<p class="source-tag">✦ Feedback from ${MODEL_LABEL}. Double-check with your notes or teacher.</p>`}`;
+      ${done ? `<div class="row write-actions"><button class="btn btn-primary" type="button" id="next">${w.i === w.queue.length - 1 ? "See results" : "Next card"}${shortcutsOn() ? " <kbd>Enter</kbd>" : ""}</button></div>` : ""}
+      ${t.phase === "feedback" && !t.local ? `<p class="source-tag">✦ Feedback from ${MODEL_LABEL}. Double-check with your notes or teacher.</p>` : ""}`;
 
     bindToolbar();
     hydrateImages(app);
@@ -375,6 +406,7 @@ export function renderWrite(deck) {
     if (form) {
       const input = app.querySelector("#answer");
       input.addEventListener("input", () => (t.text = input.value));
+      submitOnCmdEnter(input, form);
       form.addEventListener("submit", (e) => {
         e.preventDefault();
         t.text = input.value;
@@ -383,10 +415,12 @@ export function renderWrite(deck) {
       });
       app.querySelector("#dont-know").addEventListener("click", () => {
         t.text = "";
+        t.local = true; // no AI involved
         t.feedback = { verdict: "not_yet", summary: "That's OK. Read the card, then try explaining it next time.", correct: [], missing: [], wrong: [], followUp: "" };
         t.phase = "feedback";
         drawExplain();
-        app.querySelector("#next")?.focus();
+        app.querySelector("#next")?.focus({ preventScroll: true });
+        announce(`The card says: ${card.definition}`);
       });
       input.focus();
     }
@@ -394,14 +428,24 @@ export function renderWrite(deck) {
       b.addEventListener("click", () => {
         t.selfGraded = b.dataset.self === "right";
         drawExplain();
-        app.querySelector("#next")?.focus();
+        app.querySelector("#next")?.focus({ preventScroll: true });
       }),
     );
     app.querySelector("#retry-teach")?.addEventListener("click", askFeedback);
+    app.querySelector("#skip-teach")?.addEventListener("click", () => {
+      cancelRequest();
+      t.error = "you skipped it";
+      t.phase = "error";
+      t.selfGraded = null;
+      drawExplain();
+      app.querySelector('[data-self="right"]')?.focus();
+      announce(`The card says: ${card.definition}. Did you have it?`);
+    });
     const follow = app.querySelector(".teach-follow-form");
     if (follow) {
       const input = follow.querySelector("#follow-answer");
       input.addEventListener("input", () => (t.followText = input.value));
+      submitOnCmdEnter(input, follow);
       follow.addEventListener("submit", (e) => {
         e.preventDefault();
         t.followText = input.value;
@@ -416,20 +460,26 @@ export function renderWrite(deck) {
     const t = teachState();
     t.phase = "loading";
     drawExplain();
+    app.querySelector("#skip-teach")?.focus();
+    announce("Reading your explanation…");
+    cancelRequest();
+    controller = new AbortController();
     try {
-      const feedback = await teachBack({ term: card.term, definition: card.definition, subject: deck.subject, explanation: t.text });
-      if (!alive || w.teach !== t) return;
+      const feedback = await teachBack({ term: card.term, definition: card.definition, subject: deck.subject, explanation: t.text }, { signal: controller.signal });
+      if (!alive || w.teach !== t || t.phase !== "loading") return;
       t.feedback = feedback;
       t.phase = "feedback";
       drawExplain();
-      announce(`${VERDICT_LABEL[feedback.verdict]}. ${feedback.summary}`);
-      app.querySelector("#next")?.focus({ preventScroll: true });
+      app.querySelector(".teach-feedback")?.focus({ preventScroll: true });
+      announce(feedbackAnnouncement(feedback));
     } catch (err) {
-      if (!alive || w.teach !== t) return;
+      if (!alive || w.teach !== t || t.phase !== "loading") return;
       t.error = err.message;
       t.phase = "error";
       t.selfGraded = null;
       drawExplain();
+      app.querySelector('[data-self="right"]')?.focus();
+      announce(`Couldn't get feedback: ${err.message}. The card says: ${card.definition}. Did you have it?`);
     }
   };
 
@@ -438,15 +488,19 @@ export function renderWrite(deck) {
     const t = teachState();
     const question = t.feedback.followUp;
     t.followPhase = "loading";
-    keepFocus(drawExplain);
+    drawExplain();
+    app.querySelector("#next")?.focus({ preventScroll: true });
+    announce("Reading your answer…");
+    cancelRequest();
+    controller = new AbortController();
     try {
-      const feedback = await teachBack({ term: card.term, definition: card.definition, subject: deck.subject, explanation: t.followText, question });
+      const feedback = await teachBack({ term: card.term, definition: card.definition, subject: deck.subject, explanation: t.followText, question }, { signal: controller.signal });
       if (!alive || w.teach !== t) return;
       t.followFeedback = feedback;
       t.followPhase = "done";
       drawExplain();
-      announce(`${VERDICT_LABEL[feedback.verdict]}. ${feedback.summary}`);
-      app.querySelector("#next")?.focus({ preventScroll: true });
+      app.querySelectorAll(".teach-feedback")[1]?.focus({ preventScroll: true });
+      announce(feedbackAnnouncement(feedback));
     } catch {
       if (!alive || w.teach !== t) return;
       t.followPhase = "error";
@@ -458,6 +512,7 @@ export function renderWrite(deck) {
   // Only "Got it" (or "I had it" when the service was down) counts as known.
   // The follow-up is extra practice and doesn't change the grade.
   const advanceExplain = () => {
+    cancelRequest(); // a follow-up still loading is just dropped
     const card = w.queue[w.i];
     const t = teachState();
     const correct = t.phase === "feedback" ? t.feedback.verdict === "got_it" : t.selfGraded === true;
@@ -479,8 +534,10 @@ export function renderWrite(deck) {
   };
   document.addEventListener("keydown", onKey);
 
+  view.leaveGuard = okToDropDraft;
   view.cleanup = () => {
     alive = false;
+    cancelRequest();
     document.removeEventListener("keydown", onKey);
   };
   restart();
